@@ -6,6 +6,7 @@ import 'package:ingrain/app/theme/app_colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
+import 'package:ingrain/core/platform/picture_in_picture.dart';
 import 'package:ingrain/core/utils/duration_format.dart';
 import 'package:ingrain/features/content/data/youtube_url_parser.dart';
 import 'package:ingrain/features/content/domain/content_item.dart';
@@ -96,7 +97,11 @@ class _ImmersionPlayerViewState extends ConsumerState<ImmersionPlayerView> {
         pointerEvents: kIsWeb ? PointerEvents.none : PointerEvents.initial,
       ),
       onWebResourceError: (error) {
-        if (!mounted) return;
+        // The page loads many sub-resources (ads, trackers, thumbnails) and
+        // the WebView reports each one that is blocked or fails as
+        // net::ERR_FAILED, though the video itself plays fine. Only the page
+        // failing to load, before anything has played, is a real error.
+        if (!mounted || error.isForMainFrame == false || _videoReady) return;
         setState(() {
           _playerError = 'Network error: ${error.description}';
           _videoReady = false;
@@ -146,6 +151,9 @@ class _ImmersionPlayerViewState extends ConsumerState<ImmersionPlayerView> {
           value.playerState == PlayerState.ended;
       if ((isPlaying && !_playerIsPlaying) || (stopped && _playerIsPlaying)) {
         setState(() => _playerIsPlaying = isPlaying);
+        // Leaving the app while a video plays shrinks it into a floating
+        // window instead of stopping the video.
+        PictureInPicture.instance.setAutoEnter(isPlaying);
       }
 
       if (isPlaying) {
@@ -205,6 +213,7 @@ class _ImmersionPlayerViewState extends ConsumerState<ImmersionPlayerView> {
 
   @override
   void dispose() {
+    PictureInPicture.instance.setAutoEnter(false);
     _videoStateSubscription?.cancel();
     _playerStreamSubscription?.cancel();
     _controller.close();
@@ -274,6 +283,17 @@ class _ImmersionPlayerViewState extends ConsumerState<ImmersionPlayerView> {
 
     if (!mounted) return;
     setState(() => _videoReady = true);
+  }
+
+  /// Back while a video plays shrinks it into the floating window; with
+  /// nothing playing (or no window support) it leaves the screen as usual.
+  Future<void> _onBack(bool didPop, Object? result) async {
+    if (didPop) return;
+    final playing =
+        _playerIsPlaying ||
+        _controller.value.playerState == PlayerState.playing;
+    if (playing && await PictureInPicture.instance.enter()) return;
+    if (mounted) context.pop();
   }
 
   Future<void> _seekRelative(int deltaSeconds) async {
@@ -356,6 +376,27 @@ class _ImmersionPlayerViewState extends ConsumerState<ImmersionPlayerView> {
           .select((session) => session.isRunning && !session.isPaused),
     );
 
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: _onBack,
+      child: ValueListenableBuilder<bool>(
+        valueListenable: PictureInPicture.instance.active,
+        builder: (context, inPip, _) => inPip
+            ? Scaffold(
+                backgroundColor: Colors.black,
+                body: Center(
+                  child: RepaintBoundary(
+                    key: _playerKey,
+                    child: _buildPlayer(contentAsync),
+                  ),
+                ),
+              )
+            : _buildScreen(contentAsync, sessionLive),
+      ),
+    );
+  }
+
+  Widget _buildScreen(AsyncValue<ContentItem> contentAsync, bool sessionLive) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('HitaruJP'),
@@ -383,98 +424,77 @@ class _ImmersionPlayerViewState extends ConsumerState<ImmersionPlayerView> {
             key: _playerKey,
             child: _buildPlayer(contentAsync),
           );
-          final controls = <Widget>[
-            _SeekBar(
-              controller: _controller,
-              fallbackDuration: Duration(
-                seconds: contentAsync.asData?.value.durationSeconds ?? 0,
+          final seekBar = _SeekBar(
+            controller: _controller,
+            fallbackDuration: Duration(
+              seconds: contentAsync.asData?.value.durationSeconds ?? 0,
+            ),
+          );
+          // Right under the video, so reading along never means looking away
+          // from it. Three lines: the one before, the current one centred,
+          // and the next.
+          final transcript = SizedBox(
+            height: TranscriptView.heightForRows(context, 3),
+            child: RepaintBoundary(
+              key: _transcriptKey,
+              child: TranscriptView(contentId: widget.contentId),
+            ),
+          );
+          final controls = Column(
+            children: [
+              if (_playerError != null) _buildPlayerError(),
+              _buildPlaybackControls(),
+              _SessionControls(
+                contentId: widget.contentId,
+                title: contentAsync.whenOrNull(data: (c) => c.title),
+                onStop: _confirmStopSession,
               ),
-            ),
-            if (_playerError != null) _buildPlayerError(),
-            _buildPlaybackControls(),
-            _SessionControls(
-              contentId: widget.contentId,
-              title: contentAsync.whenOrNull(data: (c) => c.title),
-              onStop: _confirmStopSession,
-            ),
-          ];
-          final transcript = RepaintBoundary(
-            key: _transcriptKey,
-            child: TranscriptView(contentId: widget.contentId),
+            ],
           );
 
-          if (constraints.maxWidth < _sideBySideMinWidth) {
+          if (constraints.maxWidth < _wideMinWidth) {
             return Column(
               children: [
                 player,
-                ...controls,
-                Expanded(child: transcript),
+                seekBar,
+                transcript,
+                const Divider(height: 1),
+                Expanded(child: SingleChildScrollView(child: controls)),
               ],
             );
           }
 
-          // Wide: watch on the left, read along on the right. The video
-          // shrinks to fit the window's height rather than pushing the
-          // controls off screen.
-          final theme = Theme.of(context);
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
-                  child: Column(
-                    children: [
-                      Flexible(
-                        // Rounded corners on mobile only: clipping the web
-                        // <iframe> re-applies a CSS clip every frame and
-                        // makes playback flicker.
-                        child: kIsWeb
-                            ? player
-                            : ClipRRect(
-                                borderRadius: BorderRadius.circular(16),
-                                child: player,
-                              ),
-                      ),
-                      ...controls,
-                    ],
-                  ),
+          // Wide: the video shrinks to fit the window's height rather than
+          // pushing the transcript and controls off screen.
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+            child: Column(
+              children: [
+                Flexible(
+                  // Rounded corners on mobile only: clipping the web
+                  // <iframe> re-applies a CSS clip every frame and
+                  // makes playback flicker.
+                  child: kIsWeb
+                      ? player
+                      : ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: player,
+                        ),
                 ),
-              ),
-              Container(
-                width: _transcriptWidth(constraints.maxWidth),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surface,
-                  border: Border(
-                    left: BorderSide(color: theme.colorScheme.outlineVariant),
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
-                      child: Text(
-                        'Transcript',
-                        style: theme.textTheme.titleMedium,
-                      ),
-                    ),
-                    Expanded(child: transcript),
-                  ],
-                ),
-              ),
-            ],
+                seekBar,
+                transcript,
+                const Divider(height: 1),
+                controls,
+              ],
+            ),
           );
         },
       ),
     );
   }
 
-  /// From this width the transcript sits beside the video.
-  static const _sideBySideMinWidth = 960.0;
-
-  static double _transcriptWidth(double available) =>
-      (available * 0.36).clamp(360.0, 520.0);
+  /// From this width the video gets padding and rounded corners.
+  static const _wideMinWidth = 960.0;
 
   Widget _buildPlayer(AsyncValue<ContentItem> contentAsync) {
     return contentAsync.when(

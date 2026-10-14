@@ -238,13 +238,13 @@ class _HitTile extends StatelessWidget {
   static (IconData, String, String, String?, String?, String?) _describe(
     SearchHit hit,
   ) => switch (hit) {
-    WordHit(:final word) => (
+    WordHit(:final word, :final card) => (
       Icons.translate,
       'Word · ${word.state.label}',
       word.displayWithReading,
       word.meaning,
       _sourceLabel(word.sourceTitle, word.timestampSeconds),
-      '/vocabulary',
+      '/flashcards/deck/${card?.deckId ?? minedPhrasesDeckId}',
     ),
     SentenceHit(:final sentence) => (
       Icons.format_quote,

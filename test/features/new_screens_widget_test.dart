@@ -26,7 +26,6 @@ import 'package:ingrain/features/srs/presentation/viewmodel/review_view_model.da
 import 'package:ingrain/features/vocabulary/domain/dictionary_index.dart';
 import 'package:ingrain/features/vocabulary/domain/vocabulary_item.dart';
 import 'package:ingrain/features/vocabulary/domain/vocabulary_repository.dart';
-import 'package:ingrain/features/vocabulary/presentation/view/vocabulary_view.dart';
 import 'package:ingrain/features/vocabulary/presentation/widgets/tappable_transcript_text.dart';
 import 'package:ingrain/features/vocabulary/presentation/viewmodel/vocabulary_view_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -721,7 +720,8 @@ void main() {
       expect(find.text('Words saved'), findsOneWidget);
 
       await scrollDashboardDown(tester);
-      expect(find.text('Browse saved vocabulary'), findsOneWidget);
+      expect(find.text('Browse saved vocabulary'), findsNothing);
+      expect(find.text('Browse mined phrases'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
   });
@@ -748,56 +748,6 @@ void main() {
       await tester.enterText(find.byType(TextField), 'zzz');
       await tester.pumpAndSettle();
       expect(find.text('Nothing found'), findsOneWidget);
-      expect(tester.takeException(), isNull);
-    });
-  });
-
-  group('VocabularyView', () {
-    testWidgets('shows the empty state with no saved words', (tester) async {
-      await pumpScreen(tester, const VocabularyView());
-
-      expect(find.text('Vocabulary'), findsOneWidget);
-      expect(find.text('No saved words yet'), findsOneWidget);
-      expect(find.text('Add'), findsOneWidget);
-      expect(tester.takeException(), isNull);
-    });
-
-    testWidgets('lists a word with its reading, meaning and source', (
-      tester,
-    ) async {
-      await pumpScreen(tester, const VocabularyView(), words: [sampleWord()]);
-
-      expect(find.text('猫 (ねこ)'), findsOneWidget);
-      expect(find.text('cat (animal)'), findsOneWidget);
-      expect(find.text('My Video • 0:42'), findsOneWidget);
-      expect(find.text('No saved words yet'), findsNothing);
-      expect(tester.takeException(), isNull);
-    });
-
-    testWidgets('filters the list by learning state', (tester) async {
-      await pumpScreen(
-        tester,
-        const VocabularyView(),
-        words: [
-          sampleWord(state: VocabState.learning),
-          sampleWord(state: VocabState.encountered, text: '犬', reading: 'いぬ'),
-        ],
-      );
-
-      await tester.tap(find.widgetWithText(FilterChip, 'Learning 1'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('猫 (ねこ)'), findsOneWidget);
-
-      await tester.tap(find.widgetWithText(FilterChip, 'Encountered 1'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('犬 (いぬ)'), findsOneWidget);
-      expect(find.text('猫 (ねこ)'), findsNothing);
-
-      await tester.tap(find.widgetWithText(FilterChip, 'Known 0'));
-      await tester.pumpAndSettle();
-      expect(find.text('No words in this state'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
   });
@@ -965,7 +915,7 @@ void main() {
       await pumpDialogue(tester);
 
       expect(find.text('neko'), findsNothing);
-      await tester.tap(find.byTooltip('Show romaji'));
+      await tester.tap(find.widgetWithText(FilterChip, 'Romaji'));
       await tester.pumpAndSettle();
 
       expect(find.text('neko'), findsOneWidget);

@@ -146,8 +146,23 @@ class ContentViewModel extends AsyncNotifier<List<ContentItem>> {
     return YoutubeImport(item, hasTranscript: hasTranscript);
   }
 
-  Future<void> deleteContent(String id) async {
-    await _repository.delete(id);
+  Future<void> deleteContent(String id) => deleteContents([id]);
+
+  Future<void> deleteContents(Iterable<String> ids) async {
+    for (final id in ids) {
+      await _repository.delete(id);
+      ref.invalidate(contentItemProvider(id));
+      ref.invalidate(transcriptProvider(id));
+    }
+    await refresh();
+  }
+
+  Future<void> renameContent(String id, String title) async {
+    final trimmed = title.trim();
+    if (trimmed.isEmpty) return;
+    final item = await _repository.getContent(id);
+    await _repository.save(item.copyWith(title: trimmed));
+    ref.invalidate(contentItemProvider(id));
     await refresh();
   }
 

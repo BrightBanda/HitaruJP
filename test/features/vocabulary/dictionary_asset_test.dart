@@ -30,6 +30,42 @@ void main() {
     }
   });
 
+  test('covers everyday words, loanwords and inflected forms', () async {
+    final index = await const AssetDictionaryLoader().load();
+
+    for (final word in const [
+      '食べる',
+      'です',
+      'ます',
+      'こんにちは',
+      'すごい',
+      'かわいい',
+      'コーヒー',
+      'ありがとう',
+    ]) {
+      expect(index.lookup(word), isNotNull, reason: word);
+    }
+    // Common spellings open the everyday sense.
+    expect(index.lookup('私')?.reading, 'わたし');
+    expect(index.lookup('事')?.surface, 'こと');
+    expect(index.lookup('本')?.reading, 'ほん');
+    expect(index.lookup('なる')?.primaryMeaning, 'to become');
+
+    final inflected = {
+      '食べなかった': '食べる',
+      '行きます': '行く',
+      '行った': '行く',
+      '読んだ': '読む',
+      '楽しかった': '楽しい',
+      '分からない': 'わかる',
+      '見れる': '見る',
+      '言っちゃった': '言う',
+    };
+    inflected.forEach((word, base) {
+      expect(index.lookup(word)?.surface, base, reason: word);
+    });
+  });
+
   test('unknown words simply miss', () async {
     final index = await const AssetDictionaryLoader().load();
 

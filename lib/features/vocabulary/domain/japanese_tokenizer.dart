@@ -1,19 +1,39 @@
+import 'package:ingrain/features/vocabulary/domain/dictionary_index.dart';
+
 /// Splits Japanese text into tap-targetable tokens.
 ///
 /// There is no morphological analyser in the app, so segmentation is driven by
 /// the bundled dictionary: the longest known word starting at the cursor wins,
-/// which keeps compounds like 日本語 from being torn into 日本 + 語. Anything the
-/// dictionary does not know still becomes a token (a single kanji, a kana run,
-/// a latin word, a number), so every character on screen stays tappable.
+/// which keeps compounds like 日本語 from being torn into 日本 + 語, and an
+/// inflected word like 食べなかった whole. Anything the dictionary does not know
+/// still becomes a token (a single kanji, a kana run, a latin word, a number),
+/// so every character on screen stays tappable.
 class JapaneseTokenizer {
   JapaneseTokenizer(Set<String> knownWords)
-    : _knownWords = knownWords,
+    : _isWord = knownWords.contains,
       _maxWordLength = knownWords.fold<int>(
         0,
         (longest, word) => word.length > longest ? word.length : longest,
       );
 
-  final Set<String> _knownWords;
+  /// Recognises everything [dictionary] does, inflected forms included.
+  JapaneseTokenizer.dictionary(DictionaryIndex dictionary)
+    : _isWord = dictionary.isWord,
+      _maxWordLength = dictionary.maxWordLength == 0
+          ? 0
+          : (dictionary.maxWordLength + _inflectionAllowance).clamp(
+              0,
+              _maxCandidateLength,
+            );
+
+  /// Inflection can make a word longer than its dictionary form:
+  /// 食べる (3) → 食べさせられなかった (10).
+  static const _inflectionAllowance = 8;
+
+  /// Longer candidates are almost never words, and each one costs a lookup.
+  static const _maxCandidateLength = 16;
+
+  final bool Function(String) _isWord;
   final int _maxWordLength;
 
   int get maxWordLength => _maxWordLength;
@@ -71,7 +91,7 @@ class JapaneseTokenizer {
 
     for (var length = longest; length >= 1; length--) {
       final candidate = text.substring(index, index + length);
-      if (_knownWords.contains(candidate)) return candidate;
+      if (_isWord(candidate)) return candidate;
     }
     return null;
   }

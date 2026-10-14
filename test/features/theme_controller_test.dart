@@ -19,9 +19,7 @@ void main() {
     // store and auth providers at in-memory stand-ins — a real session must never
     // leak a broadcast stream that keeps the test binding alive.
     container = ProviderContainer(
-      overrides: [
-        ...appTestOverrides(prefs, session: session),
-      ],
+      overrides: [...appTestOverrides(prefs, session: session)],
     );
     addTearDown(container.dispose);
     addTearDown(session.dispose);
@@ -69,7 +67,9 @@ void main() {
 
       expect(container.read(themeControllerProvider), ThemeMode.dark);
 
-      final settings = await container.read(settingsRepositoryProvider).settings;
+      final settings = await container
+          .read(settingsRepositoryProvider)
+          .settings;
       expect(settings.themeMode, ThemeSetting.dark);
     });
 
@@ -84,7 +84,9 @@ void main() {
           .setMode(ThemeMode.system);
 
       expect(container.read(themeControllerProvider), ThemeMode.system);
-      final settings = await container.read(settingsRepositoryProvider).settings;
+      final settings = await container
+          .read(settingsRepositoryProvider)
+          .settings;
       expect(settings.themeMode, ThemeSetting.system);
     });
   });

@@ -12,8 +12,8 @@ class _AppLifecycleNotifier extends Notifier<AppLifecycleState> {
 
 final appLifecycleProvider =
     NotifierProvider<_AppLifecycleNotifier, AppLifecycleState>(
-  _AppLifecycleNotifier.new,
-);
+      _AppLifecycleNotifier.new,
+    );
 
 class _LifecycleObserver extends WidgetsBindingObserver {
   final void Function(AppLifecycleState) onChange;

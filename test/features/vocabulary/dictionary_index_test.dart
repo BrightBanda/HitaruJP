@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ingrain/features/vocabulary/data/asset_dictionary_loader.dart';
 import 'package:ingrain/features/vocabulary/domain/dictionary_index.dart';
+import 'package:ingrain/features/vocabulary/domain/japanese_tokenizer.dart';
 
 const _dictionaryJson = '''
 {
@@ -121,6 +122,98 @@ void main() {
       final loader = AssetDictionaryLoader(assetBundle: _StubBundle('{}'));
 
       expect((await loader.load()).length, 0);
+    });
+  });
+
+  group('DictionaryIndex compact format and inflections', () {
+    DictionaryIndex index() => DictionaryIndex.fromJson({
+      'format': 2,
+      'entries': [
+        [
+          '食べる',
+          'たべる',
+          ['to eat'],
+          'verb',
+          1,
+        ],
+        [
+          'わかる',
+          'わかる',
+          ['to understand'],
+          'verb',
+          2,
+          ['分かる'],
+        ],
+        [
+          '蛙',
+          'かえる',
+          ['frog'],
+          'noun',
+        ],
+        [
+          '帰る',
+          'かえる',
+          ['to return'],
+          'verb',
+          2,
+        ],
+        [
+          '勉強',
+          'べんきょう',
+          ['study'],
+          'noun',
+          512,
+        ],
+        [
+          '猫',
+          'ねこ',
+          ['cat'],
+          'noun',
+        ],
+        [
+          '高い',
+          'たかい',
+          ['high'],
+          'i-adjective',
+          16,
+        ],
+      ],
+    });
+
+    test('reads rows with alternative spellings', () {
+      expect(index().lookup('分かる')?.surface, 'わかる');
+      expect(index().lookup('ねこ')?.surface, '猫');
+    });
+
+    test('finds katakana words through their hiragana reading', () {
+      expect(index().lookup('ネコ')?.surface, '猫');
+    });
+
+    test('traces inflected words to the entry that conjugates that way', () {
+      final match = index().match('食べなかった')!;
+      expect(match.entry.surface, '食べる');
+      expect(match.inflected, isTrue);
+      expect(match.reading, 'たべなかった');
+
+      // かえった is 帰る; 蛙 the frog does not conjugate.
+      expect(index().lookup('かえった')?.surface, '帰る');
+      expect(index().match('分からない')?.reading, 'わからない');
+      expect(index().match('高くて')?.entry.surface, '高い');
+    });
+
+    test('recognises suru nouns with an inflected する', () {
+      final match = index().match('勉強しました')!;
+      expect(match.entry.surface, '勉強する');
+      expect(match.entry.primaryMeaning, 'study');
+      expect(match.reading, 'べんきょうしました');
+    });
+
+    test('isWord drives the tokenizer, inflections included', () {
+      final tokenizer = JapaneseTokenizer.dictionary(index());
+      expect(tokenizer.tokenize('猫は食べなかった'), ['猫', 'は', '食べなかった']);
+      expect(index().isWord('ネコ'), isTrue);
+      // Mixed scripts are not folded: は + コ is not はこ.
+      expect(index().isWord('はコ'), isFalse);
     });
   });
 }

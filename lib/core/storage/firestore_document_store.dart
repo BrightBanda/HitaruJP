@@ -92,7 +92,9 @@ class FirestoreDocumentStore implements DocumentStore {
     String uid,
     String collection,
   ) async {
-    final snapshot = await _firestore.collection(collectionPath(uid, collection)).get();
+    final snapshot = await _firestore
+        .collection(collectionPath(uid, collection))
+        .get();
     return snapshot.docs
         .map((doc) => doc.data())
         .whereType<Map<String, dynamic>>()

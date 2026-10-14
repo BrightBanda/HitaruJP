@@ -1,23 +1,24 @@
 #!/usr/bin/env python3
 """Regenerates assets/data/dictionary.json.
 
-Builds a curated Japanese dictionary subset for the ingrain MVP from JMdict:
+Builds the app's offline Japanese dictionary from JMdict:
 
-1. Fetch JMdict_e.gz from EDRDG and parse it into surface -> entry records
-   (reading, part of speech, English glosses).
-2. Order the candidates so the subset is useful for real material:
-   - words that actually appear in Japanese subtitles come first, by
-     descending frequency;
-   - the rest is filled with JMdict's most common vocabulary band, grouped by
-     word length so the everyday 1-2 character words lead.
-3. Emit the first N entries as JSON. Selection is deterministic: the same
-   inputs always produce the same file.
+1. Fetch JMdict_e.gz from EDRDG and parse every entry: all its spellings, its
+   readings, English glosses, a display part of speech and its conjugation
+   class (ichidan, godan, suru, kuru, i-adjective, copula, suru-noun).
+2. Keep every entry JMdict marks as common, plus entries whose spellings
+   appear in Japanese subtitles, ordered most common first. The order matters:
+   when two entries share a spelling or reading, the app resolves it to the
+   first one.
+3. Emit them in a compact array format (format 2) that the app decodes on a
+   background isolate. The conjugation class lets the app turn inflected
+   forms (食べなかった, 行きます) back into their dictionary form.
 
 The output keeps the JMdict/EDICT CC BY-SA 4.0 attribution inside `meta`; the
 same credit is shown in the app's Settings screen.
 
 Usage:
-    python3 tool/build_dictionary.py [--limit 3000] [--cache-dir .cache]
+    python3 tool/build_dictionary.py [--frequency-limit 20000] [--cache-dir .cache]
 
 Downloads are cached, so re-running is cheap. If a download fails the script
 exits non-zero and the existing asset is left untouched.
@@ -53,7 +54,6 @@ META = {
 }
 
 MAX_GLOSSES = 3
-LENGTH_BUCKETS = 6
 
 # The bundled JMdict XML expands its entity references to readable labels such
 # as "noun (common) (futsuumeishi)", so parts of speech are matched by their
@@ -65,7 +65,9 @@ POS_LABELS = {
     "godan verb": "verb",
     "nidan verb": "verb",
     "verb": "verb",
+    "kuru verb": "verb",
     "i-adjective": "i-adjective",
+    "adjective": "i-adjective",
     "adjectival": "i-adjective",
     "na-adjective": "na-adjective",
     "adjectival nouns": "na-adjective",
@@ -100,14 +102,27 @@ POS_RANK = {
     "suffix": 12,
 }
 
-# JMdict priority bands, best first.
-COMMON_PRIORITIES = {"ichi1", "news1"}
-SECOND_PRIORITIES = {"ichi2", "news2"}
+# JMdict's own definition of a common word, then its second band.
+COMMON_PRIORITIES = {"ichi1", "news1", "spec1", "spec2", "gai1"}
+SECOND_PRIORITIES = {"ichi2", "news2", "gai2"}
 DEFAULT_NEWS_RANK = 99
-# How many common-vocabulary words are interleaved per subtitle-frequency word.
-# The frequency list tokenises everyday words out of existence (猫, 食べる,
-# 見る are all absent), so JMdict's common band is weighted higher.
-COMMON_WEIGHT = 2
+DEFAULT_FREQUENCY_RANK = 10**9
+FORMAT_VERSION = 2
+
+# Conjugation classes, as bit flags shared with the app's Deinflector.
+CONJ_ICHIDAN = 1
+CONJ_GODAN = 2
+CONJ_KURU = 4
+CONJ_SURU = 8
+CONJ_I_ADJECTIVE = 16
+CONJ_COPULA = 32
+CONJ_SURU_NOUN = 512
+
+USUALLY_KANA = "word usually written using kana alone"
+
+# Grammar words are kept whatever their frequency tags say: a subtitle line
+# is full of them, and ます or particles are rarely tagged as common.
+GRAMMAR_POS_PREFIXES = ("particle", "auxiliary", "copula")
 
 HALFWIDTH_KATAKANA_START = 0xFF61
 HALFWIDTH_KATAKANA_END = 0xFF9F
@@ -204,11 +219,27 @@ def _text(element: ElementTree.Element | None) -> str:
 
 
 def _pos_label(element: ElementTree.Element) -> str:
-    """Maps a JMdict <pos> element to one of the labels above."""
+    """Maps a JMdict <pos> element to one of the labels above.
+
+    Labels are matched by prefix, longest first, so "Godan verb with 'ru'
+    ending" maps to "godan verb" rather than nothing.
+    """
     head = _text(element).split("(")[0].strip().lower()
     if not head:
         return ""
-    return POS_LABELS.get(head, POS_LABELS.get(head.split()[0], ""))
+    for key in _POS_KEYS_LONGEST_FIRST:
+        if head.startswith(key):
+            return POS_LABELS[key]
+    return ""
+
+
+_POS_KEYS_LONGEST_FIRST = sorted(POS_LABELS, key=len, reverse=True)
+
+
+def _is_marked(sense: ElementTree.Element) -> bool:
+    """Archaic, slang, rare and similar senses. "Usually kana" is a spelling
+    note, not a marker, so it never demotes a sense."""
+    return any(_text(misc) != USUALLY_KANA for misc in sense.findall("misc"))
 
 
 def _priorities_for(entry: ElementTree.Element) -> set[str]:
@@ -219,8 +250,16 @@ def _priorities_for(entry: ElementTree.Element) -> set[str]:
     }
 
 
-def _priority_band(entry: ElementTree.Element) -> int:
-    priorities = _priorities_for(entry)
+def _commonness(priorities: set[str]) -> int:
+    """How many independent lists call the entry common; more is commoner.
+
+    ichi1 (the Ichimango everyday word list) counts double: it is what keeps
+    居る "to be" ahead of 要る "to need" for いる.
+    """
+    return len(priorities & COMMON_PRIORITIES) + ("ichi1" in priorities)
+
+
+def _priority_band(priorities: set[str]) -> int:
     if priorities & COMMON_PRIORITIES:
         return 0
     if priorities & SECOND_PRIORITIES:
@@ -228,11 +267,11 @@ def _priority_band(entry: ElementTree.Element) -> int:
     return 2
 
 
-def _news_rank(entry: ElementTree.Element) -> int:
+def _news_rank(priorities: set[str]) -> int:
     """JMdict's news-frequency rank (nf01 is the most common)."""
     ranks = [
         int(priority[2:])
-        for priority in _priorities_for(entry)
+        for priority in priorities
         if priority.startswith("nf") and priority[2:].isdigit()
     ]
     return min(ranks) if ranks else DEFAULT_NEWS_RANK
@@ -246,26 +285,71 @@ def _sequence(entry: ElementTree.Element) -> int:
 
 
 def _readings_for(entry: ElementTree.Element) -> list[str]:
-    """Full readings for the entry, hiragana, in source order."""
+    """Readings in source order, in the script JMdict writes them in.
+
+    Katakana stays katakana: コーヒー must match コーヒー in a subtitle. The app
+    folds katakana to hiragana itself when it indexes readings.
+    """
     readings = []
     for r_ele in entry.findall("r_ele"):
-        reading = _text(r_ele.find("reb")) or _text(r_ele.find("rb"))
-        if reading:
-            readings.append(to_hiragana(reading))
+        reading = to_fullwidth_kana(_text(r_ele.find("reb")))
+        if reading and reading not in readings:
+            readings.append(reading)
     return readings
 
 
-def _surfaces_for(entry: ElementTree.Element, readings: list[str]) -> list[str]:
-    """Every spelling of the entry, including its kana form."""
-    surfaces: list[str] = []
+def _kanji_forms_for(entry: ElementTree.Element) -> list[str]:
+    forms = []
     for k_ele in entry.findall("k_ele"):
-        for keb in k_ele.findall("keb"):
-            surface = to_fullwidth_kana(_text(keb))
-            if surface and is_japanese(surface):
-                surfaces.append(surface)
-    if not surfaces and readings and is_japanese(readings[0]):
-        surfaces.append(readings[0])
-    return surfaces
+        form = to_fullwidth_kana(_text(k_ele.find("keb")))
+        if form and is_japanese(form) and form not in forms:
+            forms.append(form)
+    return forms
+
+
+def _conjugation_for(entry: ElementTree.Element) -> int:
+    """Every conjugation class any sense of the entry has."""
+    mask = 0
+    for pos in entry.iter("pos"):
+        label = _text(pos).lower()
+        if label.startswith("ichidan verb") and "zuru" not in label:
+            mask |= CONJ_ICHIDAN
+        elif label.startswith("godan verb"):
+            mask |= CONJ_GODAN
+        elif label.startswith("kuru verb"):
+            mask |= CONJ_KURU
+        elif label.startswith(("suru verb - included", "suru verb - special")):
+            mask |= CONJ_SURU
+        elif label.startswith("adjective (keiyoushi)") or label == (
+            "auxiliary adjective"
+        ):
+            mask |= CONJ_I_ADJECTIVE
+        elif label == "copula":
+            mask |= CONJ_COPULA
+        elif label.startswith("noun or participle which takes the aux. verb suru"):
+            mask |= CONJ_SURU_NOUN
+    return mask
+
+
+def _is_grammar_word(entry: ElementTree.Element) -> bool:
+    return any(
+        _text(pos).lower().startswith(GRAMMAR_POS_PREFIXES)
+        for pos in entry.iter("pos")
+    )
+
+
+def _is_kana(text: str) -> bool:
+    return all(
+        0x3040 <= ord(ch) <= 0x30FF or HALFWIDTH_START <= ord(ch) <= HALFWIDTH_END
+        for ch in text
+    )
+
+
+def _usually_kana(entry: ElementTree.Element) -> bool:
+    first = entry.find("sense")
+    return first is not None and any(
+        _text(misc) == USUALLY_KANA for misc in first.findall("misc")
+    )
 
 
 def _senses_for(entry: ElementTree.Element) -> tuple[int, str, list[str]]:
@@ -278,50 +362,32 @@ def _senses_for(entry: ElementTree.Element) -> tuple[int, str, list[str]]:
     suffix is downgraded, which keeps 人 on "person" rather than its rare
     "-ian" suffix reading while leaving verb and adjective entries alone.
     """
-    unmarked: list[str] = []
-    fallback: list[str] = []
-
+    # A sense without <pos> inherits the previous sense's.
+    senses: list[tuple[list[str], list[str], bool]] = []
+    inherited: list[str] = []
     for sense in entry.findall("sense"):
+        own = [_pos_label(pos) for pos in sense.findall("pos")]
+        if sense.findall("pos"):
+            inherited = [label for label in own if label]
         glosses = [
             _text(gloss) for gloss in sense.findall("gloss") if _text(gloss)
         ]
-        if not glosses:
-            continue
-        if sense.findall("misc"):
-            fallback = fallback or glosses
-            continue
-        if not unmarked:
-            unmarked = glosses
+        if glosses:
+            senses.append((glosses, inherited, _is_marked(sense)))
 
-    meanings = unmarked or fallback
-    if not meanings:
+    if not senses:
         return (len(POS_RANK), "", [])
-
-    label = ""
-    rank = 0
-    for sense in entry.findall("sense"):
-        if sense.findall("misc"):
-            continue
-        glosses = [_text(gloss) for gloss in sense.findall("gloss")]
-        if not any(gloss and gloss in meanings for gloss in glosses):
-            continue
-        labels = [
-            value
-            for value in (_pos_label(pos) for pos in sense.findall("pos"))
-            if value
-        ]
-        if labels:
-            label = labels[0]
-            rank = 1 if label in AFFIX_LABELS else 0
-        break
-
+    chosen = next((s for s in senses if not s[2]), senses[0])
+    meanings, labels, _ = chosen
+    label = labels[0] if labels else ""
+    rank = 1 if label in AFFIX_LABELS else 0
     return (rank, label, meanings[:MAX_GLOSSES])
 
 
-def parse_jmdict(cache_dir: Path) -> dict[str, dict]:
-    """Returns surface -> {reading, pos, meanings, band, rank}."""
+def parse_jmdict(cache_dir: Path) -> list[dict]:
+    """Every JMdict entry that has an English meaning."""
     path = download(JMDICT_URLS, cache_dir)
-    entries: dict[str, dict] = {}
+    records: list[dict] = []
 
     with gzip.open(path, "rb") as stream:
         context = ElementTree.iterparse(stream, events=("start", "end"))
@@ -330,100 +396,170 @@ def parse_jmdict(cache_dir: Path) -> dict[str, dict]:
             if event != "end" or element.tag != "entry":
                 continue
 
-            rank, label, meanings = _senses_for(element)
-            if meanings:
-                readings = _readings_for(element)
-                reading = readings[0] if readings else ""
-                band = _priority_band(element)
-                record = {
-                    "reading": reading,
-                    "pos": label,
-                    "meanings": meanings,
-                    "band": band,
-                    "rank": rank,
-                    "newsRank": _news_rank(element),
-                    "sequence": _sequence(element),
-                }
-                for surface in _surfaces_for(element, readings):
-                    existing = entries.get(surface)
-                    # The most common band, then the most useful part of
-                    # speech, then the source ordering decides which sense a
-                    # spelling resolves to.
-                    if existing is None or (band, rank, record["sequence"]) < (
-                        existing["band"],
-                        existing["rank"],
-                        existing["sequence"],
-                    ):
-                        entries[surface] = record
+            affix_rank, label, meanings = _senses_for(element)
+            readings = _readings_for(element)
+            kanji = _kanji_forms_for(element)
+            if meanings and readings:
+                priorities = _priorities_for(element)
+                kana_first = _usually_kana(element) or not kanji
+                if kana_first:
+                    # Written in kana in practice, so every kana spelling is
+                    # something a subtitle may contain; kanji spellings still
+                    # resolve to it.
+                    surface = readings[0]
+                    forms = readings[1:] + kanji
+                    other_readings = []
+                else:
+                    surface = kanji[0]
+                    forms = kanji[1:]
+                    other_readings = readings[1:]
+                records.append(
+                    {
+                        "surface": surface,
+                        "reading": readings[0],
+                        "forms": forms,
+                        "readings": other_readings,
+                        "kanaFirst": kana_first,
+                        "grammar": _is_grammar_word(element),
+                        "pos": label,
+                        "meanings": meanings,
+                        "conjugation": _conjugation_for(element),
+                        "band": _priority_band(priorities),
+                        "affixRank": affix_rank,
+                        "commonness": _commonness(priorities),
+                        "newsRank": _news_rank(priorities),
+                        "sequence": _sequence(element),
+                        "senseCount": len(element.findall("sense")),
+                    }
+                )
             element.clear()
             root.clear()
 
-    return entries
+    return records
 
 
-def select(entries: dict[str, dict], frequent: list[str], limit: int) -> list[str]:
-    """Interleaves real subtitle words with JMdict's common vocabulary.
+def select(records: list[dict], frequent: list[str], frequency_limit: int) -> list[dict]:
+    """Common entries plus entries met in subtitles, most common first.
 
-    The subtitle frequency list alone misses everyday words its tokeniser split
-    away (猫, 食べる, 見る), while JMdict's news band alone misses colloquial
-    material, so the two sources are woven together at a 1:2 ratio rather than
-    one crowding the other out.
+    JMdict's common band covers everyday and news vocabulary; the subtitle
+    list adds the colloquial words that band misses. Ordering by band and
+    then by subtitle frequency means a shared spelling resolves to the
+    everyday sense.
     """
-    in_frequency = [
-        surface for surface in frequent if surface in entries
-    ][:limit]
+    rank_of = {
+        surface: rank for rank, surface in enumerate(frequent[:frequency_limit])
+    }
 
-    seen = set(in_frequency)
-    by_commonness = sorted(
-        (surface for surface in entries if surface not in seen),
-        key=lambda surface: (
-            entries[surface]["band"],
-            entries[surface]["newsRank"],
-            min(len(surface), LENGTH_BUCKETS),
-            surface,
-        ),
-    )[:limit]
+    chosen = []
+    for record in records:
+        # The main spelling's frequency ranks first: あなた the pronoun must
+        # beat 彼方, which merely lists あなた as a rare alternative.
+        primary = rank_of.get(record["surface"], DEFAULT_FREQUENCY_RANK)
+        alternative = min(
+            (rank_of[form] for form in record["forms"] if form in rank_of),
+            default=DEFAULT_FREQUENCY_RANK,
+        )
+        if (
+            record["band"] == 0
+            or record["grammar"]
+            or min(primary, alternative) != DEFAULT_FREQUENCY_RANK
+        ):
+            record["primaryRank"] = primary
+            record["alternativeRank"] = alternative
+            chosen.append(record)
 
-    ordered: list[str] = []
-    primary = 0
-    secondary = 0
-    while len(ordered) < limit and (
-        primary < len(in_frequency) or secondary < len(by_commonness)
-    ):
-        if primary < len(in_frequency) and len(ordered) < limit:
-            ordered.append(in_frequency[primary])
-            primary += 1
-        for _ in range(COMMON_WEIGHT):
-            if secondary < len(by_commonness) and len(ordered) < limit:
-                ordered.append(by_commonness[secondary])
-                secondary += 1
-    return ordered
+    chosen.sort(
+        key=lambda r: (
+            r["band"],
+            r["affixRank"],
+            # Coarse on purpose: past "on the everyday list", news tags say
+            # little (生る outranks 成る there), so sense count decides.
+            -min(r["commonness"], 2),
+            r["primaryRank"],
+            # A general word has many senses; 成る beats 生る for なる.
+            -r["senseCount"],
+            r["alternativeRank"],
+            r["newsRank"],
+            r["sequence"],
+        )
+    )
+    return chosen
 
 
-def build(limit: int, cache_dir: Path) -> dict:
+def assign_spellings(records: list[dict]) -> None:
+    """Leaves each alternative spelling only on the entry it should open.
+
+    A spelling stays an entry's primary surface regardless, but it may be an
+    alternative of several entries (本 is a rare spelling of 元). A spelling
+    has a strong claim when it is an entry's surface, or the kanji of a word
+    usually written in kana (事 for こと): those are how the word is really
+    written. Strong claims beat weak ones, then the more common entry wins.
+    So 事 opens こと while 本 still opens ほん. The app indexes alternatives
+    before primaries, so pruning the losers is all it needs.
+    """
+    users: dict[str, list[tuple[tuple, int]]] = {}
+    for order, record in enumerate(records):
+        for spelling, primary in [(record["surface"], True)] + [
+            (form, False) for form in record["forms"]
+        ]:
+            strong = primary or (
+                record["kanaFirst"] and not _is_kana(spelling)
+            )
+            key = (not strong, -record["commonness"], not primary, order)
+            users.setdefault(spelling, []).append((key, order))
+        # Readings compete for kana spellings too, though they are never kept
+        # as forms: はし is 橋's reading before it is a variant of くちばし.
+        for reading, primary in [(record["reading"], True)] + [
+            (other, False) for other in record["readings"]
+        ]:
+            key = (not primary, -record["commonness"], True, order)
+            users.setdefault(reading, []).append((key, -1))
+
+    owner = {spelling: min(entries)[1] for spelling, entries in users.items()}
+    for order, record in enumerate(records):
+        record["forms"] = [
+            form for form in record["forms"] if owner[form] == order
+        ]
+
+
+def _compact(record: dict) -> list:
+    """[surface, reading, meanings, pos, conjugation, forms, readings].
+
+    Trailing empty fields are dropped to keep the asset small.
+    """
+    row = [
+        record["surface"],
+        record["reading"],
+        record["meanings"],
+        record["pos"],
+        record["conjugation"],
+        record["forms"],
+        record["readings"],
+    ]
+    while row and row[-1] in ([], "", 0):
+        row.pop()
+    return row
+
+
+def build(frequency_limit: int, cache_dir: Path) -> dict:
     frequent = read_frequency(cache_dir)
-    entries = parse_jmdict(cache_dir)
-
-    output: list[dict] = []
-    for surface in select(entries, frequent, limit):
-        record = entries[surface]
-        entry = {
-            "surface": surface,
-            "reading": record["reading"] or surface,
-            "meanings": record["meanings"],
-        }
-        if record["pos"]:
-            entry["pos"] = record["pos"]
-        output.append(entry)
+    chosen = select(parse_jmdict(cache_dir), frequent, frequency_limit)
+    assign_spellings(chosen)
+    output = [_compact(r) for r in chosen]
 
     meta = dict(META)
     meta["entryCount"] = len(output)
-    return {"meta": meta, "entries": output}
+    return {"meta": meta, "format": FORMAT_VERSION, "entries": output}
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--limit", type=int, default=8000)
+    parser.add_argument(
+        "--frequency-limit",
+        type=int,
+        default=20000,
+        help="How many of the most frequent subtitle words to cover",
+    )
     parser.add_argument(
         "--cache-dir",
         default=".cache",
@@ -437,7 +573,7 @@ def main() -> int:
     args = parser.parse_args()
 
     try:
-        payload = build(args.limit, Path(args.cache_dir))
+        payload = build(args.frequency_limit, Path(args.cache_dir))
     except Exception as error:  # noqa: BLE001 - surface a clean CLI failure
         print(f"error: {error}", file=sys.stderr)
         return 1

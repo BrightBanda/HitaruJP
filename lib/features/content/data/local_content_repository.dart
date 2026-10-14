@@ -100,7 +100,8 @@ class LocalContentRepository implements ContentRepository {
   @override
   Future<void> delete(String id) async {
     final uid = await _auth.ensureUid();
-    await _store.deleteDoc(uid, collection, id);
+    // The transcript is a sibling document; leaving it would orphan it.
+    await _store.deleteDocs(uid, collection, [id, transcriptDocId(id)]);
   }
 
   @override

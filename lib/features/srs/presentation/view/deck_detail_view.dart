@@ -5,6 +5,7 @@ import 'package:ingrain/features/sentence_mining/presentation/viewmodel/sentence
 import 'package:ingrain/features/srs/domain/deck.dart';
 import 'package:ingrain/features/srs/domain/review_card.dart';
 import 'package:ingrain/features/srs/presentation/viewmodel/review_view_model.dart';
+import 'package:ingrain/features/vocabulary/presentation/viewmodel/vocabulary_view_model.dart';
 import 'package:ingrain/shared/widgets/colorful.dart';
 
 /// One deck: its counts, a study button, and its cards.
@@ -113,16 +114,20 @@ class DeckDetailView extends ConsumerWidget {
           'The mined sentence and its card are deleted. This cannot be '
               'undone.',
         CardType.vocabulary =>
-          'The card stops coming up for review. The word stays in Vocab.',
+          'The saved word and its card are deleted. This cannot be undone.',
       },
     );
     if (!confirmed) return;
-    // A mined sentence lives only here now, so deleting its card deletes it;
-    // a word still has the Vocab list, so only its card goes.
+    // Mined sentences and saved words live only here now, so deleting their
+    // card deletes them too.
     if (card.cardType == CardType.sentence) {
       await ref
           .read(sentenceMiningViewModelProvider.notifier)
           .deleteSentence(card.sourceItemId);
+    } else if (card.cardType == CardType.vocabulary) {
+      await ref
+          .read(vocabularyViewModelProvider.notifier)
+          .deleteWord(card.sourceItemId);
     } else {
       await ref.read(deckRepositoryProvider).deleteCard(card);
     }

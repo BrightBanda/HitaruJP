@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ingrain/app/theme/app_colors.dart';
+import 'package:ingrain/features/ai/domain/ai_explanation.dart';
+import 'package:ingrain/features/ai/presentation/ai_explanation_providers.dart';
 import 'package:ingrain/features/content/domain/content_item.dart';
 import 'package:ingrain/features/dialogue/domain/dialogue.dart';
 import 'package:ingrain/features/dialogue/presentation/viewmodel/dialogue_providers.dart';
@@ -18,13 +20,24 @@ import 'package:ingrain/features/settings/presentation/viewmodel/settings_view_m
 import 'package:ingrain/shared/widgets/colorful.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class DialogueReaderView extends ConsumerWidget {
+class DialogueReaderView extends ConsumerStatefulWidget {
   final String dialogueId;
 
   const DialogueReaderView({super.key, required this.dialogueId});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DialogueReaderView> createState() => _DialogueReaderViewState();
+}
+
+class _DialogueReaderViewState extends ConsumerState<DialogueReaderView> {
+  /// Whether each line shows its English translation. Off by default: a
+  /// translation is an AI request, so none are made until the learner asks.
+  bool _showTranslation = false;
+
+  String get dialogueId => widget.dialogueId;
+
+  @override
+  Widget build(BuildContext context) {
     final dialogueAsync = ref.watch(
       dialogueReaderViewModelProvider(dialogueId),
     );
@@ -38,13 +51,6 @@ class DialogueReaderView extends ConsumerWidget {
             ? const Text('Dialogue')
             : Text(dialogueAsync.asData!.value.title),
         actions: [
-          IconButton(
-            tooltip: showRomaji ? 'Hide romaji' : 'Show romaji',
-            icon: Icon(showRomaji ? Icons.translate : Icons.translate_outlined),
-            onPressed: () => ref
-                .read(settingsViewModelProvider.notifier)
-                .setShowRomaji(!showRomaji),
-          ),
           if (dialogueAsync.asData?.value.source.url != null)
             IconButton(
               tooltip: 'Open source',
@@ -81,23 +87,54 @@ class DialogueReaderView extends ConsumerWidget {
             children: [
               if (isCached) const _CachedDialogueNotice(),
               Expanded(
-                child: ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
-                  itemCount: dialogue.lines.length + 1,
-                  separatorBuilder: (_, index) =>
-                      SizedBox(height: index == 0 ? 20 : 12),
-                  itemBuilder: (context, index) {
-                    if (index == 0) return _DialogueHeader(dialogue: dialogue);
-                    final line = dialogue.lines[index - 1];
-                    return _DialogueLineCard(
-                      dialogue: dialogue,
-                      line: line,
-                      showRomaji: showRomaji,
-                      onTokenTap: (token) =>
-                          _openLookup(context, ref, dialogue, line, token),
-                      onMine: () => _mineLine(context, ref, dialogue, line),
-                    );
-                  },
+                child: CustomScrollView(
+                  slivers: [
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                      sliver: SliverToBoxAdapter(
+                        child: _DialogueHeader(dialogue: dialogue),
+                      ),
+                    ),
+                    // Stays under the app bar while the lines scroll past.
+                    SliverPersistentHeader(
+                      pinned: true,
+                      delegate: _ReaderOptionsBar(
+                        showRomaji: showRomaji,
+                        showTranslation: _showTranslation,
+                        onRomaji: () => ref
+                            .read(settingsViewModelProvider.notifier)
+                            .setShowRomaji(!showRomaji),
+                        onTranslation: () => setState(
+                          () => _showTranslation = !_showTranslation,
+                        ),
+                      ),
+                    ),
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+                      sliver: SliverList.separated(
+                        itemCount: dialogue.lines.length,
+                        separatorBuilder: (_, _) => const SizedBox(height: 12),
+                        itemBuilder: (context, index) {
+                          final line = dialogue.lines[index];
+                          return _DialogueLineCard(
+                            dialogue: dialogue,
+                            line: line,
+                            showRomaji: showRomaji,
+                            showTranslation: _showTranslation,
+                            onTokenTap: (token) => _openLookup(
+                              context,
+                              ref,
+                              dialogue,
+                              line,
+                              token,
+                            ),
+                            onMine: () =>
+                                _mineLine(context, ref, dialogue, line),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -302,6 +339,7 @@ class _DialogueLineCard extends StatelessWidget {
   final Dialogue dialogue;
   final DialogueLine line;
   final bool showRomaji;
+  final bool showTranslation;
   final ValueChanged<DialogueToken> onTokenTap;
   final VoidCallback onMine;
 
@@ -309,6 +347,7 @@ class _DialogueLineCard extends StatelessWidget {
     required this.dialogue,
     required this.line,
     required this.showRomaji,
+    required this.showTranslation,
     required this.onTokenTap,
     required this.onMine,
   });
@@ -349,6 +388,11 @@ class _DialogueLineCard extends StatelessWidget {
               ),
             ],
           ),
+          if (showTranslation)
+            Padding(
+              padding: const EdgeInsets.only(top: 6, right: 10),
+              child: _LineTranslation(text: line.text),
+            ),
         ],
       ),
     );
@@ -370,4 +414,106 @@ class _CachedDialogueNotice extends StatelessWidget {
     leading: Icon(Icons.cloud_off_outlined),
     actions: [SizedBox.shrink()],
   );
+}
+
+/// The romaji and translation switches, pinned under the app bar.
+class _ReaderOptionsBar extends SliverPersistentHeaderDelegate {
+  final bool showRomaji;
+  final bool showTranslation;
+  final VoidCallback onRomaji;
+  final VoidCallback onTranslation;
+
+  const _ReaderOptionsBar({
+    required this.showRomaji,
+    required this.showTranslation,
+    required this.onRomaji,
+    required this.onTranslation,
+  });
+
+  static const _height = 52.0;
+
+  @override
+  double get minExtent => _height;
+
+  @override
+  double get maxExtent => _height;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    final theme = Theme.of(context);
+    return Material(
+      color: theme.scaffoldBackgroundColor,
+      elevation: overlapsContent ? 2 : 0,
+      child: SizedBox(
+        height: _height,
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            children: [
+              FilterChip(
+                avatar: const Icon(Icons.translate, size: 18),
+                label: const Text('Romaji'),
+                selected: showRomaji,
+                onSelected: (_) => onRomaji(),
+              ),
+              const SizedBox(width: 8),
+              FilterChip(
+                avatar: const Icon(Icons.subtitles_outlined, size: 18),
+                label: Text(
+                  showTranslation ? 'Hide translation' : 'See translation',
+                ),
+                selected: showTranslation,
+                onSelected: (_) => onTranslation(),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  bool shouldRebuild(_ReaderOptionsBar old) =>
+      old.showRomaji != showRomaji || old.showTranslation != showTranslation;
+}
+
+/// One line's translation, fetched when it first scrolls into view.
+class _LineTranslation extends ConsumerWidget {
+  final String text;
+
+  const _LineTranslation({required this.text});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final request = (text: text, kind: ExplainKind.sentence, context: null);
+    final style = theme.textTheme.bodySmall?.copyWith(
+      fontStyle: FontStyle.italic,
+      color: theme.colorScheme.onSurface.withValues(alpha: 0.75),
+    );
+    return ref
+        .watch(aiExplanationProvider(request))
+        .when(
+          skipLoadingOnRefresh: false,
+          loading: () => const SizedBox(
+            height: 14,
+            width: 14,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+          error: (_, _) => Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: () => ref.invalidate(aiExplanationProvider(request)),
+              icon: const Icon(Icons.refresh, size: 16),
+              label: const Text('Translation failed, retry'),
+            ),
+          ),
+          data: (explanation) => Text(explanation.translation, style: style),
+        );
+  }
 }

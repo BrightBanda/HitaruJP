@@ -18,15 +18,18 @@ void main() {
       expect('/'.allMatches(path).length, 3);
     });
 
-    test('the composite transcript id stays one document in contentHistory', () {
-      final docId = LocalContentRepository.transcriptDocId('dQw4w9WgXcQ');
-      expect(docId, 'dQw4w9WgXcQ__transcript');
-      expect(
-        documentPath('user-1', 'contentHistory', docId),
-        'users/user-1/contentHistory/dQw4w9WgXcQ__transcript',
-      );
-      expect('/'.allMatches(docId).length, 0);
-    });
+    test(
+      'the composite transcript id stays one document in contentHistory',
+      () {
+        final docId = LocalContentRepository.transcriptDocId('dQw4w9WgXcQ');
+        expect(docId, 'dQw4w9WgXcQ__transcript');
+        expect(
+          documentPath('user-1', 'contentHistory', docId),
+          'users/user-1/contentHistory/dQw4w9WgXcQ__transcript',
+        );
+        expect('/'.allMatches(docId).length, 0);
+      },
+    );
 
     test('distinct content ids cannot collide on one transcript document', () {
       expect(
@@ -38,7 +41,10 @@ void main() {
 
   group('collectionPath', () {
     test('lists a whole collection for one user', () {
-      expect(collectionPath('user-1', 'reviewCards'), 'users/user-1/reviewCards');
+      expect(
+        collectionPath('user-1', 'reviewCards'),
+        'users/user-1/reviewCards',
+      );
     });
   });
 
@@ -62,13 +68,15 @@ void main() {
 
     test('rejects a DateTime and names the field', () {
       expect(
-        () => assertFirestoreSafe({
-          'lastOpenedAt': DateTime(2026, 3, 15),
-        }),
+        () => assertFirestoreSafe({'lastOpenedAt': DateTime(2026, 3, 15)}),
         throwsA(
           isA<ArgumentError>()
               .having((e) => e.name, 'name', 'value.lastOpenedAt')
-              .having((e) => e.message.toString(), 'message', contains('DateTime')),
+              .having(
+                (e) => e.message.toString(),
+                'message',
+                contains('DateTime'),
+              ),
         ),
       );
     });

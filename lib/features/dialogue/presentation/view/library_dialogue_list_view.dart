@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ingrain/app/theme/app_colors.dart';
 import 'package:ingrain/features/content/presentation/view/add_content_type.dart';
+import 'package:ingrain/features/dialogue/data/user_dialogue_repository.dart';
 import 'package:ingrain/features/dialogue/domain/dialogue.dart';
 import 'package:ingrain/features/dialogue/presentation/viewmodel/dialogue_providers.dart';
 import 'package:ingrain/shared/widgets/colorful.dart';
@@ -12,7 +13,19 @@ const nhkEasyJapaneseUrl =
     'https://www3.nhk.or.jp/nhkworld/en/shows/easyjapanese';
 
 class LibraryDialogueListView extends ConsumerWidget {
-  const LibraryDialogueListView({super.key});
+  /// Ids picked in the Library's edit mode, or null outside it.
+  final Set<String>? selectedIds;
+  final ValueChanged<String>? onToggle;
+
+  /// A long press on one of the learner's own dialogues starts edit mode.
+  final ValueChanged<String>? onStartEditing;
+
+  const LibraryDialogueListView({
+    super.key,
+    this.selectedIds,
+    this.onToggle,
+    this.onStartEditing,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -36,8 +49,23 @@ class LibraryDialogueListView extends ConsumerWidget {
                           mainAxisExtent: 136,
                         ),
                     itemCount: items.length,
-                    itemBuilder: (context, index) =>
-                        DialogueSummaryCard(dialogue: items[index]),
+                    itemBuilder: (context, index) {
+                      final dialogue = items[index];
+                      final own = UserDialogueRepository.isUserDialogueId(
+                        dialogue.id,
+                      );
+                      final selected = selectedIds;
+                      return DialogueSummaryCard(
+                        dialogue: dialogue,
+                        editing: selected != null,
+                        editable: own,
+                        selected: selected?.contains(dialogue.id) ?? false,
+                        onToggle: () => onToggle?.call(dialogue.id),
+                        onLongPress: () => own
+                            ? onStartEditing?.call(dialogue.id)
+                            : _explainLocked(context),
+                      );
+                    },
                   ),
           ),
         ],
@@ -50,6 +78,16 @@ class LibraryDialogueListView extends ConsumerWidget {
         message: error.toString(),
       ),
     );
+  }
+
+  static void _explainLocked(BuildContext context) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        const SnackBar(
+          content: Text('Only dialogues you wrote can be edited or deleted'),
+        ),
+      );
   }
 
   static Future<void> _openNhk(BuildContext context) async {
@@ -74,7 +112,23 @@ class LibraryDialogueListView extends ConsumerWidget {
 class DialogueSummaryCard extends StatelessWidget {
   final DialogueSummary dialogue;
 
-  const DialogueSummaryCard({super.key, required this.dialogue});
+  /// In edit mode a tap toggles selection instead of opening the dialogue,
+  /// and dialogues that cannot be edited are dimmed.
+  final bool editing;
+  final bool editable;
+  final bool selected;
+  final VoidCallback? onToggle;
+  final VoidCallback? onLongPress;
+
+  const DialogueSummaryCard({
+    super.key,
+    required this.dialogue,
+    this.editing = false,
+    this.editable = false,
+    this.selected = false,
+    this.onToggle,
+    this.onLongPress,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -82,12 +136,21 @@ class DialogueSummaryCard extends StatelessWidget {
     final isStory = dialogue.kind == DialogueKind.story;
     const accent = AppColors.primaryMain;
 
-    return Card(
+    final card = Card(
       margin: EdgeInsets.zero,
-      color: accent.withValues(alpha: 0.1),
+      color: accent.withValues(alpha: selected ? 0.2 : 0.1),
+      shape: selected
+          ? RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
+              side: const BorderSide(color: accent, width: 1.5),
+            )
+          : null,
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () => context.push('/dialogues/${dialogue.id}'),
+        onTap: editing
+            ? (editable ? onToggle : null)
+            : () => context.push('/dialogues/${dialogue.id}'),
+        onLongPress: editing ? null : onLongPress,
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: Column(
@@ -96,7 +159,15 @@ class DialogueSummaryCard extends StatelessWidget {
               Row(
                 children: [
                   Icon(
-                    isStory ? Icons.menu_book_outlined : Icons.forum_outlined,
+                    editing && editable
+                        ? (selected
+                              ? Icons.check_circle
+                              : Icons.radio_button_unchecked)
+                        : editing
+                        ? Icons.lock_outline
+                        : isStory
+                        ? Icons.menu_book_outlined
+                        : Icons.forum_outlined,
                     color: accent,
                     size: 20,
                   ),
@@ -140,6 +211,7 @@ class DialogueSummaryCard extends StatelessWidget {
         ),
       ),
     );
+    return editing && !editable ? Opacity(opacity: 0.45, child: card) : card;
   }
 }
 

@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:ingrain/app/theme/app_colors.dart';
@@ -46,6 +48,21 @@ class TranscriptView extends ConsumerStatefulWidget {
   final String? contentId;
 
   const TranscriptView({super.key, this.contentId});
+
+  static const _fontSize = 14.0;
+  static const _lineVerticalPadding = 6.0;
+  static const _lineGap = 2.0;
+  static const _listVerticalPadding = 4.0;
+  static const _mineButtonSize = 28.0;
+
+  /// Height that shows [rows] single-line transcript lines at the current
+  /// text size. Lines that wrap simply take more of it.
+  static double heightForRows(BuildContext context, int rows) {
+    final textHeight = MediaQuery.textScalerOf(context).scale(_fontSize) * 1.5;
+    final lineHeight =
+        math.max(textHeight, _mineButtonSize) + _lineVerticalPadding * 2;
+    return _listVerticalPadding * 2 + rows * lineHeight + (rows - 1) * _lineGap;
+  }
 
   @override
   ConsumerState<TranscriptView> createState() => _TranscriptViewState();
@@ -176,10 +193,11 @@ class _TranscriptViewState extends ConsumerState<TranscriptView> {
                 child: ListView.separated(
                   controller: _scrollController,
                   itemCount: sentences.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 2),
+                  separatorBuilder: (_, _) =>
+                      const SizedBox(height: TranscriptView._lineGap),
                   padding: EdgeInsets.fromLTRB(
                     12,
-                    8,
+                    TranscriptView._listVerticalPadding,
                     12,
                     constraints.maxHeight / 2,
                   ),
@@ -197,7 +215,7 @@ class _TranscriptViewState extends ConsumerState<TranscriptView> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 8,
-                          vertical: 6,
+                          vertical: TranscriptView._lineVerticalPadding,
                         ),
                         decoration: BoxDecoration(
                           color: isCurrent
@@ -240,7 +258,7 @@ class _TranscriptViewState extends ConsumerState<TranscriptView> {
                                   fontWeight: isCurrent
                                       ? FontWeight.bold
                                       : FontWeight.w400,
-                                  fontSize: 14,
+                                  fontSize: TranscriptView._fontSize,
                                 ),
                                 onTokenTap: (token) => _openLookupSheet(
                                   context,
@@ -257,8 +275,8 @@ class _TranscriptViewState extends ConsumerState<TranscriptView> {
                               iconSize: 18,
                               padding: EdgeInsets.zero,
                               constraints: const BoxConstraints(
-                                minWidth: 28,
-                                minHeight: 28,
+                                minWidth: TranscriptView._mineButtonSize,
+                                minHeight: TranscriptView._mineButtonSize,
                               ),
                               tooltip: 'Mine this sentence',
                               onPressed: () => _openSaveSheet(

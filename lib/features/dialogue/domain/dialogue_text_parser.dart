@@ -32,7 +32,7 @@ class DialogueTextParser {
     required DictionaryIndex dictionary,
     DateTime? now,
   }) {
-    final tokenizer = JapaneseTokenizer(dictionary.surfaces);
+    final tokenizer = JapaneseTokenizer.dictionary(dictionary);
     final lines = <DialogueLine>[];
     final speakers = <String>[];
 
@@ -78,7 +78,8 @@ class DialogueTextParser {
 
   /// Only worth showing when it differs from what is already written.
   static String? _readingFor(String surface, DictionaryIndex dictionary) {
-    final reading = dictionary.lookup(surface)?.reading;
+    // The reading of the word as written, so 食べた gets たべた, not たべる.
+    final reading = dictionary.match(surface)?.reading;
     if (reading == null || reading == surface) return null;
     return reading;
   }

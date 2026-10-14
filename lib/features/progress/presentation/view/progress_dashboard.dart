@@ -56,13 +56,6 @@ class ProgressDashboard extends ConsumerWidget {
           const SizedBox(height: 8),
           OutlinedButton.icon(
             style: _tintedButton(AppColors.primaryMain),
-            onPressed: () => context.go('/learn/vocab'),
-            icon: const Icon(Icons.translate),
-            label: const Text('Browse saved vocabulary'),
-          ),
-          const SizedBox(height: 8),
-          OutlinedButton.icon(
-            style: _tintedButton(AppColors.primaryMain),
             onPressed: () =>
                 context.push('/flashcards/deck/$minedPhrasesDeckId'),
             icon: const Icon(Icons.auto_awesome),

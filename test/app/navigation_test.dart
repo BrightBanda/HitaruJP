@@ -12,6 +12,7 @@ import 'package:ingrain/features/content/presentation/view/youtube_search_result
 import 'package:ingrain/features/content/presentation/viewmodel/content_view_model.dart';
 import 'package:ingrain/features/immersion/domain/immersion_session.dart';
 import 'package:ingrain/features/immersion/presentation/viewmodel/immersion_session_view_model.dart';
+import 'package:ingrain/features/dialogue/data/user_dialogue_repository.dart';
 import 'package:ingrain/features/dialogue/domain/dialogue.dart';
 import 'package:ingrain/features/dialogue/domain/dialogue_repository.dart';
 import 'package:ingrain/features/dialogue/presentation/viewmodel/dialogue_providers.dart';
@@ -375,7 +376,6 @@ void main() {
     }
 
     for (final route in [
-      '/vocabulary',
       '/dialogues/lesson-1',
       '/flashcards/deck/mined-phrases',
     ]) {
@@ -554,6 +554,126 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('駅'), findsOneWidget);
       expect(find.byType(BackButton), findsOneWidget);
+    });
+
+    testWidgets('long press enters edit mode to select, rename and delete', (
+      tester,
+    ) async {
+      final container = await pumpApp(tester);
+      final repository = container.read(contentRepositoryProvider);
+      await repository.create(
+        sourceUrl: 'https://www.youtube.com/watch?v=aaaaaaaaaa1',
+        title: 'First video',
+      );
+      await repository.create(
+        sourceUrl: 'https://www.youtube.com/watch?v=bbbbbbbbbb2',
+        title: 'Second video',
+      );
+      container.invalidate(contentViewModelProvider);
+      await openLibrary(tester);
+      expect(find.text('First video'), findsOneWidget);
+
+      await tester.longPress(find.text('First video'));
+      await tester.pumpAndSettle();
+      expect(find.text('1 selected'), findsOneWidget);
+
+      // Back leaves edit mode without the exit warning.
+      await pressSystemBack(tester);
+      expect(find.widgetWithText(AppBar, 'Library'), findsOneWidget);
+      expect(find.text(DoubleBackToExit.message), findsNothing);
+
+      await tester.longPress(find.text('First video'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Select all'));
+      await tester.pumpAndSettle();
+      expect(find.text('2 selected'), findsOneWidget);
+      // Renaming needs exactly one video.
+      expect(
+        tester
+            .widget<IconButton>(
+              find.widgetWithIcon(IconButton, Icons.edit_outlined),
+            )
+            .onPressed,
+        isNull,
+      );
+
+      await tester.tap(find.text('Second video'));
+      await tester.pumpAndSettle();
+      expect(find.text('1 selected'), findsOneWidget);
+      await tester.tap(find.byTooltip('Rename'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'Renamed video');
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle();
+      expect(find.text('Renamed video'), findsOneWidget);
+      expect(find.widgetWithText(AppBar, 'Library'), findsOneWidget);
+
+      await tester.longPress(find.text('Renamed video'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Delete'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
+      await tester.pumpAndSettle();
+      expect(find.text('Renamed video'), findsNothing);
+      expect(find.text('Second video'), findsOneWidget);
+      expect(find.widgetWithText(AppBar, 'Library'), findsOneWidget);
+    });
+
+    testWidgets('dialogues you wrote can be renamed and deleted', (
+      tester,
+    ) async {
+      final container = await pumpApp(tester);
+      await container
+          .read(userDialogueRepositoryProvider)
+          .save(
+            Dialogue(
+              id: '${UserDialogueRepository.idPrefix}mine',
+              title: 'My dialogue',
+              level: 'N5',
+              updatedAt: DateTime(2026),
+              lines: const [
+                DialogueLine(
+                  index: 0,
+                  tokens: [DialogueToken(surface: 'こんにちは')],
+                ),
+              ],
+            ),
+          );
+      container.invalidate(dialogueListViewModelProvider);
+      await openLibrary(tester);
+      await tester.tap(find.text('Japanese dialogue'));
+      await tester.pumpAndSettle();
+
+      // Catalogue dialogues stay locked.
+      await tester.longPress(find.text('At the station'));
+      await tester.pumpAndSettle();
+      expect(find.widgetWithText(AppBar, 'Library'), findsOneWidget);
+      expect(find.textContaining('Only dialogues you wrote'), findsOneWidget);
+
+      await tester.longPress(find.text('My dialogue'));
+      await tester.pumpAndSettle();
+      expect(find.text('1 selected'), findsOneWidget);
+      // Tapping a locked card does nothing in edit mode.
+      await tester.tap(find.text('At the station'));
+      await tester.pumpAndSettle();
+      expect(find.text('1 selected'), findsOneWidget);
+
+      await tester.tap(find.byTooltip('Rename'));
+      await tester.pumpAndSettle();
+      expect(find.text('Rename dialogue'), findsOneWidget);
+      await tester.enterText(find.byType(TextField), 'Renamed dialogue');
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle();
+      expect(find.text('Renamed dialogue'), findsOneWidget);
+
+      await tester.longPress(find.text('Renamed dialogue'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Delete'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
+      await tester.pumpAndSettle();
+      expect(find.text('Renamed dialogue'), findsNothing);
+      expect(find.text('At the station'), findsOneWidget);
     });
 
     testWidgets('Add Content has a back button that returns to Library', (

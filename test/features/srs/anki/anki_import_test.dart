@@ -105,10 +105,7 @@ void main() {
     await vm().read(broken.path);
 
     expect(state(), isA<AnkiImportFailed>());
-    expect(
-      (state() as AnkiImportFailed).message,
-      contains('.apkg'),
-    );
+    expect((state() as AnkiImportFailed).message, contains('.apkg'));
   });
 
   test('bulk saves report progress chunk by chunk', () async {

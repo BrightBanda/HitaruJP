@@ -51,6 +51,37 @@ class DialogueListViewModel extends AsyncNotifier<List<DialogueSummary>> {
     state = await AsyncValue.guard(_load);
   }
 
+  /// Renames one of the learner's own dialogues.
+  Future<void> rename(String id, String title) async {
+    final trimmed = title.trim();
+    if (trimmed.isEmpty) return;
+    final dialogue = await _userRepository.get(id);
+    if (dialogue == null) return;
+    await _userRepository.save(
+      Dialogue(
+        id: dialogue.id,
+        title: trimmed,
+        level: dialogue.level,
+        kind: dialogue.kind,
+        speakers: dialogue.speakers,
+        source: dialogue.source,
+        updatedAt: dialogue.updatedAt,
+        lines: dialogue.lines,
+      ),
+    );
+    ref.invalidate(dialogueReaderViewModelProvider(id));
+    await refresh();
+  }
+
+  /// Deletes the learner's own dialogues; catalogue ids are ignored.
+  Future<void> deleteMany(Iterable<String> ids) async {
+    for (final id in ids.where(UserDialogueRepository.isUserDialogueId)) {
+      await _userRepository.delete(id);
+      ref.invalidate(dialogueReaderViewModelProvider(id));
+    }
+    await refresh();
+  }
+
   /// An unreachable catalogue only fails the list when the user has nothing of
   /// their own to show either.
   Future<List<DialogueSummary>> _load() async {

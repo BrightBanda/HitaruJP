@@ -19,6 +19,7 @@ class IngrApp extends ConsumerWidget {
 
     return MaterialApp.router(
       title: 'HitaruJP',
+      debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: themeMode,

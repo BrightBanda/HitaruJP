@@ -15,6 +15,7 @@ import 'package:ingrain/features/profile/presentation/widgets/learner_avatar.dar
 import 'package:ingrain/features/progress/presentation/viewmodel/progress_view_model.dart';
 import 'package:ingrain/shared/layout/window_size.dart';
 import 'package:ingrain/shared/widgets/colorful.dart';
+import 'package:ingrain/shared/widgets/video_thumbnail.dart';
 
 class ImmersionHomeView extends ConsumerWidget {
   const ImmersionHomeView({super.key});
@@ -264,14 +265,6 @@ DialogueSummary? dialogueOfTheDay(List<DialogueSummary> items, DateTime now) {
   final day = DateTime.utc(now.year, now.month, now.day);
   final dayNumber = day.millisecondsSinceEpoch ~/ Duration.millisecondsPerDay;
   return sorted[dayNumber % sorted.length];
-}
-
-/// YouTube serves a still for every video id; other sources have none.
-String? _thumbnailFor(ContentItem item) {
-  final stored = item.thumbnailUrl;
-  if (stored != null && stored.isNotEmpty) return stored;
-  if (item.sourceType != SourceType.youtube) return null;
-  return 'https://i.ytimg.com/vi/${item.id}/hqdefault.jpg';
 }
 
 /// The app bar's Add button: a dropdown of the content types.
@@ -568,37 +561,6 @@ class _ShortcutTile extends StatelessWidget {
   }
 }
 
-/// A thumbnail, or a coloured stand-in when there is none or it fails to load.
-class _Thumbnail extends StatelessWidget {
-  final ContentItem item;
-  final double iconSize;
-
-  const _Thumbnail({required this.item, this.iconSize = 40});
-
-  @override
-  Widget build(BuildContext context) {
-    final placeholder = ColoredBox(
-      color: AppColors.video.withValues(alpha: 0.16),
-      child: Center(
-        child: Icon(
-          Icons.play_circle_fill,
-          color: AppColors.video,
-          size: iconSize,
-        ),
-      ),
-    );
-    final url = _thumbnailFor(item);
-    if (url == null) return placeholder;
-    return Image.network(
-      url,
-      fit: BoxFit.cover,
-      errorBuilder: (_, _, _) => placeholder,
-      loadingBuilder: (_, child, progress) =>
-          progress == null ? child : placeholder,
-    );
-  }
-}
-
 class _VideoHeroCard extends StatelessWidget {
   final ContentItem item;
 
@@ -618,7 +580,7 @@ class _VideoHeroCard extends StatelessWidget {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  _Thumbnail(item: item, iconSize: 56),
+                  VideoThumbnail(item: item, iconSize: 56),
                   const Center(
                     child: CircleAvatar(
                       radius: 26,
@@ -680,7 +642,7 @@ class _RecentCard extends StatelessWidget {
               SizedBox(
                 height: 92,
                 width: double.infinity,
-                child: _Thumbnail(item: item, iconSize: 32),
+                child: VideoThumbnail(item: item, iconSize: 32),
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(10, 8, 10, 0),

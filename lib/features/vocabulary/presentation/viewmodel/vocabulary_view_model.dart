@@ -218,5 +218,7 @@ class VocabularyViewModel extends AsyncNotifier<List<VocabularyItem>> {
 /// Splits transcript text into tap targets using the bundled dictionary.
 final transcriptTokenizerProvider = Provider<JapaneseTokenizer>((ref) {
   final dictionary = ref.watch(dictionaryProvider).value;
-  return JapaneseTokenizer(dictionary?.surfaces ?? const {});
+  return dictionary == null
+      ? JapaneseTokenizer(const {})
+      : JapaneseTokenizer.dictionary(dictionary);
 });

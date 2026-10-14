@@ -123,11 +123,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const PageFrame(child: EditProfileView()),
       ),
       GoRoute(
-        path: '/vocabulary',
-        builder: (context, state) =>
-            const PageFrame(maxWidth: 980, child: VocabularyView()),
-      ),
-      GoRoute(
         path: '/dialogues/:id',
         builder: (context, state) => PageFrame(
           child: DialogueReaderView(dialogueId: state.pathParameters['id']!),
