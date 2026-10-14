@@ -17,6 +17,7 @@ import 'package:ingrain/features/search/presentation/view/search_view.dart';
 import 'package:ingrain/features/srs/presentation/view/deck_detail_view.dart';
 import 'package:ingrain/features/srs/presentation/view/flashcard_study_view.dart';
 import 'package:ingrain/features/srs/presentation/view/flashcards_view.dart';
+import 'package:ingrain/features/content/presentation/player_host/player_host.dart';
 import 'package:ingrain/features/srs/presentation/view/srs_settings_view.dart';
 import 'package:ingrain/features/vocabulary/presentation/view/vocabulary_view.dart';
 import 'package:ingrain/shared/layout/window_size.dart';
@@ -33,6 +34,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
   return GoRouter(
     initialLocation: '/onboarding',
+    observers: [playerRouteObserver],
     redirect: (context, state) {
       if (isLoading) return null;
       final location = state.uri.toString();

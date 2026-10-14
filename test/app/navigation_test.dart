@@ -457,7 +457,7 @@ void main() {
   testWidgets('reading a dialogue is recorded as immersion', (tester) async {
     final container = await pumpApp(tester);
     await openLibrary(tester);
-    await tester.tap(find.text('Japanese dialogue'));
+    await tester.tap(find.text('Dialogues and stories'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('At the station'));
     await tester.pumpAndSettle();
@@ -518,6 +518,7 @@ void main() {
         find.widgetWithText(TextFormField, 'Japanese text'),
         'Aiko: おはよう\nKen: こんにちは',
       );
+      await tester.ensureVisible(find.text('Save dialogue'));
       await tester.tap(find.text('Save dialogue'));
       await tester.pumpAndSettle();
 
@@ -539,14 +540,14 @@ void main() {
 
       expect(find.text('YouTube video'), findsOneWidget);
       expect(find.text('Japanese podcasts'), findsOneWidget);
-      expect(find.text('Japanese dialogue'), findsOneWidget);
+      expect(find.text('Dialogues and stories'), findsOneWidget);
       expect(find.text('Your library is empty'), findsOneWidget);
 
       await tester.tap(find.text('Japanese podcasts'));
       await tester.pumpAndSettle();
       expect(find.text('Podcasts are coming soon'), findsOneWidget);
 
-      await tester.tap(find.text('Japanese dialogue'));
+      await tester.tap(find.text('Dialogues and stories'));
       await tester.pumpAndSettle();
       expect(find.text('At the station'), findsOneWidget);
 
@@ -641,7 +642,7 @@ void main() {
           );
       container.invalidate(dialogueListViewModelProvider);
       await openLibrary(tester);
-      await tester.tap(find.text('Japanese dialogue'));
+      await tester.tap(find.text('Dialogues and stories'));
       await tester.pumpAndSettle();
 
       // Catalogue dialogues stay locked.

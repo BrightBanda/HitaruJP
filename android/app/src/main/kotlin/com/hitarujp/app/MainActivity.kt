@@ -1,6 +1,7 @@
 package com.hitarujp.app
 
 import android.app.PictureInPictureParams
+import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.os.Build
 import android.util.Rational
@@ -22,7 +23,6 @@ class MainActivity : FlutterActivity() {
         channel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
         channel!!.setMethodCallHandler { call, result ->
             when (call.method) {
-                "enter" -> result.success(enterPip())
                 "setAutoEnter" -> {
                     autoEnter = call.arguments as? Boolean ?: false
                     updateAutoEnter()
@@ -36,18 +36,21 @@ class MainActivity : FlutterActivity() {
     private fun params(): PictureInPictureParams.Builder =
         PictureInPictureParams.Builder().setAspectRatio(Rational(16, 9))
 
-    private fun enterPip(): Boolean {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return false
-        return try {
+    private fun isPipSupported(): Boolean =
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+            packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)
+
+    private fun enterPip() {
+        if (!isPipSupported()) return
+        try {
             enterPictureInPictureMode(params().build())
         } catch (e: IllegalStateException) {
-            // The device or the user's settings do not allow it.
-            false
+            // The switch for this app is off: nothing to do.
         }
     }
 
     private fun updateAutoEnter() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && isPipSupported()) {
             setPictureInPictureParams(params().setAutoEnterEnabled(autoEnter).build())
         }
     }

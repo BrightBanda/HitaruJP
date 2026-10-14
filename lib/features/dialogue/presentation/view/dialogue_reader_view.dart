@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ingrain/app/theme/app_colors.dart';
-import 'package:ingrain/features/ai/domain/ai_explanation.dart';
-import 'package:ingrain/features/ai/presentation/ai_explanation_providers.dart';
 import 'package:ingrain/features/content/domain/content_item.dart';
 import 'package:ingrain/features/dialogue/domain/dialogue.dart';
 import 'package:ingrain/features/dialogue/presentation/viewmodel/dialogue_providers.dart';
@@ -30,8 +28,9 @@ class DialogueReaderView extends ConsumerStatefulWidget {
 }
 
 class _DialogueReaderViewState extends ConsumerState<DialogueReaderView> {
-  /// Whether each line shows its English translation. Off by default: a
-  /// translation is an AI request, so none are made until the learner asks.
+  /// Kana over kanji, and the translation under each line the author wrote
+  /// one for. Both are off until asked for.
+  bool _showFurigana = false;
   bool _showTranslation = false;
 
   String get dialogueId => widget.dialogueId;
@@ -100,7 +99,16 @@ class _DialogueReaderViewState extends ConsumerState<DialogueReaderView> {
                       pinned: true,
                       delegate: _ReaderOptionsBar(
                         showRomaji: showRomaji,
+                        showFurigana: _showFurigana,
                         showTranslation: _showTranslation,
+                        hasFurigana: dialogue.lines.any(
+                          (l) => l.tokens.any((t) => t.reading != null),
+                        ),
+                        hasTranslation: dialogue.lines.any(
+                          (l) => l.translation != null,
+                        ),
+                        onFurigana: () =>
+                            setState(() => _showFurigana = !_showFurigana),
                         onRomaji: () => ref
                             .read(settingsViewModelProvider.notifier)
                             .setShowRomaji(!showRomaji),
@@ -120,6 +128,7 @@ class _DialogueReaderViewState extends ConsumerState<DialogueReaderView> {
                             dialogue: dialogue,
                             line: line,
                             showRomaji: showRomaji,
+                            showFurigana: _showFurigana,
                             showTranslation: _showTranslation,
                             onTokenTap: (token) => _openLookup(
                               context,
@@ -287,9 +296,17 @@ class _DialogueHeader extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(
-                isStory ? Icons.menu_book : Icons.forum,
-                color: Colors.white,
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: isStory ? AppColors.story : AppColors.dialogue,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  isStory ? Icons.menu_book : Icons.forum,
+                  color: Colors.white,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 8),
               Expanded(
@@ -339,6 +356,7 @@ class _DialogueLineCard extends StatelessWidget {
   final Dialogue dialogue;
   final DialogueLine line;
   final bool showRomaji;
+  final bool showFurigana;
   final bool showTranslation;
   final ValueChanged<DialogueToken> onTokenTap;
   final VoidCallback onMine;
@@ -347,6 +365,7 @@ class _DialogueLineCard extends StatelessWidget {
     required this.dialogue,
     required this.line,
     required this.showRomaji,
+    required this.showFurigana,
     required this.showTranslation,
     required this.onTokenTap,
     required this.onMine,
@@ -354,6 +373,7 @@ class _DialogueLineCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final speaker = line.speaker;
     final color = speaker == null
         ? AppColors.primaryMain
@@ -377,6 +397,7 @@ class _DialogueLineCard extends StatelessWidget {
                 child: DialogueTokenRow(
                   line: line,
                   showRomaji: showRomaji,
+                  showFurigana: showFurigana,
                   onTokenTap: onTokenTap,
                 ),
               ),
@@ -388,10 +409,21 @@ class _DialogueLineCard extends StatelessWidget {
               ),
             ],
           ),
-          if (showTranslation)
+          if (showRomaji && line.romaji != null)
             Padding(
               padding: const EdgeInsets.only(top: 6, right: 10),
-              child: _LineTranslation(text: line.text),
+              child: Text(line.romaji!, style: theme.textTheme.bodySmall),
+            ),
+          if (showTranslation && line.translation != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 6, right: 10),
+              child: Text(
+                line.translation!,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontStyle: FontStyle.italic,
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.75),
+                ),
+              ),
             ),
         ],
       ),
@@ -419,13 +451,21 @@ class _CachedDialogueNotice extends StatelessWidget {
 /// The romaji and translation switches, pinned under the app bar.
 class _ReaderOptionsBar extends SliverPersistentHeaderDelegate {
   final bool showRomaji;
+  final bool showFurigana;
   final bool showTranslation;
+  final bool hasFurigana;
+  final bool hasTranslation;
+  final VoidCallback onFurigana;
   final VoidCallback onRomaji;
   final VoidCallback onTranslation;
 
   const _ReaderOptionsBar({
     required this.showRomaji,
+    required this.showFurigana,
     required this.showTranslation,
+    required this.hasFurigana,
+    required this.hasTranslation,
+    required this.onFurigana,
     required this.onRomaji,
     required this.onTranslation,
   });
@@ -479,41 +519,9 @@ class _ReaderOptionsBar extends SliverPersistentHeaderDelegate {
 
   @override
   bool shouldRebuild(_ReaderOptionsBar old) =>
-      old.showRomaji != showRomaji || old.showTranslation != showTranslation;
-}
-
-/// One line's translation, fetched when it first scrolls into view.
-class _LineTranslation extends ConsumerWidget {
-  final String text;
-
-  const _LineTranslation({required this.text});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final request = (text: text, kind: ExplainKind.sentence, context: null);
-    final style = theme.textTheme.bodySmall?.copyWith(
-      fontStyle: FontStyle.italic,
-      color: theme.colorScheme.onSurface.withValues(alpha: 0.75),
-    );
-    return ref
-        .watch(aiExplanationProvider(request))
-        .when(
-          skipLoadingOnRefresh: false,
-          loading: () => const SizedBox(
-            height: 14,
-            width: 14,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
-          error: (_, _) => Align(
-            alignment: Alignment.centerLeft,
-            child: TextButton.icon(
-              onPressed: () => ref.invalidate(aiExplanationProvider(request)),
-              icon: const Icon(Icons.refresh, size: 16),
-              label: const Text('Translation failed, retry'),
-            ),
-          ),
-          data: (explanation) => Text(explanation.translation, style: style),
-        );
-  }
+      old.showRomaji != showRomaji ||
+      old.showFurigana != showFurigana ||
+      old.showTranslation != showTranslation ||
+      old.hasFurigana != hasFurigana ||
+      old.hasTranslation != hasTranslation;
 }

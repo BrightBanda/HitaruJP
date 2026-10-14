@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ingrain/app/player_overlay.dart';
 import 'package:ingrain/app/router.dart';
 import 'package:ingrain/app/theme/app_theme.dart';
 import 'package:ingrain/app/theme/theme_controller.dart';
@@ -24,6 +25,13 @@ class IngrApp extends ConsumerWidget {
       darkTheme: AppTheme.dark,
       themeMode: themeMode,
       routerConfig: router,
+      // The video player floats above every page.
+      builder: (context, child) => Stack(
+        children: [
+          if (child != null) Positioned.fill(child: child),
+          const Positioned.fill(child: PlayerOverlay()),
+        ],
+      ),
     );
   }
 }

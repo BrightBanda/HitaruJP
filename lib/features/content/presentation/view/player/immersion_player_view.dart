@@ -6,10 +6,10 @@ import 'package:ingrain/app/theme/app_colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
-import 'package:ingrain/core/platform/picture_in_picture.dart';
 import 'package:ingrain/core/utils/duration_format.dart';
 import 'package:ingrain/features/content/data/youtube_url_parser.dart';
 import 'package:ingrain/features/content/domain/content_item.dart';
+import 'package:ingrain/features/content/presentation/player_host/player_host.dart';
 import 'package:ingrain/features/content/presentation/viewmodel/content_view_model.dart';
 import 'package:ingrain/features/content/presentation/view/player/transcript_view.dart';
 import 'package:ingrain/features/immersion/presentation/viewmodel/immersion_session_view_model.dart';
@@ -58,65 +58,50 @@ class ImmersionPlayerView extends ConsumerStatefulWidget {
       _ImmersionPlayerViewState();
 }
 
-class _ImmersionPlayerViewState extends ConsumerState<ImmersionPlayerView> {
+class _ImmersionPlayerViewState extends ConsumerState<ImmersionPlayerView>
+    with RouteAware {
+  // The player itself belongs to the app-wide [PlayerHost], so the video can
+  // carry on in a small window after this screen closes.
   late YoutubePlayerController _controller;
-  StreamSubscription<YoutubeVideoState>? _videoStateSubscription;
+  late final PlayerHost _host;
   StreamSubscription<YoutubePlayerValue>? _playerStreamSubscription;
-  // Saved up front: `ref` must not be used once the screen starts closing.
-  late final PlayerControllerNotifier _controllerNotifier;
-  final _playerKey = GlobalKey();
+  final _slotKey = GlobalKey();
   final _transcriptKey = GlobalKey();
   bool _videoLoadStarted = false;
   bool _videoReady = false;
   bool _playerIsPlaying = false;
+  bool _covered = false;
+  bool _trackingSlot = true;
   String? _videoId;
   String? _playerError;
+  PageRoute<dynamic>? _route;
 
   @override
   void initState() {
     super.initState();
-    _controllerNotifier = ref.read(playerControllerProvider.notifier);
-    _controller = YoutubePlayerController(
-      params: YoutubePlayerParams(
-        showFullscreenButton: false,
-        enableKeyboard: false,
-        showControls: false,
-        // The app shows its own tappable Japanese transcript, so YouTube's
-        // burned-in captions would only duplicate (or contradict) it.
-        enableCaption: false,
-        origin: 'https://www.youtube-nocookie.com',
-        strictRelatedVideos: true,
-        // How often the iframe reports the position over the WebView bridge.
-        // The default 100ms sent ten messages a second, each one waking the
-        // UI thread; transcript lines and the seek bar only need a few.
-        videoStateUpdateInterval: 250,
-        // On web, YouTube's player reacts to the mouse even with its controls
-        // off: hovering fades in dark gradient bars over the video. The app
-        // has its own controls, so the player is made to ignore the pointer.
-        // Mobile keeps the default.
-        pointerEvents: kIsWeb ? PointerEvents.none : PointerEvents.initial,
-      ),
-      onWebResourceError: (error) {
-        // The page loads many sub-resources (ads, trackers, thumbnails) and
-        // the WebView reports each one that is blocked or fails as
-        // net::ERR_FAILED, though the video itself plays fine. Only the page
-        // failing to load, before anything has played, is a real error.
-        if (!mounted || error.isForMainFrame == false || _videoReady) return;
-        setState(() {
-          _playerError = 'Network error: ${error.description}';
-          _videoReady = false;
-          _videoLoadStarted = false;
-        });
-      },
-    );
+    _host = ref.read(playerHostProvider.notifier);
+    _controller = _host.acquire(widget.contentId);
+    // A video already loaded (reopened from the small window) is on its way.
+    if (_host.loadedVideoId != null) {
+      _videoLoadStarted = true;
+      _videoReady = true;
+      _videoId = _host.loadedVideoId;
+      _playerIsPlaying = _controller.value.playerState == PlayerState.playing;
+    }
+    _host.onResourceError = (error) {
+      // The page loads many sub-resources (ads, trackers, thumbnails) and
+      // the WebView reports each one that is blocked or fails as
+      // net::ERR_FAILED, though the video itself plays fine. Only the page
+      // failing to load, before anything has played, is a real error.
+      if (!mounted || error.isForMainFrame == false || _videoReady) return;
+      setState(() {
+        _playerError = 'Network error: ${error.description}';
+        _videoReady = false;
+        _videoLoadStarted = false;
+      });
+    };
 
-    _videoStateSubscription = _controller.videoStateStream.listen((state) {
-      ref.read(playbackPositionProvider.notifier).setPosition(state.position);
-      ref
-          .read(immersionSessionViewModelProvider(widget.contentId).notifier)
-          .updatePosition(state.position.inSeconds);
-    });
-
+    // Screen state only: the immersion session follows the player in the host.
     _playerStreamSubscription = _controller.stream.listen((value) {
       if (!mounted) return;
       if (value.error != YoutubeError.none &&
@@ -138,53 +123,16 @@ class _ImmersionPlayerViewState extends ConsumerState<ImmersionPlayerView> {
         }
       }
 
-      final sessionVm = ref.read(
-        immersionSessionViewModelProvider(widget.contentId).notifier,
-      );
-      final sessionState = ref.read(
-        immersionSessionViewModelProvider(widget.contentId),
-      );
-
       final isPlaying = value.playerState == PlayerState.playing;
       final stopped =
           value.playerState == PlayerState.paused ||
           value.playerState == PlayerState.ended;
       if ((isPlaying && !_playerIsPlaying) || (stopped && _playerIsPlaying)) {
         setState(() => _playerIsPlaying = isPlaying);
-        // Leaving the app while a video plays shrinks it into a floating
-        // window instead of stopping the video.
-        PictureInPicture.instance.setAutoEnter(isPlaying);
-      }
-
-      if (isPlaying) {
-        // Whatever started playback — our button, YouTube's own surface, or
-        // the player coming back from fullscreen (which pauses and then plays
-        // again) — the session clock follows it.
-        if (!sessionState.hasActiveSession) {
-          final title =
-              ref
-                  .read(contentItemProvider(widget.contentId))
-                  .asData
-                  ?.value
-                  .title ??
-              'Video';
-          sessionVm.startSession(sourceTitle: title);
-        } else if (sessionState.isPaused) {
-          sessionVm.resumeSession();
-        }
-      } else if (stopped) {
-        if (sessionState.isRunning && !sessionState.isPaused) {
-          sessionVm.pauseSession();
-        }
       }
     });
 
-    // Set controller in provider after first frame to avoid build-phase modification
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        _controllerNotifier.setController(_controller);
-      }
-    });
+    WidgetsBinding.instance.addPostFrameCallback(_trackSlot);
 
     // Load the video once the content item is known, rather than checking on
     // every build of this screen.
@@ -212,14 +160,46 @@ class _ImmersionPlayerViewState extends ConsumerState<ImmersionPlayerView> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (route is PageRoute && route != _route) {
+      if (_route != null) playerRouteObserver.unsubscribe(this);
+      _route = route;
+      playerRouteObserver.subscribe(this, route);
+    }
+  }
+
+  // Another full page opened on top: the video steps aside for it.
+  @override
+  void didPushNext() => _covered = true;
+
+  @override
+  void didPopNext() => _covered = false;
+
+  /// Tells the host where the video belongs on this screen, every frame the
+  /// layout changes (including while the page slides in).
+  void _trackSlot(Duration _) {
+    if (!_trackingSlot || !mounted) return;
+    Rect? slot;
+    final box = _slotKey.currentContext?.findRenderObject();
+    if (!_covered && box is RenderBox && box.attached && box.hasSize) {
+      slot = box.localToGlobal(Offset.zero) & box.size;
+    }
+    if (ref.read(playerHostProvider).slot != slot) _host.setSlot(slot);
+    WidgetsBinding.instance.addPostFrameCallback(_trackSlot);
+  }
+
+  @override
   void dispose() {
-    PictureInPicture.instance.setAutoEnter(false);
-    _videoStateSubscription?.cancel();
+    _trackingSlot = false;
+    playerRouteObserver.unsubscribe(this);
     _playerStreamSubscription?.cancel();
-    _controller.close();
-    // Deferred: provider state cannot change while the tree is tearing down.
     final controller = _controller;
-    Future.microtask(() => _controllerNotifier.clearIfCurrent(controller));
+    final host = _host;
+    host.onResourceError = null;
+    // Deferred: provider state cannot change while the tree is tearing down.
+    Future.microtask(() => host.leaveIfExpanded(controller));
     super.dispose();
   }
 
@@ -256,6 +236,7 @@ class _ImmersionPlayerViewState extends ConsumerState<ImmersionPlayerView> {
       return;
     }
 
+    _host.loadedVideoId = resolvedId;
     if (!mounted) return;
     setState(() => _videoReady = true);
   }
@@ -285,21 +266,20 @@ class _ImmersionPlayerViewState extends ConsumerState<ImmersionPlayerView> {
     setState(() => _videoReady = true);
   }
 
-  /// Back while a video plays shrinks it into the floating window; with
-  /// nothing playing (or no window support) it leaves the screen as usual.
-  Future<void> _onBack(bool didPop, Object? result) async {
+  /// Back (or the minimise button) leaves the screen. A playing video keeps
+  /// going in a small window over the rest of the app; one that is paused or
+  /// finished is closed.
+  void _onBack(bool didPop, Object? result) {
     if (didPop) return;
-    final playing =
-        _playerIsPlaying ||
-        _controller.value.playerState == PlayerState.playing;
-    if (playing && await PictureInPicture.instance.enter()) return;
-    if (mounted) context.pop();
+    _host.leave();
+    context.pop();
   }
 
-  Future<void> _seekRelative(int deltaSeconds) async {
-    final current = await _controller.currentTime;
-    final target = (current + deltaSeconds).clamp(0.0, double.infinity);
-    await _controller.seekTo(seconds: target);
+  /// Sends the video to the small window and goes back to browsing, even when
+  /// it is paused.
+  void _minimize() {
+    _host.minimize();
+    context.pop();
   }
 
   Future<void> _togglePlayback() async {
@@ -379,20 +359,7 @@ class _ImmersionPlayerViewState extends ConsumerState<ImmersionPlayerView> {
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: _onBack,
-      child: ValueListenableBuilder<bool>(
-        valueListenable: PictureInPicture.instance.active,
-        builder: (context, inPip, _) => inPip
-            ? Scaffold(
-                backgroundColor: Colors.black,
-                body: Center(
-                  child: RepaintBoundary(
-                    key: _playerKey,
-                    child: _buildPlayer(contentAsync),
-                  ),
-                ),
-              )
-            : _buildScreen(contentAsync, sessionLive),
-      ),
+      child: _buildScreen(contentAsync, sessionLive),
     );
   }
 
@@ -420,10 +387,7 @@ class _ImmersionPlayerViewState extends ConsumerState<ImmersionPlayerView> {
           // platform view untouched. The key keeps it (and the transcript)
           // the same widget when a resize switches layouts, so the video is
           // moved rather than reloaded.
-          final player = RepaintBoundary(
-            key: _playerKey,
-            child: _buildPlayer(contentAsync),
-          );
+          final player = _buildPlayer(contentAsync);
           final seekBar = _SeekBar(
             controller: _controller,
             fallbackDuration: Duration(
@@ -496,40 +460,22 @@ class _ImmersionPlayerViewState extends ConsumerState<ImmersionPlayerView> {
   /// From this width the video gets padding and rounded corners.
   static const _wideMinWidth = 960.0;
 
+  /// The empty slot where the app-wide player draws the video, over this
+  /// screen. [_trackSlot] reports its position.
   Widget _buildPlayer(AsyncValue<ContentItem> contentAsync) {
-    return contentAsync.when(
-      data: (content) {
-        if (content.sourceType != SourceType.youtube) {
-          return _placeholderPlayer('Only YouTube content is supported');
-        }
-        // The iframe needs a moment to boot before the first frame renders.
-        // Without this the player is an unexplained black box on slow
-        // connections, which reads as "the video is not starting".
-        return Stack(
-          children: [
-            YoutubePlayer(controller: _controller, aspectRatio: 16 / 9),
-            // Not on web: there the player is an <iframe>, and Flutter
-            // painting over it (an animating spinner, every frame) makes the
-            // engine split each frame around the video, which stutters. The
-            // player already shows the video's thumbnail while it loads.
-            if (!kIsWeb && !_videoReady && _playerError == null)
-              Positioned.fill(
-                child: ColoredBox(
-                  color: Colors.black12,
-                  child: const Center(
-                    child: SizedBox(
-                      height: 28,
-                      width: 28,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        );
-      },
-      loading: () => _placeholderPlayer('Loading...'),
-      error: (_, _) => _placeholderPlayer('Failed to load content'),
+    return AspectRatio(
+      aspectRatio: 16 / 9,
+      child: ColoredBox(
+        key: _slotKey,
+        color: Colors.black12,
+        child: contentAsync.when(
+          data: (content) => content.sourceType == SourceType.youtube
+              ? const SizedBox.shrink()
+              : const Center(child: Text('Only YouTube content is supported')),
+          loading: () => const Center(child: Text('Loading...')),
+          error: (_, _) => const Center(child: Text('Failed to load content')),
+        ),
+      ),
     );
   }
 
@@ -562,16 +508,6 @@ class _ImmersionPlayerViewState extends ConsumerState<ImmersionPlayerView> {
     );
   }
 
-  Widget _placeholderPlayer(String message) {
-    return AspectRatio(
-      aspectRatio: 16 / 9,
-      child: Container(
-        color: Colors.black12,
-        child: Center(child: Text(message)),
-      ),
-    );
-  }
-
   Widget _buildPlaybackControls() {
     final isPlaying =
         _playerIsPlaying ||
@@ -587,14 +523,6 @@ class _ImmersionPlayerViewState extends ConsumerState<ImmersionPlayerView> {
             tooltip: isPlaying ? 'Pause' : 'Play',
             onPressed: _togglePlayback,
           ),
-          IconButton(
-            icon: const Icon(Icons.replay_10),
-            onPressed: () => _seekRelative(-10),
-          ),
-          IconButton(
-            icon: const Icon(Icons.forward_10),
-            onPressed: () => _seekRelative(10),
-          ),
           DropdownButton<double>(
             value: 1.0,
             items: [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0]
@@ -605,6 +533,11 @@ class _ImmersionPlayerViewState extends ConsumerState<ImmersionPlayerView> {
                 _controller.setPlaybackRate(value);
               }
             },
+          ),
+          IconButton(
+            icon: const Icon(Icons.picture_in_picture_alt),
+            tooltip: 'Mini player',
+            onPressed: _minimize,
           ),
           IconButton(
             icon: const Icon(Icons.fullscreen),

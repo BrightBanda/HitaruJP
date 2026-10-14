@@ -671,6 +671,7 @@ class _DialogueCard extends StatelessWidget {
     final theme = Theme.of(context);
     final isStory = dialogue.kind == DialogueKind.story;
     const accent = AppColors.dialogue;
+    final kindColor = isStory ? AppColors.story : AppColors.dialogue;
 
     return Material(
       color: accent.withValues(alpha: 0.14),
@@ -686,7 +687,7 @@ class _DialogueCard extends StatelessWidget {
                 width: 52,
                 height: 52,
                 decoration: BoxDecoration(
-                  color: accent,
+                  color: kindColor,
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Icon(
@@ -714,7 +715,7 @@ class _DialogueCard extends StatelessWidget {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: accent,
+                            color: kindColor,
                             borderRadius: BorderRadius.circular(999),
                           ),
                           child: Text(
@@ -738,7 +739,7 @@ class _DialogueCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right, color: accent),
+              Icon(Icons.chevron_right, color: accent),
             ],
           ),
         ),

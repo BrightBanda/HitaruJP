@@ -13,8 +13,8 @@ enum LibraryContentFilter {
   ),
   dialogues(
     icon: Icons.forum_outlined,
-    title: 'Japanese dialogue',
-    description: 'Read through everyday conversations',
+    title: 'Dialogues and stories',
+    description: 'Read conversations and short stories',
   );
 
   const LibraryContentFilter({

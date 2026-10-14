@@ -135,6 +135,7 @@ class DialogueSummaryCard extends StatelessWidget {
     final theme = Theme.of(context);
     final isStory = dialogue.kind == DialogueKind.story;
     const accent = AppColors.primaryMain;
+    final kindColor = isStory ? AppColors.story : AppColors.dialogue;
 
     final card = Card(
       margin: EdgeInsets.zero,
@@ -168,7 +169,7 @@ class DialogueSummaryCard extends StatelessWidget {
                         : isStory
                         ? Icons.menu_book_outlined
                         : Icons.forum_outlined,
-                    color: accent,
+                    color: editing ? accent : kindColor,
                     size: 20,
                   ),
                   const Spacer(),
@@ -178,7 +179,7 @@ class DialogueSummaryCard extends StatelessWidget {
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
-                      color: accent,
+                      color: kindColor,
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: Text(

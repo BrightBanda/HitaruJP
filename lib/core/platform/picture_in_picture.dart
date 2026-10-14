@@ -3,8 +3,9 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
-/// Picture-in-picture for the video player. Android only: everywhere else
-/// [isSupported] is false and every call does nothing.
+/// The system's picture-in-picture window, on Android phones that have one.
+/// Elsewhere (and on phones without it, such as many Android Go devices) every
+/// call does nothing; the in-app mini player covers those.
 class PictureInPicture {
   PictureInPicture._() {
     if (isSupported) _channel.setMethodCallHandler(_onCall);
@@ -24,25 +25,13 @@ class PictureInPicture {
     if (call.method == 'pipChanged') active.value = call.arguments == true;
   }
 
-  /// Shrinks the app into the floating window. False when that is not allowed.
-  Future<bool> enter() async {
-    if (!isSupported) return false;
-    try {
-      return await _channel.invokeMethod<bool>('enter') ?? false;
-    } on PlatformException {
-      return false;
-    } on MissingPluginException {
-      return false;
-    }
-  }
-
   /// While set, leaving the app (home button, gesture) enters the window.
   Future<void> setAutoEnter(bool enabled) async {
     if (!isSupported) return;
     try {
       await _channel.invokeMethod<void>('setAutoEnter', enabled);
     } on PlatformException {
-      // Not worth surfacing: the learner can still use the back button.
+      // Not worth surfacing: the in-app mini player still works.
     } on MissingPluginException {
       // Same.
     }

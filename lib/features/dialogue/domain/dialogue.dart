@@ -20,7 +20,17 @@ class DialogueLine {
   final String? speaker;
   final List<DialogueToken> tokens;
 
-  const DialogueLine({required this.index, this.speaker, required this.tokens});
+  /// The whole line in romaji and in English, when the author wrote them.
+  final String? romaji;
+  final String? translation;
+
+  const DialogueLine({
+    required this.index,
+    this.speaker,
+    required this.tokens,
+    this.romaji,
+    this.translation,
+  });
 
   String get text => tokens.map((token) => token.surface).join();
 }

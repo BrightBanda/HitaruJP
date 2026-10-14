@@ -64,8 +64,13 @@ class DialogueDto {
       index: (map['index'] as num?)?.toInt() ?? 0,
       speaker: map['speaker'] as String?,
       tokens: tokens,
+      romaji: _text(map['romaji']),
+      translation: _text(map['translation']),
     );
   }
+
+  static String? _text(Object? value) =>
+      value is String && value.trim().isNotEmpty ? value : null;
 
   static List<String> _strings(Object? value) =>
       value is List ? value.whereType<String>().toList() : const [];
@@ -117,6 +122,8 @@ Map<String, dynamic> dialogueToMap(Dialogue dialogue) => {
       {
         'index': line.index,
         'speaker': line.speaker,
+        if (line.romaji != null) 'romaji': line.romaji,
+        if (line.translation != null) 'translation': line.translation,
         'tokens': [
           for (final token in line.tokens)
             {

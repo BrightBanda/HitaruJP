@@ -175,11 +175,9 @@ class _ContentAddViewState extends ConsumerState<ContentAddView> {
                     decoration: const InputDecoration(
                       labelText: 'Japanese text',
                       alignLabelWithHint: true,
-                      hintText: 'Aiko: おはようございます。\nKen: おはよう!',
-                      helperText:
-                          'One line each. Start a line with "Name:" to set '
-                          'the speaker.',
-                      helperMaxLines: 2,
+                      hintText:
+                          'Aiko: 今日[きょう]は いい天気[てんき]ですね。 | '
+                          'kyou wa ii tenki desu ne | Nice weather today.',
                     ),
                     validator: (v) {
                       if (v == null || v.trim().isEmpty) {
@@ -188,6 +186,10 @@ class _ContentAddViewState extends ConsumerState<ContentAddView> {
                       return null;
                     },
                   ),
+                ],
+                if (isDialogue) ...[
+                  const SizedBox(height: 12),
+                  const _DialogueFormatHelp(),
                 ],
                 if (_fetchError != null) ...[
                   const SizedBox(height: 16),
@@ -292,6 +294,49 @@ class _TypeLabel extends StatelessWidget {
           Text('Coming soon', style: theme.textTheme.labelSmall),
         ],
       ],
+    );
+  }
+}
+
+/// How to write a dialogue, shown under the text box.
+class _DialogueFormatHelp extends StatelessWidget {
+  const _DialogueFormatHelp();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final code = theme.textTheme.bodySmall?.copyWith(
+      fontFamily: 'monospace',
+      fontWeight: FontWeight.w600,
+    );
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('How to write it', style: theme.textTheme.titleSmall),
+          const SizedBox(height: 6),
+          Text('One line per sentence:', style: theme.textTheme.bodySmall),
+          Text('Name: 日本語[にほんご] | romaji | translation', style: code),
+          const SizedBox(height: 6),
+          Text(
+            '• Name: sets the speaker. Leave it out for a story.\n'
+            '• 漢字[かんじ] shows kana over that kanji. Kanji you leave '
+            'unmarked are filled in from the dictionary.\n'
+            '• | separates the parts. Romaji and translation are optional: '
+            'with one part after the Japanese it is the translation, or use '
+            '|| to skip the romaji.\n'
+            '• In the reader, Kana, Romaji and See translation switch each '
+            'one on and off.',
+            style: theme.textTheme.bodySmall,
+          ),
+        ],
+      ),
     );
   }
 }
