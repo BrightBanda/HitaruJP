@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ingrain/app/theme/app_colors.dart';
+import 'package:ingrain/features/ads/domain/ad_creative.dart';
+import 'package:ingrain/features/ads/presentation/ad_card.dart';
+import 'package:ingrain/features/ads/presentation/ad_providers.dart';
 import 'package:ingrain/core/utils/duration_format.dart';
 import 'package:ingrain/features/catalog/domain/catalog_video.dart';
 import 'package:ingrain/features/catalog/presentation/viewmodel/catalog_providers.dart';
@@ -10,16 +13,21 @@ import 'package:ingrain/shared/widgets/colorful.dart';
 import 'package:ingrain/shared/widgets/web_transcript_notice.dart';
 
 /// Opens [video] in the player, telling the learner what is going on.
+///
+/// [replace] swaps the current page for the player instead of stacking another
+/// on top, for videos opened from inside the player.
 Future<void> openCatalogVideo(
   BuildContext context,
   WidgetRef ref,
-  CatalogVideo video,
-) async {
+  CatalogVideo video, {
+  bool replace = false,
+}) async {
   final messenger = ScaffoldMessenger.of(context);
   final router = GoRouter.of(context);
   try {
     final opened = await ref.read(catalogOpenerProvider.notifier).open(video);
-    router.push('/content/${opened.contentId}');
+    final route = '/content/${opened.contentId}';
+    replace ? router.pushReplacement(route) : router.push(route);
     if (!opened.hasTranscript) {
       messenger.showSnackBar(
         SnackBar(
@@ -91,15 +99,20 @@ class DailyPicksSection extends ConsumerWidget {
             builder: (context, constraints) {
               // Wide: all of today's picks side by side, as equals.
               if (constraints.maxWidth >= _sideBySideMinWidth) {
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                return Column(
                   children: [
-                    for (final (index, video) in value.videos.indexed) ...[
-                      if (index > 0) const SizedBox(width: 14),
-                      Expanded(
-                        child: _PickHeroCard(video: video, compact: true),
-                      ),
-                    ],
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        for (final (index, video) in value.videos.indexed) ...[
+                          if (index > 0) const SizedBox(width: 14),
+                          Expanded(
+                            child: _PickHeroCard(video: video, compact: true),
+                          ),
+                        ],
+                      ],
+                    ),
+                    const _SpacedAd(placement: AdPlacement.homePicks),
                   ],
                 );
               }
@@ -108,8 +121,9 @@ class DailyPicksSection extends ConsumerWidget {
                   _PickHeroCard(video: value.videos.first),
                   for (final video in value.videos.skip(1)) ...[
                     const SizedBox(height: 10),
-                    _PickRowCard(video: video),
+                    CatalogVideoRow(video: video),
                   ],
+                  const _SpacedAd(placement: AdPlacement.homePicks),
                 ],
               );
             },
@@ -136,10 +150,14 @@ class DailyPicksSection extends ConsumerWidget {
 class LevelShelf extends ConsumerWidget {
   const LevelShelf({super.key});
 
+  /// Where the ad card goes among the videos.
+  static const _shelfAdIndex = 2;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final videos = ref.watch(levelVideosProvider).value;
     final picks = ref.watch(dailyPicksProvider).value;
+    final showAds = ref.watch(showAdsProvider);
     if (videos == null) return const SizedBox.shrink();
     // Today's picks are already on screen; do not show them twice.
     final shown = {for (final video in picks?.videos ?? const []) video.id};
@@ -157,9 +175,19 @@ class LevelShelf extends ConsumerWidget {
           height: 178,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
-            itemCount: rest.length,
+            // Free tier: a small ad card sits among the videos.
+            itemCount: rest.length + (showAds ? 1 : 0),
             separatorBuilder: (_, _) => const SizedBox(width: 12),
-            itemBuilder: (context, index) => _ShelfCard(video: rest[index]),
+            itemBuilder: (context, index) {
+              if (showAds && index == _shelfAdIndex.clamp(0, rest.length)) {
+                return const AdCard(
+                  placement: AdPlacement.homeShelf,
+                  compact: true,
+                );
+              }
+              final at = showAds && index > _shelfAdIndex ? index - 1 : index;
+              return _ShelfCard(video: rest[at]);
+            },
           ),
         ),
       ],
@@ -249,10 +277,18 @@ class _PickHeroCard extends ConsumerWidget {
   }
 }
 
-class _PickRowCard extends ConsumerWidget {
+/// A video as a compact row: thumbnail, title and labels.
+class CatalogVideoRow extends ConsumerWidget {
   final CatalogVideo video;
 
-  const _PickRowCard({required this.video});
+  /// See [openCatalogVideo].
+  final bool replaceRoute;
+
+  const CatalogVideoRow({
+    super.key,
+    required this.video,
+    this.replaceRoute = false,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -260,7 +296,10 @@ class _PickRowCard extends ConsumerWidget {
     final opening = ref.watch(catalogOpenerProvider).contains(video.id);
     return Card(
       child: InkWell(
-        onTap: opening ? null : () => openCatalogVideo(context, ref, video),
+        onTap: opening
+            ? null
+            : () =>
+                  openCatalogVideo(context, ref, video, replace: replaceRoute),
         child: Padding(
           padding: const EdgeInsets.all(10),
           child: Row(
@@ -537,6 +576,22 @@ class _PicksLoading extends StatelessWidget {
     );
     return Column(
       children: [block(250), const SizedBox(height: 10), block(92)],
+    );
+  }
+}
+
+/// A small ad with room above it, which takes no room when there is no ad.
+class _SpacedAd extends ConsumerWidget {
+  final AdPlacement placement;
+
+  const _SpacedAd({required this.placement});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (!ref.watch(showAdsProvider)) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: AdCard(placement: placement),
     );
   }
 }

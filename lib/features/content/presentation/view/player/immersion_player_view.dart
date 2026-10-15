@@ -11,6 +11,7 @@ import 'package:ingrain/features/content/data/youtube_url_parser.dart';
 import 'package:ingrain/features/content/domain/content_item.dart';
 import 'package:ingrain/features/content/presentation/player_host/player_host.dart';
 import 'package:ingrain/features/content/presentation/viewmodel/content_view_model.dart';
+import 'package:ingrain/features/content/presentation/view/player/recommended_videos.dart';
 import 'package:ingrain/features/content/presentation/view/player/transcript_view.dart';
 import 'package:ingrain/features/immersion/presentation/viewmodel/immersion_session_view_model.dart';
 
@@ -404,6 +405,7 @@ class _ImmersionPlayerViewState extends ConsumerState<ImmersionPlayerView>
               child: TranscriptView(contentId: widget.contentId),
             ),
           );
+          final recommended = RecommendedVideos(currentYoutubeId: _videoId);
           final controls = Column(
             children: [
               if (_playerError != null) _buildPlayerError(),
@@ -423,7 +425,11 @@ class _ImmersionPlayerViewState extends ConsumerState<ImmersionPlayerView>
                 seekBar,
                 transcript,
                 const Divider(height: 1),
-                Expanded(child: SingleChildScrollView(child: controls)),
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(children: [controls, recommended]),
+                  ),
+                ),
               ],
             );
           }
@@ -432,23 +438,36 @@ class _ImmersionPlayerViewState extends ConsumerState<ImmersionPlayerView>
           // pushing the transcript and controls off screen.
           return Padding(
             padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
-            child: Column(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Flexible(
-                  // Rounded corners on mobile only: clipping the web
-                  // <iframe> re-applies a CSS clip every frame and
-                  // makes playback flicker.
-                  child: kIsWeb
-                      ? player
-                      : ClipRRect(
-                          borderRadius: BorderRadius.circular(16),
-                          child: player,
-                        ),
+                Expanded(
+                  child: Column(
+                    children: [
+                      Flexible(
+                        // Rounded corners on mobile only: clipping the web
+                        // <iframe> re-applies a CSS clip every frame and
+                        // makes playback flicker.
+                        child: kIsWeb
+                            ? player
+                            : ClipRRect(
+                                borderRadius: BorderRadius.circular(16),
+                                child: player,
+                              ),
+                      ),
+                      seekBar,
+                      transcript,
+                      const Divider(height: 1),
+                      controls,
+                    ],
+                  ),
                 ),
-                seekBar,
-                transcript,
-                const Divider(height: 1),
-                controls,
+                const SizedBox(width: 16),
+                // Up next beside the video, as on YouTube.
+                SizedBox(
+                  width: 360,
+                  child: SingleChildScrollView(child: recommended),
+                ),
               ],
             ),
           );
