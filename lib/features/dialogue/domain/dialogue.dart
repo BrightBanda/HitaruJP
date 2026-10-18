@@ -1,4 +1,20 @@
-enum DialogueKind { dialogue, story }
+enum DialogueKind { dialogue, story, book }
+
+/// What a book is, shown above its text: who wrote the original and what the
+/// adaptation is. Credit and the source link live in [DialogueSource].
+class BookInfo {
+  final String author;
+  final String? originalTitle;
+  final int? originalYear;
+  final String? summary;
+
+  const BookInfo({
+    required this.author,
+    this.originalTitle,
+    this.originalYear,
+    this.summary,
+  });
+}
 
 class DialogueSource {
   final String? attribution;
@@ -45,6 +61,9 @@ class DialogueSummary {
   final DialogueSource source;
   final DateTime? updatedAt;
 
+  /// Set when [kind] is [DialogueKind.book].
+  final BookInfo? book;
+
   const DialogueSummary({
     required this.id,
     required this.title,
@@ -54,6 +73,7 @@ class DialogueSummary {
     this.lineCount = 0,
     this.source = const DialogueSource(),
     this.updatedAt,
+    this.book,
   });
 }
 
@@ -68,6 +88,7 @@ class Dialogue extends DialogueSummary {
     super.speakers,
     super.source,
     super.updatedAt,
+    super.book,
     required this.lines,
   }) : super(lineCount: lines.length);
 }

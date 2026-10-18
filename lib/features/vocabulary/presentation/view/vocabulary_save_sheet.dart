@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:ingrain/app/theme/app_colors.dart';
 import 'package:ingrain/shared/widgets/colorful.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ingrain/features/srs/domain/deck.dart';
+import 'package:ingrain/features/srs/domain/review_card.dart';
+import 'package:ingrain/features/srs/presentation/viewmodel/review_view_model.dart';
 import 'package:ingrain/features/vocabulary/presentation/viewmodel/vocabulary_view_model.dart';
 
 class VocabularySaveRequest {
@@ -10,11 +13,15 @@ class VocabularySaveRequest {
   final String? meaning;
   final String? pos;
 
+  /// The deck the word's flashcard goes into.
+  final String deckId;
+
   const VocabularySaveRequest({
     required this.word,
     this.reading,
     this.meaning,
     this.pos,
+    this.deckId = minedPhrasesDeckId,
   });
 }
 
@@ -49,6 +56,7 @@ class _VocabularySaveSheetState extends State<VocabularySaveSheet> {
   late final TextEditingController _readingController;
   late final TextEditingController _meaningController;
   String? _errorText;
+  String _deckId = minedPhrasesDeckId;
 
   @override
   void initState() {
@@ -119,6 +127,7 @@ class _VocabularySaveSheetState extends State<VocabularySaveSheet> {
         reading: _nullable(_readingController.text),
         meaning: _nullable(_meaningController.text),
         pos: null,
+        deckId: _deckId,
       ),
     );
   }
@@ -194,6 +203,11 @@ class _VocabularySaveSheetState extends State<VocabularySaveSheet> {
                 minLines: 1,
                 maxLines: 4,
                 decoration: const InputDecoration(labelText: 'Meaning'),
+              ),
+              const SizedBox(height: 12),
+              _DeckPicker(
+                deckId: _deckId,
+                onChanged: (id) => setState(() => _deckId = id),
               ),
               if (_errorText != null) ...[
                 const SizedBox(height: 12),
@@ -361,5 +375,109 @@ class _VocabularySaveSheetState extends State<VocabularySaveSheet> {
 
     final kana = buffer.toString();
     return kana.isEmpty ? null : kana;
+  }
+}
+
+/// The decks a word can go into, plus "New deck…" to make one on the spot.
+final _saveDecksProvider = FutureProvider.autoDispose<List<Deck>>(
+  (ref) => ref.watch(deckRepositoryProvider).listDecks(),
+);
+
+class _DeckPicker extends ConsumerWidget {
+  static const _newDeck = '__new__';
+
+  final String deckId;
+  final ValueChanged<String> onChanged;
+
+  const _DeckPicker({required this.deckId, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final decks = ref.watch(_saveDecksProvider).value ?? [Deck.minedPhrases];
+    // A deck deleted meanwhile falls back to the built-in one.
+    final value = decks.any((deck) => deck.id == deckId)
+        ? deckId
+        : minedPhrasesDeckId;
+    return DropdownButtonFormField<String>(
+      initialValue: value,
+      isExpanded: true,
+      decoration: const InputDecoration(
+        labelText: 'Deck',
+        prefixIcon: Icon(Icons.style_outlined),
+      ),
+      items: [
+        for (final deck in decks)
+          DropdownMenuItem(
+            value: deck.id,
+            child: Text(deck.name, overflow: TextOverflow.ellipsis),
+          ),
+        const DropdownMenuItem(
+          value: _newDeck,
+          child: Row(
+            children: [
+              Icon(Icons.add, size: 18),
+              SizedBox(width: 8),
+              Text('New deck…'),
+            ],
+          ),
+        ),
+      ],
+      onChanged: (id) async {
+        if (id == null) return;
+        if (id != _newDeck) return onChanged(id);
+        final name = await showDialog<String>(
+          context: context,
+          builder: (_) => const _NewDeckDialog(),
+        );
+        if (name == null) return;
+        final deck = await ref.read(deckRepositoryProvider).createDeck(name);
+        ref.invalidate(_saveDecksProvider);
+        ref.invalidate(deckSummariesProvider);
+        onChanged(deck.id);
+      },
+    );
+  }
+}
+
+class _NewDeckDialog extends StatefulWidget {
+  const _NewDeckDialog();
+
+  @override
+  State<_NewDeckDialog> createState() => _NewDeckDialogState();
+}
+
+class _NewDeckDialogState extends State<_NewDeckDialog> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final name = _controller.text.trim();
+    if (name.isNotEmpty) Navigator.of(context).pop(name);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('New deck'),
+      content: TextField(
+        controller: _controller,
+        autofocus: true,
+        decoration: const InputDecoration(labelText: 'Deck name'),
+        textInputAction: TextInputAction.done,
+        onSubmitted: (_) => _submit(),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(onPressed: _submit, child: const Text('Create')),
+      ],
+    );
   }
 }

@@ -24,6 +24,7 @@ abstract final class AppColors {
   static const Color podcast = Color(0xFF9B5DE5); // violet
   static const Color dialogue = Color(0xFF00B894); // teal
   static const Color story = Color(0xFF6C63FF); // indigo
+  static const Color book = Color(0xFFB5651D); // leather brown
   static const Color review = Color(0xFFFFA62B); // amber
   static const Color streak = Color(0xFFFF7A45); // orange
   static const Color vocabulary = Color(0xFFF15BB5); // pink

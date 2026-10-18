@@ -1,5 +1,4 @@
 import 'package:collection/collection.dart';
-import 'package:flutter/foundation.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
 class YoutubeTranscriptFetcher {
@@ -46,9 +45,9 @@ class YoutubeTranscriptFetcher {
   ///
   /// Only Japanese qualifies: the transcript is what the learner reads, taps
   /// and mines, so English subtitles would defeat the point. Hand-made
-  /// captions beat auto-generated ones. Generic so it can be tested without
-  /// building `youtube_explode_dart` track objects.
-  @visibleForTesting
+  /// captions beat auto-generated ones. Generic so it serves the official
+  /// API's tracks too, and can be tested without building
+  /// `youtube_explode_dart` track objects.
   static T? pickJapaneseTrack<T>(
     List<T> tracks, {
     required String Function(T) languageCode,

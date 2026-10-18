@@ -131,6 +131,7 @@ Future<void> _lookupAndSave(
         reading: request.reading,
         meaning: request.meaning,
         pos: request.pos,
+        deckId: request.deckId,
         sourceType: sourceType,
         sourceId: sourceId,
         sourceTitle: sourceTitle,

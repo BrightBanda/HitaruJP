@@ -276,6 +276,23 @@ class _ImmersionPlayerViewState extends ConsumerState<ImmersionPlayerView>
     context.pop();
   }
 
+  /// YouTube's own captions, in Japanese. The iframe API has no call for this
+  /// in the Dart package, so the captions module is driven directly.
+  Future<void> _toggleCaptions() async {
+    final on = !_host.captionsOn;
+    setState(() => _host.captionsOn = on);
+    final js = on
+        ? "player.loadModule('captions');"
+              "player.setOption('captions','track',{languageCode:'ja'});"
+        : "player.unloadModule('captions');";
+    try {
+      await _controller.webViewController.runJavaScript(js);
+    } catch (_) {
+      // The player is not ready yet: undo the switch so it shows the truth.
+      if (mounted) setState(() => _host.captionsOn = !on);
+    }
+  }
+
   /// Sends the video to the small window and goes back to browsing, even when
   /// it is paused.
   void _minimize() {
@@ -389,12 +406,6 @@ class _ImmersionPlayerViewState extends ConsumerState<ImmersionPlayerView>
           // the same widget when a resize switches layouts, so the video is
           // moved rather than reloaded.
           final player = _buildPlayer(contentAsync);
-          final seekBar = _SeekBar(
-            controller: _controller,
-            fallbackDuration: Duration(
-              seconds: contentAsync.asData?.value.durationSeconds ?? 0,
-            ),
-          );
           // Right under the video, so reading along never means looking away
           // from it. Three lines: the one before, the current one centred,
           // and the next.
@@ -422,7 +433,6 @@ class _ImmersionPlayerViewState extends ConsumerState<ImmersionPlayerView>
             return Column(
               children: [
                 player,
-                seekBar,
                 transcript,
                 const Divider(height: 1),
                 Expanded(
@@ -455,7 +465,6 @@ class _ImmersionPlayerViewState extends ConsumerState<ImmersionPlayerView>
                                 child: player,
                               ),
                       ),
-                      seekBar,
                       transcript,
                       const Divider(height: 1),
                       controls,
@@ -543,15 +552,25 @@ class _ImmersionPlayerViewState extends ConsumerState<ImmersionPlayerView>
             onPressed: _togglePlayback,
           ),
           DropdownButton<double>(
-            value: 1.0,
+            value: _host.playbackRate,
             items: [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0]
                 .map((v) => DropdownMenuItem(value: v, child: Text('${v}x')))
                 .toList(),
             onChanged: (value) {
               if (value != null) {
+                setState(() => _host.playbackRate = value);
                 _controller.setPlaybackRate(value);
               }
             },
+          ),
+          IconButton(
+            icon: Icon(
+              _host.captionsOn
+                  ? Icons.closed_caption
+                  : Icons.closed_caption_off,
+            ),
+            tooltip: _host.captionsOn ? 'Hide captions' : 'Show captions',
+            onPressed: _toggleCaptions,
           ),
           IconButton(
             icon: const Icon(Icons.picture_in_picture_alt),
@@ -617,72 +636,6 @@ class _SessionControls extends ConsumerWidget {
               icon: const Icon(Icons.stop),
               label: const Text('Stop session'),
             ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Position slider with elapsed and total time. Dragging only previews the
-/// position; the video seeks once, when the thumb is released.
-class _SeekBar extends ConsumerStatefulWidget {
-  final YoutubePlayerController controller;
-  final Duration fallbackDuration;
-
-  const _SeekBar({required this.controller, required this.fallbackDuration});
-
-  @override
-  ConsumerState<_SeekBar> createState() => _SeekBarState();
-}
-
-class _SeekBarState extends ConsumerState<_SeekBar> {
-  double? _dragSeconds;
-
-  @override
-  Widget build(BuildContext context) {
-    final position = ref.watch(playbackPositionProvider);
-    final reported = widget.controller.value.metaData.duration;
-    final duration = reported > Duration.zero
-        ? reported
-        : widget.fallbackDuration;
-    final total = duration.inMilliseconds / 1000;
-    final current = (_dragSeconds ?? position.inMilliseconds / 1000).clamp(
-      0.0,
-      total <= 0 ? 0.0 : total,
-    );
-    final labelStyle = Theme.of(context).textTheme.labelSmall;
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
-      child: Row(
-        children: [
-          Text(
-            formatDuration(Duration(seconds: current.round())),
-            style: labelStyle,
-          ),
-          Expanded(
-            child: SliderTheme(
-              data: SliderTheme.of(context).copyWith(
-                trackHeight: 3,
-                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
-                overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
-              ),
-              child: Slider(
-                value: current.toDouble(),
-                max: total <= 0 ? 1 : total,
-                onChanged: total <= 0
-                    ? null
-                    : (value) => setState(() => _dragSeconds = value),
-                onChangeEnd: total <= 0
-                    ? null
-                    : (value) async {
-                        await widget.controller.seekTo(seconds: value);
-                        if (mounted) setState(() => _dragSeconds = null);
-                      },
-              ),
-            ),
-          ),
-          Text(formatDuration(duration), style: labelStyle),
         ],
       ),
     );

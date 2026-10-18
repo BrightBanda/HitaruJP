@@ -1010,6 +1010,6242 @@
           "translation": "Today, the cat came with a friend."
         }
       ]
+    },
+    {
+      "id": "book-ichiya-n4",
+      "title": "I駅の一夜",
+      "level": "N4",
+      "kind": "book",
+      "speakers": [],
+      "lineCount": 83,
+      "attribution": "Adapted from 中谷宇吉郎「Ｉ駅の一夜」(1946), which is in the public domain, via Aozora Bunko / Soranoha (text encoding CC0). Rewritten in simple Japanese for HitaruJP.",
+      "sourceUrl": "https://soranoha.org/works/053205_001569/",
+      "updatedAt": "2026-10-15T15:02:19.659335Z",
+      "author": "中谷宇吉郎",
+      "originalTitle": "Ｉ駅の一夜",
+      "originalYear": 1946,
+      "description": "A scientist on his way to Tokyo is stuck in a snowy, blacked-out town during the war. A kind young innkeeper's wife, who loves his books, gives him a room full of books for the night.",
+      "lines": [
+        {
+          "index": 0,
+          "speaker": null,
+          "romaji": "sensou no toki no hanashi desu.",
+          "translation": "This story is from the time of the war.",
+          "tokens": [
+            {
+              "surface": "戦争",
+              "reading": "せんそう",
+              "romaji": null
+            },
+            {
+              "surface": "の",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "とき",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "の",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "話",
+              "reading": "はなし",
+              "romaji": null
+            },
+            {
+              "surface": "です",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "speaker": null,
+          "romaji": "sono koro, yoru wa denki o keshinakereba narimasen deshita.",
+          "translation": "In those days, we had to turn off the lights at night.",
+          "tokens": [
+            {
+              "surface": "その",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "ころ",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "夜",
+              "reading": "よる",
+              "romaji": null
+            },
+            {
+              "surface": "は",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "電気",
+              "reading": "でんき",
+              "romaji": null
+            },
+            {
+              "surface": "を",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "消さなければ",
+              "reading": "けさなければ",
+              "romaji": null
+            },
+            {
+              "surface": "なりませんでした",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "speaker": null,
+          "romaji": "machi wa itsumo kurakatta desu.",
+          "translation": "The towns were always dark.",
+          "tokens": [
+            {
+              "surface": "町",
+              "reading": "まち",
+              "romaji": null
+            },
+            {
+              "surface": "はいつ",
+              "reading": "ハイツ",
+              "romaji": null
+            },
+            {
+              "surface": "も",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "暗かった",
+              "reading": "くらかった",
+              "romaji": null
+            },
+            {
+              "surface": "です",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 3,
+          "speaker": null,
+          "romaji": "watashi wa shigoto de, toukyou e iku kisha ni notte imashita.",
+          "translation": "I was on a train to Tokyo for work.",
+          "tokens": [
+            {
+              "surface": "私",
+              "reading": "わたし",
+              "romaji": null
+            },
+            {
+              "surface": "は",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "仕事",
+              "reading": "しごと",
+              "romaji": null
+            },
+            {
+              "surface": "で",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "東京",
+              "reading": "とうきょう",
+              "romaji": null
+            },
+            {
+              "surface": "へ",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "行く",
+              "reading": "いく",
+              "romaji": null
+            },
+            {
+              "surface": "汽車",
+              "reading": "きしゃ",
+              "romaji": null
+            },
+            {
+              "surface": "に",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "乗っていました",
+              "reading": "のっていました",
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 4,
+          "speaker": null,
+          "romaji": "morioka ni tsuku to, eki no mawari ga yakete imashita.",
+          "translation": "When I reached Morioka, the area around the station had burned.",
+          "tokens": [
+            {
+              "surface": "盛岡",
+              "reading": "もりおか",
+              "romaji": null
+            },
+            {
+              "surface": "に",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "着く",
+              "reading": "つく",
+              "romaji": null
+            },
+            {
+              "surface": "と",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "駅",
+              "reading": "えき",
+              "romaji": null
+            },
+            {
+              "surface": "の",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "まわり",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "が",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "焼けていました",
+              "reading": "やけていました",
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 5,
+          "speaker": null,
+          "romaji": "sono asa, hikouki ga kite, machi o yaita no desu.",
+          "translation": "That morning, planes had come and burned the town.",
+          "tokens": [
+            {
+              "surface": "その",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "朝",
+              "reading": "あさ",
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "飛行機",
+              "reading": "ひこうき",
+              "romaji": null
+            },
+            {
+              "surface": "が",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "来て",
+              "reading": "きて",
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "町",
+              "reading": "まち",
+              "romaji": null
+            },
+            {
+              "surface": "を",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "焼いた",
+              "reading": "やいた",
+              "romaji": null
+            },
+            {
+              "surface": "のです",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 6,
+          "speaker": null,
+          "romaji": "kisha wa morioka made shika ikimasen deshita.",
+          "translation": "The train would go no farther than Morioka.",
+          "tokens": [
+            {
+              "surface": "汽車",
+              "reading": "きしゃ",
+              "romaji": null
+            },
+            {
+              "surface": "は",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "盛岡",
+              "reading": "もりおか",
+              "romaji": null
+            },
+            {
+              "surface": "まで",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "しか",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "行きませんでした",
+              "reading": "いきませんでした",
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 7,
+          "speaker": null,
+          "romaji": "watashi wa tsugi no kisha o sanjikan machimashita.",
+          "translation": "I waited three hours for the next train.",
+          "tokens": [
+            {
+              "surface": "私",
+              "reading": "わたし",
+              "romaji": null
+            },
+            {
+              "surface": "は",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "次",
+              "reading": "つぎ",
+              "romaji": null
+            },
+            {
+              "surface": "の",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "汽車",
+              "reading": "きしゃ",
+              "romaji": null
+            },
+            {
+              "surface": "を",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "三時間",
+              "reading": "さんじかん",
+              "romaji": null
+            },
+            {
+              "surface": "待ちました",
+              "reading": "まちました",
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 8,
+          "speaker": null,
+          "romaji": "demo, hito ga totemo ookute, noremasen deshita.",
+          "translation": "But there were so many people that I could not get on.",
+          "tokens": [
+            {
+              "surface": "でも",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "人",
+              "reading": "ひと",
+              "romaji": null
+            },
+            {
+              "surface": "が",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "とても",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "多くて",
+              "reading": "おおくて",
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "乗れませんでした",
+              "reading": "のれませんでした",
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 9,
+          "speaker": null,
+          "romaji": "mata nijikan matte, yatto tsugi no kisha ni norimashita.",
+          "translation": "I waited two more hours and finally got on the next train.",
+          "tokens": [
+            {
+              "surface": "また",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "二",
+              "reading": "に",
+              "romaji": null
+            },
+            {
+              "surface": "時間",
+              "reading": "じかん",
+              "romaji": null
+            },
+            {
+              "surface": "待って",
+              "reading": "まって",
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "やっと",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "次",
+              "reading": "つぎ",
+              "romaji": null
+            },
+            {
+              "surface": "の",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "汽車",
+              "reading": "きしゃ",
+              "romaji": null
+            },
+            {
+              "surface": "に",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "乗りました",
+              "reading": "のりました",
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 10,
+          "speaker": null,
+          "romaji": "demo, sono kisha mo hito de ippai deshita.",
+          "translation": "But that train was also full of people.",
+          "tokens": [
+            {
+              "surface": "でも",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "その",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "汽車",
+              "reading": "きしゃ",
+              "romaji": null
+            },
+            {
+              "surface": "も",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "人",
+              "reading": "ひと",
+              "romaji": null
+            },
+            {
+              "surface": "で",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "いっぱい",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "でした",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 11,
+          "speaker": null,
+          "romaji": "watashi wa iriguchi no chikaku ni, zutto tatte imashita.",
+          "translation": "I stood near the door the whole time.",
+          "tokens": [
+            {
+              "surface": "私",
+              "reading": "わたし",
+              "romaji": null
+            },
+            {
+              "surface": "は",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "入り口",
+              "reading": "いりぐち",
+              "romaji": null
+            },
+            {
+              "surface": "の",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "近く",
+              "reading": "ちかく",
+              "romaji": null
+            },
+            {
+              "surface": "に",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "ずっと",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "立っていました",
+              "reading": "たっていました",
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 12,
+          "speaker": null,
+          "romaji": "yoru ni naru to, kaze ga tsumetaku narimashita.",
+          "translation": "When night came, the wind turned cold.",
+          "tokens": [
+            {
+              "surface": "夜",
+              "reading": "よる",
+              "romaji": null
+            },
+            {
+              "surface": "になると",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "風",
+              "reading": "かぜ",
+              "romaji": null
+            },
+            {
+              "surface": "が",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "冷たくなりました",
+              "reading": "つめたくなりました",
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 13,
+          "speaker": null,
+          "romaji": "ashi mo totemo tsukaremashita.",
+          "translation": "My legs were very tired, too.",
+          "tokens": [
+            {
+              "surface": "足もと",
+              "reading": "あしもと",
+              "romaji": null
+            },
+            {
+              "surface": "ても",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "つかれました",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 14,
+          "speaker": null,
+          "romaji": "\"kono mama toukyou made tatte iku no wa, muri da.\"",
+          "translation": "\"I can't stand all the way to Tokyo like this.\"",
+          "tokens": [
+            {
+              "surface": "「",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "この",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "まま",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "東京",
+              "reading": "とうきょう",
+              "romaji": null
+            },
+            {
+              "surface": "まで",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "立っていく",
+              "reading": "たっていく",
+              "romaji": null
+            },
+            {
+              "surface": "の",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "は",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "むり",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "だ",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。」",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 15,
+          "speaker": null,
+          "romaji": "shashou-san ni hanasu to, kou iimashita.",
+          "translation": "I talked to the conductor, and he said this.",
+          "tokens": [
+            {
+              "surface": "車掌",
+              "reading": "しゃしょう",
+              "romaji": null
+            },
+            {
+              "surface": "さん",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "に",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "話す",
+              "reading": "はなす",
+              "romaji": null
+            },
+            {
+              "surface": "と",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "こう",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "言いました",
+              "reading": "いいました",
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 16,
+          "speaker": null,
+          "romaji": "\"I-eki de orite, hitoban tomatte wa dou desu ka. asa, hayai kisha ga arimasu yo.\"",
+          "translation": "\"Why not get off at I Station and stay the night? There is an early train in the morning.\"",
+          "tokens": [
+            {
+              "surface": "「",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "I",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "駅",
+              "reading": "えき",
+              "romaji": null
+            },
+            {
+              "surface": "で",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "おりて",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "一晩",
+              "reading": "ひとばん",
+              "romaji": null
+            },
+            {
+              "surface": "泊まっては",
+              "reading": "とまっては",
+              "romaji": null
+            },
+            {
+              "surface": "どう",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "ですか",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "朝",
+              "reading": "あさ",
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "早い",
+              "reading": "はやい",
+              "romaji": null
+            },
+            {
+              "surface": "汽車",
+              "reading": "きしゃ",
+              "romaji": null
+            },
+            {
+              "surface": "が",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "あります",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "よ",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。」",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 17,
+          "speaker": null,
+          "romaji": "\"demo, ima kara tomareru yado wa, nai kamo shiremasen.\"",
+          "translation": "\"But you may not find an inn to stay at now.\"",
+          "tokens": [
+            {
+              "surface": "「",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "でも",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "今",
+              "reading": "いま",
+              "romaji": null
+            },
+            {
+              "surface": "から",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "泊まれる",
+              "reading": "とまれる",
+              "romaji": null
+            },
+            {
+              "surface": "宿",
+              "reading": "やど",
+              "romaji": null
+            },
+            {
+              "surface": "は",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "ないか",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "もし",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "れません",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。」",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 18,
+          "speaker": null,
+          "romaji": "watashi wa gaman dekinaku natte, I-eki de orimashita.",
+          "translation": "I could not bear it any longer, and I got off at I Station.",
+          "tokens": [
+            {
+              "surface": "私",
+              "reading": "わたし",
+              "romaji": null
+            },
+            {
+              "surface": "は",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "がまん",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "できなくなって",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "I",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "駅",
+              "reading": "えき",
+              "romaji": null
+            },
+            {
+              "surface": "で",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "おりました",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 19,
+          "speaker": null,
+          "romaji": "yoru no kuji sugi deshita.",
+          "translation": "It was past nine at night.",
+          "tokens": [
+            {
+              "surface": "夜",
+              "reading": "よる",
+              "romaji": null
+            },
+            {
+              "surface": "の",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "九時",
+              "reading": "くじ",
+              "romaji": null
+            },
+            {
+              "surface": "すぎ",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "でした",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 20,
+          "speaker": null,
+          "romaji": "yuki ga futte ite, machi wa makkura deshita.",
+          "translation": "It was snowing, and the town was pitch dark.",
+          "tokens": [
+            {
+              "surface": "雪",
+              "reading": "ゆき",
+              "romaji": null
+            },
+            {
+              "surface": "が",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "降っていて",
+              "reading": "ふっていて",
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "町",
+              "reading": "まち",
+              "romaji": null
+            },
+            {
+              "surface": "は",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "真っ暗",
+              "reading": "まっくら",
+              "romaji": null
+            },
+            {
+              "surface": "でした",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 21,
+          "speaker": null,
+          "romaji": "eki no mae no kouban de, omawari-san ni kikimashita.",
+          "translation": "At the police box in front of the station, I asked the policeman.",
+          "tokens": [
+            {
+              "surface": "駅",
+              "reading": "えき",
+              "romaji": null
+            },
+            {
+              "surface": "の",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "前",
+              "reading": "まえ",
+              "romaji": null
+            },
+            {
+              "surface": "の",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "交番",
+              "reading": "こうばん",
+              "romaji": null
+            },
+            {
+              "surface": "で",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "おまわりさん",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "に",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "聞きました",
+              "reading": "ききました",
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 22,
+          "speaker": null,
+          "romaji": "\"kono chikaku ni, tomareru yado wa arimasen ka.\"",
+          "translation": "\"Is there an inn near here where I can stay?\"",
+          "tokens": [
+            {
+              "surface": "「",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "この",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "近く",
+              "reading": "ちかく",
+              "romaji": null
+            },
+            {
+              "surface": "に",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "泊まれる",
+              "reading": "とまれる",
+              "romaji": null
+            },
+            {
+              "surface": "宿",
+              "reading": "やど",
+              "romaji": null
+            },
+            {
+              "surface": "はあ",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "りま",
+              "reading": "リマ",
+              "romaji": null
+            },
+            {
+              "surface": "せんか",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。」",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 23,
+          "speaker": null,
+          "romaji": "\"imagoro wa, muri deshou ne.\" omawari-san wa tsumetai koe de iimashita.",
+          "translation": "\"At this hour, probably not,\" the policeman said coldly.",
+          "tokens": [
+            {
+              "surface": "「",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "今ごろ",
+              "reading": "いまごろ",
+              "romaji": null
+            },
+            {
+              "surface": "は",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "むり",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "でしょう",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "ね",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。」",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "おまわりさん",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "は",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "冷たい",
+              "reading": "つめたい",
+              "romaji": null
+            },
+            {
+              "surface": "声",
+              "reading": "こえ",
+              "romaji": null
+            },
+            {
+              "surface": "で",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "言いました",
+              "reading": "いいました",
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 24,
+          "speaker": null,
+          "romaji": "shigoto de toukyou e iku tokoro da to hanashite mo, kiite moraemasen deshita.",
+          "translation": "I told him I was on my way to Tokyo for work, but he would not listen.",
+          "tokens": [
+            {
+              "surface": "仕事",
+              "reading": "しごと",
+              "romaji": null
+            },
+            {
+              "surface": "で",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "東京",
+              "reading": "とうきょう",
+              "romaji": null
+            },
+            {
+              "surface": "へ",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "行く",
+              "reading": "いく",
+              "romaji": null
+            },
+            {
+              "surface": "ところ",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "だ",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "と",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "話しても",
+              "reading": "はなしても",
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "聞いても",
+              "reading": "きいても",
+              "romaji": null
+            },
+            {
+              "surface": "ら",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "えませんでした",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 25,
+          "speaker": null,
+          "romaji": "oshiete moratta yado ni nikken ikimashita ga, dochira mo \"ippai desu\" to iimashita.",
+          "translation": "I went to the two inns he named, but both said, \"We are full.\"",
+          "tokens": [
+            {
+              "surface": "教えても",
+              "reading": "おしえても",
+              "romaji": null
+            },
+            {
+              "surface": "ら",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "った",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "宿",
+              "reading": "やど",
+              "romaji": null
+            },
+            {
+              "surface": "に",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "二軒",
+              "reading": "にけん",
+              "romaji": null
+            },
+            {
+              "surface": "行きました",
+              "reading": "いきました",
+              "romaji": null
+            },
+            {
+              "surface": "が",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "どちらも",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "「",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "いっぱい",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "です",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "」",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "と",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "言いました",
+              "reading": "いいました",
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 26,
+          "speaker": null,
+          "romaji": "kouban ni modoru to, omawari-san wa okotte imashita.",
+          "translation": "When I went back to the police box, the policeman was angry.",
+          "tokens": [
+            {
+              "surface": "交番",
+              "reading": "こうばん",
+              "romaji": null
+            },
+            {
+              "surface": "にも",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "どる",
+              "reading": "とる",
+              "romaji": null
+            },
+            {
+              "surface": "と",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "おまわりさん",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "は",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "怒っていました",
+              "reading": "おこっていました",
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 27,
+          "speaker": null,
+          "romaji": "\"nankai kite mo dame desu yo. koko no denwa wa, machi ni wa kakeraremasen.\"",
+          "translation": "\"It's no use coming back again. The phone here can't call anywhere in town.\"",
+          "tokens": [
+            {
+              "surface": "「",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "何回",
+              "reading": "なんかい",
+              "romaji": null
+            },
+            {
+              "surface": "来ても",
+              "reading": "きても",
+              "romaji": null
+            },
+            {
+              "surface": "だめ",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "です",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "よ",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "ここの",
+              "reading": "きゅう",
+              "romaji": null
+            },
+            {
+              "surface": "電話",
+              "reading": "でんわ",
+              "romaji": null
+            },
+            {
+              "surface": "は",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "町",
+              "reading": "まち",
+              "romaji": null
+            },
+            {
+              "surface": "には",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "かけられません",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。」",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 28,
+          "speaker": null,
+          "romaji": "watashi wa akiramete, mata yuki no michi o arukimashita.",
+          "translation": "I gave up and walked along the snowy road again.",
+          "tokens": [
+            {
+              "surface": "私",
+              "reading": "わたし",
+              "romaji": null
+            },
+            {
+              "surface": "はあ",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "き",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "らめ",
+              "reading": "ラメ",
+              "romaji": null
+            },
+            {
+              "surface": "て",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "また",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "雪",
+              "reading": "ゆき",
+              "romaji": null
+            },
+            {
+              "surface": "の",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "道",
+              "reading": "みち",
+              "romaji": null
+            },
+            {
+              "surface": "を",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "歩きました",
+              "reading": "あるきました",
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 29,
+          "speaker": null,
+          "romaji": "yuki wa dondon tsuyoku narimashita. soto de neru koto wa dekimasen.",
+          "translation": "The snow grew heavier and heavier. I could not sleep outside.",
+          "tokens": [
+            {
+              "surface": "雪",
+              "reading": "ゆき",
+              "romaji": null
+            },
+            {
+              "surface": "は",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "どんどん",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "強くなりました",
+              "reading": "つよくなりました",
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "外",
+              "reading": "そと",
+              "romaji": null
+            },
+            {
+              "surface": "で",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "寝る",
+              "reading": "ねる",
+              "romaji": null
+            },
+            {
+              "surface": "こと",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "はで",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "きません",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 30,
+          "speaker": null,
+          "romaji": "sono toki, ookii yado no mae ni, hirokute hikui furui ie ga miemashita.",
+          "translation": "Then I saw a wide, low, old house in front of a big inn.",
+          "tokens": [
+            {
+              "surface": "その",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "とき",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "大きい",
+              "reading": "おおきい",
+              "romaji": null
+            },
+            {
+              "surface": "宿",
+              "reading": "やど",
+              "romaji": null
+            },
+            {
+              "surface": "の",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "前",
+              "reading": "まえ",
+              "romaji": null
+            },
+            {
+              "surface": "に",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "広くて",
+              "reading": "ひろくて",
+              "romaji": null
+            },
+            {
+              "surface": "低い",
+              "reading": "ひくい",
+              "romaji": null
+            },
+            {
+              "surface": "古い",
+              "reading": "ふるい",
+              "romaji": null
+            },
+            {
+              "surface": "家",
+              "reading": "いえ",
+              "romaji": null
+            },
+            {
+              "surface": "が",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "見えました",
+              "reading": "みえました",
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 31,
+          "speaker": null,
+          "romaji": "mukashi no yado no you na ie desu.",
+          "translation": "It looked like an inn from the old days.",
+          "tokens": [
+            {
+              "surface": "昔",
+              "reading": "むかし",
+              "romaji": null
+            },
+            {
+              "surface": "の",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "宿",
+              "reading": "やど",
+              "romaji": null
+            },
+            {
+              "surface": "の",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "よう",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "な",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "家",
+              "reading": "いえ",
+              "romaji": null
+            },
+            {
+              "surface": "です",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 32,
+          "speaker": null,
+          "romaji": "omoikitte to o akeru to, kagi wa kakatte imasen deshita.",
+          "translation": "I took a chance and opened the door. It was not locked.",
+          "tokens": [
+            {
+              "surface": "思いきって",
+              "reading": "おもいきって",
+              "romaji": null
+            },
+            {
+              "surface": "戸",
+              "reading": "と",
+              "romaji": null
+            },
+            {
+              "surface": "を",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "開ける",
+              "reading": "あける",
+              "romaji": null
+            },
+            {
+              "surface": "と",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "かぎ",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "はか",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "かっていませんでした",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 33,
+          "speaker": null,
+          "romaji": "naka wa hirokute kurakute, oku ni chiisai denki ga hitotsu, tsuite imashita.",
+          "translation": "It was wide and dark inside, but one small light was on at the back.",
+          "tokens": [
+            {
+              "surface": "中",
+              "reading": "なか",
+              "romaji": null
+            },
+            {
+              "surface": "は",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "広くて",
+              "reading": "ひろくて",
+              "romaji": null
+            },
+            {
+              "surface": "暗くて",
+              "reading": "くらくて",
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "奥",
+              "reading": "おく",
+              "romaji": null
+            },
+            {
+              "surface": "に",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "小さい",
+              "reading": "ちいさい",
+              "romaji": null
+            },
+            {
+              "surface": "電気",
+              "reading": "でんき",
+              "romaji": null
+            },
+            {
+              "surface": "が",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "一つ",
+              "reading": "ひとつ",
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "ついていました",
+              "reading": "ついてました",
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 34,
+          "speaker": null,
+          "romaji": "\"sumimasen. gohan wa irimasen. hitoban dake tomete kudasai.\"",
+          "translation": "\"Excuse me. I don't need a meal. Please let me stay just one night.\"",
+          "tokens": [
+            {
+              "surface": "「",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "すみません",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "ごはん",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "はいりません",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "一晩",
+              "reading": "ひとばん",
+              "romaji": null
+            },
+            {
+              "surface": "だけ",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "泊めてください",
+              "reading": "とめてください",
+              "romaji": null
+            },
+            {
+              "surface": "。」",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 35,
+          "speaker": null,
+          "romaji": "onna no hito ga dete kite iimashita. \"sumimasen ga, ippai desu. futon mo arimasen.\"",
+          "translation": "A woman came out and said, \"I'm sorry, but we're full. And we have no futons.\"",
+          "tokens": [
+            {
+              "surface": "女の人",
+              "reading": "おんなのひと",
+              "romaji": null
+            },
+            {
+              "surface": "が",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "出てきて",
+              "reading": "でてきて",
+              "romaji": null
+            },
+            {
+              "surface": "言いました",
+              "reading": "いいました",
+              "romaji": null
+            },
+            {
+              "surface": "。「",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "すみません",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "が",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "いっぱい",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "です",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "ふとん",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "もあ",
+              "reading": "モア",
+              "romaji": null
+            },
+            {
+              "surface": "りま",
+              "reading": "リマ",
+              "romaji": null
+            },
+            {
+              "surface": "せん",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。」",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 36,
+          "speaker": null,
+          "romaji": "\"futon ga nakute mo ii n desu. kooto ga arimasu. kono yuki no naka de wa, soto de neraremasen.\"",
+          "translation": "\"I don't need a futon. I have a coat. I can't sleep outside in this snow.\"",
+          "tokens": [
+            {
+              "surface": "「",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "ふとん",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "がな",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "く",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "ても",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "いいん",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "です",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "コート",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "が",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "あります",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "この",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "雪",
+              "reading": "ゆき",
+              "romaji": null
+            },
+            {
+              "surface": "の",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "中",
+              "reading": "なか",
+              "romaji": null
+            },
+            {
+              "surface": "では",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "外",
+              "reading": "そと",
+              "romaji": null
+            },
+            {
+              "surface": "で",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "寝られません",
+              "reading": "ねられません",
+              "romaji": null
+            },
+            {
+              "surface": "。」",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 37,
+          "speaker": null,
+          "romaji": "sono toki, oku kara wakai onna no hito no koe ga shimashita.",
+          "translation": "Then I heard a young woman's voice from the back.",
+          "tokens": [
+            {
+              "surface": "その",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "とき",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "奥",
+              "reading": "おく",
+              "romaji": null
+            },
+            {
+              "surface": "から",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "若い",
+              "reading": "わかい",
+              "romaji": null
+            },
+            {
+              "surface": "女の人",
+              "reading": "おんなのひと",
+              "romaji": null
+            },
+            {
+              "surface": "の",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "声",
+              "reading": "こえ",
+              "romaji": null
+            },
+            {
+              "surface": "がし",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "ました",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 38,
+          "speaker": null,
+          "romaji": "\"hana-san, futon wa hontou ni ichimai mo nai no?\"",
+          "translation": "\"Hana, is there really not a single futon?\"",
+          "tokens": [
+            {
+              "surface": "「",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "はな",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "さん",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "ふとん",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "は",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "本当に",
+              "reading": "ほんとうに",
+              "romaji": null
+            },
+            {
+              "surface": "一枚",
+              "reading": "いちまい",
+              "romaji": null
+            },
+            {
+              "surface": "も",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "ない",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "の",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "?」",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 39,
+          "speaker": null,
+          "romaji": "\"natsu no futon ga nimai aru dake desu.\" to, hana-san wa kotaemashita.",
+          "translation": "\"Only two summer futons,\" Hana answered.",
+          "tokens": [
+            {
+              "surface": "「",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "夏",
+              "reading": "なつ",
+              "romaji": null
+            },
+            {
+              "surface": "の",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "ふとん",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "が",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "二枚",
+              "reading": "にまい",
+              "romaji": null
+            },
+            {
+              "surface": "ある",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "だけ",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "です",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。」",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "と",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "はな",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "さん",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "は",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "答えました",
+              "reading": "こたえました",
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 40,
+          "speaker": null,
+          "romaji": "\"sore de juubun desu.\" to watashi wa iimashita.",
+          "translation": "\"That's plenty,\" I said.",
+          "tokens": [
+            {
+              "surface": "「",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "それで",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "十分",
+              "reading": "じゅうぶん",
+              "romaji": null
+            },
+            {
+              "surface": "です",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。」",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "と",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "私",
+              "reading": "わたし",
+              "romaji": null
+            },
+            {
+              "surface": "は",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "言いました",
+              "reading": "いいました",
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 41,
+          "speaker": null,
+          "romaji": "\"kawaisou desu kara, tomete agete kudasai. o-kyaku-san, o-namae to juusho o oshiete kudasaimasen ka.\"",
+          "translation": "\"Poor man. Please let him stay. Sir, would you tell me your name and address?\"",
+          "tokens": [
+            {
+              "surface": "「",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "かわいそう",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "ですから",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "泊めて",
+              "reading": "とめて",
+              "romaji": null
+            },
+            {
+              "surface": "あげてください",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "お",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "客",
+              "reading": "きゃく",
+              "romaji": null
+            },
+            {
+              "surface": "さん",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "お名前",
+              "reading": "おなまえ",
+              "romaji": null
+            },
+            {
+              "surface": "と",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "住所",
+              "reading": "じゅうしょ",
+              "romaji": null
+            },
+            {
+              "surface": "を",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "教えてください",
+              "reading": "おしえてください",
+              "romaji": null
+            },
+            {
+              "surface": "ませんか",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。」",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 42,
+          "speaker": null,
+          "romaji": "watashi wa meishi o dashite, ayashii mono de wa arimasen to hanashimashita.",
+          "translation": "I handed over my business card and said I was not a suspicious person.",
+          "tokens": [
+            {
+              "surface": "私",
+              "reading": "わたし",
+              "romaji": null
+            },
+            {
+              "surface": "は",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "名刺",
+              "reading": "めいし",
+              "romaji": null
+            },
+            {
+              "surface": "を",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "出して",
+              "reading": "だして",
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "あやしい",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "者",
+              "reading": "もの",
+              "romaji": null
+            },
+            {
+              "surface": "では",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "ありません",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "と",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "話しました",
+              "reading": "はなしました",
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 43,
+          "speaker": null,
+          "romaji": "hana-san wa meishi o motte, oku ni hairimashita. nakanaka dete kimasen deshita.",
+          "translation": "Hana took the card to the back. She did not come out for a long time.",
+          "tokens": [
+            {
+              "surface": "はな",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "さん",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "は",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "名刺",
+              "reading": "めいし",
+              "romaji": null
+            },
+            {
+              "surface": "を",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "持って",
+              "reading": "もって",
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "奥",
+              "reading": "おく",
+              "romaji": null
+            },
+            {
+              "surface": "に",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "入りました",
+              "reading": "はいりました",
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "なかなか",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "出てきませんでした",
+              "reading": "でてきませんでした",
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 44,
+          "speaker": null,
+          "romaji": "oku kara, gotogoto to oto ga kikoemashita.",
+          "translation": "I heard thumping sounds from the back.",
+          "tokens": [
+            {
+              "surface": "奥",
+              "reading": "おく",
+              "romaji": null
+            },
+            {
+              "surface": "から",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "ごと",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "ごと",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "と",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "音",
+              "reading": "おと",
+              "romaji": null
+            },
+            {
+              "surface": "が",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "聞こえました",
+              "reading": "きこえました",
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 45,
+          "speaker": null,
+          "romaji": "shibaraku shite, koe no onna no hito ga dete kimashita.",
+          "translation": "After a while, the woman with the voice came out.",
+          "tokens": [
+            {
+              "surface": "しばらくして",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "声",
+              "reading": "こえ",
+              "romaji": null
+            },
+            {
+              "surface": "の",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "女の人",
+              "reading": "おんなのひと",
+              "romaji": null
+            },
+            {
+              "surface": "が",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "出てきました",
+              "reading": "でてきました",
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 46,
+          "speaker": null,
+          "romaji": "\"shitsurei shimashita. konogoro wa abunai node, sumimasen deshita. douzo, o-agari kudasai.\"",
+          "translation": "\"Forgive my rudeness. These days it is dangerous, so I'm sorry. Please come in.\"",
+          "tokens": [
+            {
+              "surface": "「",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "失礼しました",
+              "reading": "しつれいしました",
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "このごろ",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "は",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "危ない",
+              "reading": "あぶない",
+              "romaji": null
+            },
+            {
+              "surface": "ので",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "すみませんでした",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "どうぞ",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "お",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "上がり",
+              "reading": "あがり",
+              "romaji": null
+            },
+            {
+              "surface": "ください",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。」",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 47,
+          "speaker": null,
+          "romaji": "\"kutsu wa watashi ga mochimasu. nikai e douzo.\"",
+          "translation": "\"I'll take your shoes. Please come up to the second floor.\"",
+          "tokens": [
+            {
+              "surface": "「",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "くつ",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "は",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "私",
+              "reading": "わたし",
+              "romaji": null
+            },
+            {
+              "surface": "が",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "持ちます",
+              "reading": "もちます",
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "二階",
+              "reading": "にかい",
+              "romaji": null
+            },
+            {
+              "surface": "へど",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "う",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "ぞ",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。」",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 48,
+          "speaker": null,
+          "romaji": "sono hito wa kurai kaidan o, saki ni agarimashita. watashi wa ashimoto o sagashinagara, tsuite ikimashita.",
+          "translation": "She went up the dark stairs ahead of me. I followed, feeling for each step.",
+          "tokens": [
+            {
+              "surface": "その",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "人",
+              "reading": "ひと",
+              "romaji": null
+            },
+            {
+              "surface": "は",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "暗い",
+              "reading": "くらい",
+              "romaji": null
+            },
+            {
+              "surface": "階段",
+              "reading": "かいだん",
+              "romaji": null
+            },
+            {
+              "surface": "を",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "先に",
+              "reading": "さきに",
+              "romaji": null
+            },
+            {
+              "surface": "上がりました",
+              "reading": "あがりました",
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "私",
+              "reading": "わたし",
+              "romaji": null
+            },
+            {
+              "surface": "は",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "足もと",
+              "reading": "あしもと",
+              "romaji": null
+            },
+            {
+              "surface": "を",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "探しながら",
+              "reading": "さがしながら",
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "ついて行きました",
+              "reading": "ついていきました",
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 49,
+          "speaker": null,
+          "romaji": "kaidan no tochuu de, sono hito wa iimashita.",
+          "translation": "Halfway up, she said,",
+          "tokens": [
+            {
+              "surface": "階段",
+              "reading": "かいだん",
+              "romaji": null
+            },
+            {
+              "surface": "の",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "途中",
+              "reading": "とちゅう",
+              "romaji": null
+            },
+            {
+              "surface": "で",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "その",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "人",
+              "reading": "ひと",
+              "romaji": null
+            },
+            {
+              "surface": "は",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "言いました",
+              "reading": "いいました",
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 50,
+          "speaker": null,
+          "romaji": "\"sensei ga konya koko ni irassharu nante, yume no you desu. watashi wa sensei no hon ga daisuki de, itsumo yonde iru n desu.\"",
+          "translation": "\"I never dreamed you would be here tonight, sir. I love your books and always read them.\"",
+          "tokens": [
+            {
+              "surface": "「",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "先生",
+              "reading": "せんせい",
+              "romaji": null
+            },
+            {
+              "surface": "が",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "今夜",
+              "reading": "こんや",
+              "romaji": null
+            },
+            {
+              "surface": "ここ",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "にい",
+              "reading": "さら",
+              "romaji": null
+            },
+            {
+              "surface": "らっしゃる",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "なんて",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "夢",
+              "reading": "ゆめ",
+              "romaji": null
+            },
+            {
+              "surface": "の",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "ようです",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "私",
+              "reading": "わたし",
+              "romaji": null
+            },
+            {
+              "surface": "は",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "先生",
+              "reading": "せんせい",
+              "romaji": null
+            },
+            {
+              "surface": "の",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "本",
+              "reading": "ほん",
+              "romaji": null
+            },
+            {
+              "surface": "が",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "大好き",
+              "reading": "だいすき",
+              "romaji": null
+            },
+            {
+              "surface": "で",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "いつも",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "読んでいる",
+              "reading": "よんでいる",
+              "romaji": null
+            },
+            {
+              "surface": "んです",
+              "reading": "のです",
+              "romaji": null
+            },
+            {
+              "surface": "。」",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 51,
+          "speaker": null,
+          "romaji": "\"o-kyaku-san no heya wa, mou arimasen. moushiwake arimasen ga, watashi no heya de yasunde moraemasen ka.\"",
+          "translation": "\"We have no more rooms. I'm very sorry, but could you rest in my room?\"",
+          "tokens": [
+            {
+              "surface": "「",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "お",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "客",
+              "reading": "きゃく",
+              "romaji": null
+            },
+            {
+              "surface": "さん",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "の",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "部屋",
+              "reading": "へや",
+              "romaji": null
+            },
+            {
+              "surface": "は",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "もう",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "ありません",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "もうしわけありません",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "が",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "私",
+              "reading": "わたし",
+              "romaji": null
+            },
+            {
+              "surface": "の",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "部屋",
+              "reading": "へや",
+              "romaji": null
+            },
+            {
+              "surface": "で",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "休んでも",
+              "reading": "やすんでも",
+              "romaji": null
+            },
+            {
+              "surface": "ら",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "えません",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "か",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。」",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 52,
+          "speaker": null,
+          "romaji": "ichijikan mo kurai michi o aruite, yatto akarui heya ni hairimashita.",
+          "translation": "After walking an hour in the dark, I finally entered a bright room.",
+          "tokens": [
+            {
+              "surface": "一時間",
+              "reading": "いちじかん",
+              "romaji": null
+            },
+            {
+              "surface": "も",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "暗い",
+              "reading": "くらい",
+              "romaji": null
+            },
+            {
+              "surface": "道",
+              "reading": "みち",
+              "romaji": null
+            },
+            {
+              "surface": "を",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "歩いて",
+              "reading": "あるいて",
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "やっと",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "明るい",
+              "reading": "あかるい",
+              "romaji": null
+            },
+            {
+              "surface": "部屋",
+              "reading": "へや",
+              "romaji": null
+            },
+            {
+              "surface": "に",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "入りました",
+              "reading": "はいりました",
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 53,
+          "speaker": null,
+          "romaji": "chiisai heya deshita.",
+          "translation": "It was a small room.",
+          "tokens": [
+            {
+              "surface": "小さい",
+              "reading": "ちいさい",
+              "romaji": null
+            },
+            {
+              "surface": "部屋",
+              "reading": "へや",
+              "romaji": null
+            },
+            {
+              "surface": "でした",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 54,
+          "speaker": null,
+          "romaji": "sono hito wa aoi fuku o kite imashita. sanjussai gurai no, atama no yosasou na, kirei na hito deshita.",
+          "translation": "She was wearing a blue outfit. She was about thirty, clever-looking and beautiful.",
+          "tokens": [
+            {
+              "surface": "その",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "人",
+              "reading": "ひと",
+              "romaji": null
+            },
+            {
+              "surface": "は",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "青い",
+              "reading": "あおい",
+              "romaji": null
+            },
+            {
+              "surface": "服",
+              "reading": "ふく",
+              "romaji": null
+            },
+            {
+              "surface": "を",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "着ていました",
+              "reading": "きていました",
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "三十歳",
+              "reading": "さんじゅっさい",
+              "romaji": null
+            },
+            {
+              "surface": "ぐらい",
+              "reading": "くらい",
+              "romaji": null
+            },
+            {
+              "surface": "の",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "頭",
+              "reading": "あたま",
+              "romaji": null
+            },
+            {
+              "surface": "の",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "よさ",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "そう",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "な",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "きれい",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "な",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "人",
+              "reading": "ひと",
+              "romaji": null
+            },
+            {
+              "surface": "でした",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 55,
+          "speaker": null,
+          "romaji": "watashi mo odorokimashita ga, ichiban odoroita no wa, heya deshita.",
+          "translation": "I was surprised, too, but what surprised me most was the room.",
+          "tokens": [
+            {
+              "surface": "私",
+              "reading": "わたし",
+              "romaji": null
+            },
+            {
+              "surface": "も",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "おどろきました",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "が",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "いちばん",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "おどろいた",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "の",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "は",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "部屋",
+              "reading": "へや",
+              "romaji": null
+            },
+            {
+              "surface": "でした",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 56,
+          "speaker": null,
+          "romaji": "futatsu no kabe ga, zenbu hondana de, hon ga gisshiri narande imashita.",
+          "translation": "Two walls were all bookshelves, packed tight with books.",
+          "tokens": [
+            {
+              "surface": "二つ",
+              "reading": "ふたつ",
+              "romaji": null
+            },
+            {
+              "surface": "の",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "壁",
+              "reading": "かべ",
+              "romaji": null
+            },
+            {
+              "surface": "が",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "ぜんぶ",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "本",
+              "reading": "ほん",
+              "romaji": null
+            },
+            {
+              "surface": "だ",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "な",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "で",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "本",
+              "reading": "ほん",
+              "romaji": null
+            },
+            {
+              "surface": "が",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "ぎっしり",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "並んでいました",
+              "reading": "ならんでいました",
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 57,
+          "speaker": null,
+          "romaji": "nihon no furui hon mo, eigo no hon mo arimashita.",
+          "translation": "There were old Japanese books and English books.",
+          "tokens": [
+            {
+              "surface": "日本",
+              "reading": "にほん",
+              "romaji": null
+            },
+            {
+              "surface": "の",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "古い",
+              "reading": "ふるい",
+              "romaji": null
+            },
+            {
+              "surface": "本",
+              "reading": "ほん",
+              "romaji": null
+            },
+            {
+              "surface": "も",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "英語",
+              "reading": "えいご",
+              "romaji": null
+            },
+            {
+              "surface": "の",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "本",
+              "reading": "ほん",
+              "romaji": null
+            },
+            {
+              "surface": "もあ",
+              "reading": "モア",
+              "romaji": null
+            },
+            {
+              "surface": "りま",
+              "reading": "リマ",
+              "romaji": null
+            },
+            {
+              "surface": "した",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 58,
+          "speaker": null,
+          "romaji": "tatami no ue ni mo hon ga takusan oite atte, futon o shiku basho ga sukoshi dake arimashita.",
+          "translation": "Many books were laid out on the tatami too, with only a little space for a futon.",
+          "tokens": [
+            {
+              "surface": "たたみ",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "の",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "上",
+              "reading": "うえ",
+              "romaji": null
+            },
+            {
+              "surface": "にも",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "本",
+              "reading": "ほん",
+              "romaji": null
+            },
+            {
+              "surface": "がた",
+              "reading": "かた",
+              "romaji": null
+            },
+            {
+              "surface": "くさ",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "ん",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "置いてあって",
+              "reading": "おいてあって",
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "ふとん",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "を",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "しく",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "場所",
+              "reading": "ばしょ",
+              "romaji": null
+            },
+            {
+              "surface": "が",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "少し",
+              "reading": "すこし",
+              "romaji": null
+            },
+            {
+              "surface": "だけ",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "ありました",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 59,
+          "speaker": null,
+          "romaji": "watashi wa, sakki made yuki no kurai machi o aruite ita koto o, sukkari wasuremashita.",
+          "translation": "I completely forgot that just a moment ago I had been walking in the dark, snowy town.",
+          "tokens": [
+            {
+              "surface": "私",
+              "reading": "わたし",
+              "romaji": null
+            },
+            {
+              "surface": "は",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "さっき",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "まで",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "雪",
+              "reading": "ゆき",
+              "romaji": null
+            },
+            {
+              "surface": "の",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "暗い",
+              "reading": "くらい",
+              "romaji": null
+            },
+            {
+              "surface": "町",
+              "reading": "まち",
+              "romaji": null
+            },
+            {
+              "surface": "を",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "歩いていた",
+              "reading": "あるいていた",
+              "romaji": null
+            },
+            {
+              "surface": "こと",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "を",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "すっかり",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "忘れました",
+              "reading": "わすれました",
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 60,
+          "speaker": null,
+          "romaji": "sono hito ga ocha o motte kite kuremashita. watashi wa kikimashita.",
+          "translation": "She brought me tea. I asked her,",
+          "tokens": [
+            {
+              "surface": "その",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "人",
+              "reading": "ひと",
+              "romaji": null
+            },
+            {
+              "surface": "が",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "お茶",
+              "reading": "おちゃ",
+              "romaji": null
+            },
+            {
+              "surface": "を",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "持ってきて",
+              "reading": "もってきて",
+              "romaji": null
+            },
+            {
+              "surface": "くれました",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "私",
+              "reading": "わたし",
+              "romaji": null
+            },
+            {
+              "surface": "は",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "聞きました",
+              "reading": "ききました",
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 61,
+          "speaker": null,
+          "romaji": "\"daigaku de, nani o benkyou shimashita ka.\"",
+          "translation": "\"What did you study at university?\"",
+          "tokens": [
+            {
+              "surface": "「",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "大学",
+              "reading": "だいがく",
+              "romaji": null
+            },
+            {
+              "surface": "で",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "何",
+              "reading": "なに",
+              "romaji": null
+            },
+            {
+              "surface": "を",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "勉強しました",
+              "reading": "べんきょうしました",
+              "romaji": null
+            },
+            {
+              "surface": "か",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。」",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 62,
+          "speaker": null,
+          "romaji": "\"eigo no bungaku desu. sotsugyou shite kara, kaisha de sukoshi hatarakimashita.\"",
+          "translation": "\"English literature. After I graduated, I worked at a company for a while.\"",
+          "tokens": [
+            {
+              "surface": "「",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "英語",
+              "reading": "えいご",
+              "romaji": null
+            },
+            {
+              "surface": "の",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "文学",
+              "reading": "ぶんがく",
+              "romaji": null
+            },
+            {
+              "surface": "です",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "卒業して",
+              "reading": "そつぎょうして",
+              "romaji": null
+            },
+            {
+              "surface": "から",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "会社",
+              "reading": "かいしゃ",
+              "romaji": null
+            },
+            {
+              "surface": "で",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "少し",
+              "reading": "すこし",
+              "romaji": null
+            },
+            {
+              "surface": "働きました",
+              "reading": "はたらきました",
+              "romaji": null
+            },
+            {
+              "surface": "。」",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 63,
+          "speaker": null,
+          "romaji": "\"sono ato kuni ni kaette, gakkou no sensei ni narimashita. otto wa, kokugo no sensei desu.\"",
+          "translation": "\"Then I went back home and became a school teacher. My husband teaches Japanese.\"",
+          "tokens": [
+            {
+              "surface": "「",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "その",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "あと",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "国",
+              "reading": "くに",
+              "romaji": null
+            },
+            {
+              "surface": "に",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "帰って",
+              "reading": "かえって",
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "学校",
+              "reading": "がっこう",
+              "romaji": null
+            },
+            {
+              "surface": "の",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "先生",
+              "reading": "せんせい",
+              "romaji": null
+            },
+            {
+              "surface": "に",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "なりました",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "夫",
+              "reading": "おっと",
+              "romaji": null
+            },
+            {
+              "surface": "は",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "国語",
+              "reading": "こくご",
+              "romaji": null
+            },
+            {
+              "surface": "の",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "先生",
+              "reading": "せんせい",
+              "romaji": null
+            },
+            {
+              "surface": "です",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。」",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 64,
+          "speaker": null,
+          "romaji": "\"kono yado wa, otto no ryoushin ga mukashi kara yatte imasu. otousan ga nakunatte, yameyou to omoimashita.\"",
+          "translation": "\"My husband's parents have run this inn for a long time. When his father died, I thought we should close it.\"",
+          "tokens": [
+            {
+              "surface": "「",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "この",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "宿",
+              "reading": "やど",
+              "romaji": null
+            },
+            {
+              "surface": "は",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "夫",
+              "reading": "おっと",
+              "romaji": null
+            },
+            {
+              "surface": "の",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "両親",
+              "reading": "りょうしん",
+              "romaji": null
+            },
+            {
+              "surface": "が",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "昔",
+              "reading": "むかし",
+              "romaji": null
+            },
+            {
+              "surface": "から",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "やっています",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "お父さん",
+              "reading": "おとうさん",
+              "romaji": null
+            },
+            {
+              "surface": "が",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "亡くなって",
+              "reading": "なくなって",
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "やめよう",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "と",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "思いました",
+              "reading": "おもいました",
+              "romaji": null
+            },
+            {
+              "surface": "。」",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 65,
+          "speaker": null,
+          "romaji": "\"demo, kono machi ni wa yado ga sukunai n desu. mainichi, shigoto de toukyou e iku hito ga kimasu. keisatsu mo, yamete wa ikenai to iimasu.\"",
+          "translation": "\"But there are few inns in this town. Every day, people on their way to Tokyo for work come. The police say we must not close.\"",
+          "tokens": [
+            {
+              "surface": "「",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "でも",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "この",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "町",
+              "reading": "まち",
+              "romaji": null
+            },
+            {
+              "surface": "には",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "宿",
+              "reading": "やど",
+              "romaji": null
+            },
+            {
+              "surface": "が",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "少ない",
+              "reading": "すくない",
+              "romaji": null
+            },
+            {
+              "surface": "んです",
+              "reading": "のです",
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "毎日",
+              "reading": "まいにち",
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "仕事",
+              "reading": "しごと",
+              "romaji": null
+            },
+            {
+              "surface": "で",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "東京",
+              "reading": "とうきょう",
+              "romaji": null
+            },
+            {
+              "surface": "へ",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "行く",
+              "reading": "いく",
+              "romaji": null
+            },
+            {
+              "surface": "人",
+              "reading": "ひと",
+              "romaji": null
+            },
+            {
+              "surface": "が",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "来ます",
+              "reading": "きます",
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "警察",
+              "reading": "けいさつ",
+              "romaji": null
+            },
+            {
+              "surface": "も",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "やめては",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "いけない",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "と",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "言います",
+              "reading": "いいます",
+              "romaji": null
+            },
+            {
+              "surface": "。」",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 66,
+          "speaker": null,
+          "romaji": "\"yado no shigoto wa taihen desu. demo, sukoshi wa kuni no yaku ni tatte iru to omotte, ganbatte imasu.\"",
+          "translation": "\"The inn's work is hard. But I think it helps the country a little, so I keep trying.\"",
+          "tokens": [
+            {
+              "surface": "「",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "宿",
+              "reading": "やど",
+              "romaji": null
+            },
+            {
+              "surface": "の",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "仕事",
+              "reading": "しごと",
+              "romaji": null
+            },
+            {
+              "surface": "は",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "大変",
+              "reading": "たいへん",
+              "romaji": null
+            },
+            {
+              "surface": "です",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "でも",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "少し",
+              "reading": "すこし",
+              "romaji": null
+            },
+            {
+              "surface": "は",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "国",
+              "reading": "くに",
+              "romaji": null
+            },
+            {
+              "surface": "の",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "役に立っている",
+              "reading": "やくにたっている",
+              "romaji": null
+            },
+            {
+              "surface": "と",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "思って",
+              "reading": "おもって",
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "がんばっています",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。」",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 67,
+          "speaker": null,
+          "romaji": "\"ichiban komaru no wa, hon o yomu jikan ga nai koto desu.\"",
+          "translation": "\"What troubles me most is that I have no time to read.\"",
+          "tokens": [
+            {
+              "surface": "「",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "いちばん",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "こまる",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "の",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "は",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "本",
+              "reading": "ほん",
+              "romaji": null
+            },
+            {
+              "surface": "を",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "読む",
+              "reading": "よむ",
+              "romaji": null
+            },
+            {
+              "surface": "時間",
+              "reading": "じかん",
+              "romaji": null
+            },
+            {
+              "surface": "がな",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "い",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "こと",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "です",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。」",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 68,
+          "speaker": null,
+          "romaji": "watashi wa hanashi o kikinagara, omoimashita.",
+          "translation": "Listening to her, I thought.",
+          "tokens": [
+            {
+              "surface": "私",
+              "reading": "わたし",
+              "romaji": null
+            },
+            {
+              "surface": "は",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "話",
+              "reading": "はなし",
+              "romaji": null
+            },
+            {
+              "surface": "を",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "聞きながら",
+              "reading": "ききながら",
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "思いました",
+              "reading": "おもいました",
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 69,
+          "speaker": null,
+          "romaji": "kono kuni no chikara wa, kou iu hito no, mienai tokoro ni aru no kamo shiremasen.",
+          "translation": "Perhaps the strength of this country lies quietly in people like her, where no one can see.",
+          "tokens": [
+            {
+              "surface": "この",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "国",
+              "reading": "くに",
+              "romaji": null
+            },
+            {
+              "surface": "の",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "力",
+              "reading": "ちから",
+              "romaji": null
+            },
+            {
+              "surface": "は",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "こういう",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "人",
+              "reading": "ひと",
+              "romaji": null
+            },
+            {
+              "surface": "の",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "見えない",
+              "reading": "みえない",
+              "romaji": null
+            },
+            {
+              "surface": "ところ",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "に",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "ある",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "のか",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "もし",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "れません",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 70,
+          "speaker": null,
+          "romaji": "tsukue no ue ni, atarashii hon ga issatsu arimashita.",
+          "translation": "There was one new book on the desk.",
+          "tokens": [
+            {
+              "surface": "つくえ",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "の",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "上",
+              "reading": "うえ",
+              "romaji": null
+            },
+            {
+              "surface": "に",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "新しい",
+              "reading": "あたらしい",
+              "romaji": null
+            },
+            {
+              "surface": "本",
+              "reading": "ほん",
+              "romaji": null
+            },
+            {
+              "surface": "が",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "一冊",
+              "reading": "いっさつ",
+              "romaji": null
+            },
+            {
+              "surface": "ありました",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 71,
+          "speaker": null,
+          "romaji": "\"atarashii hon desu ne. kono machi de, douyatte katta no desu ka.\"",
+          "translation": "\"That's a new book. How did you buy it in this town?\"",
+          "tokens": [
+            {
+              "surface": "「",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "新しい",
+              "reading": "あたらしい",
+              "romaji": null
+            },
+            {
+              "surface": "本",
+              "reading": "ほん",
+              "romaji": null
+            },
+            {
+              "surface": "です",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "ね",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "この",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "町",
+              "reading": "まち",
+              "romaji": null
+            },
+            {
+              "surface": "で",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "どうや",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "って",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "買った",
+              "reading": "かった",
+              "romaji": null
+            },
+            {
+              "surface": "のです",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "か",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。」",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 72,
+          "speaker": null,
+          "romaji": "\"chikaku no K-machi ni, mezurashii hon'ya-san ga imasu. maitsuki, toukyou e itte, minna no hon o katte kite kuremasu.\"",
+          "translation": "\"In nearby K Town there is an unusual bookseller. Every month he goes to Tokyo and buys books for everyone.\"",
+          "tokens": [
+            {
+              "surface": "「",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "近く",
+              "reading": "ちかく",
+              "romaji": null
+            },
+            {
+              "surface": "の",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "K",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "町",
+              "reading": "まち",
+              "romaji": null
+            },
+            {
+              "surface": "に",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "めずらしい",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "本屋",
+              "reading": "ほんや",
+              "romaji": null
+            },
+            {
+              "surface": "さんが",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "います",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "毎月",
+              "reading": "まいつき",
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "東京",
+              "reading": "とうきょう",
+              "romaji": null
+            },
+            {
+              "surface": "へ",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "行って",
+              "reading": "いって",
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "みんな",
+              "reading": "みな",
+              "romaji": null
+            },
+            {
+              "surface": "の",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "本",
+              "reading": "ほん",
+              "romaji": null
+            },
+            {
+              "surface": "を",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "買ってきて",
+              "reading": "かってきて",
+              "romaji": null
+            },
+            {
+              "surface": "くれます",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。」",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 73,
+          "speaker": null,
+          "romaji": "\"takusan oshaberi shimashita. ashita no asa wa hayai desu ne. yukkuri yasunde kudasai.\"",
+          "translation": "\"I have talked a lot. You leave early tomorrow morning. Please rest well.\"",
+          "tokens": [
+            {
+              "surface": "「",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "たくさん",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "おしゃべりしました",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "あした",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "の",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "朝",
+              "reading": "あさ",
+              "romaji": null
+            },
+            {
+              "surface": "は",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "早い",
+              "reading": "はやい",
+              "romaji": null
+            },
+            {
+              "surface": "です",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "ね",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "ゆっくり",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "休んでください",
+              "reading": "やすんでください",
+              "romaji": null
+            },
+            {
+              "surface": "。」",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 74,
+          "speaker": null,
+          "romaji": "\"shujin mo sensei ni aitagatte imashita ga, kaze de yasunde imasu.\" sou itte, sono hito wa shita e ikimashita.",
+          "translation": "\"My husband wanted to meet you, too, but he is resting with a cold.\" Saying so, she went downstairs.",
+          "tokens": [
+            {
+              "surface": "「",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "主人",
+              "reading": "しゅじん",
+              "romaji": null
+            },
+            {
+              "surface": "も",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "先生",
+              "reading": "せんせい",
+              "romaji": null
+            },
+            {
+              "surface": "に",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "会いたがっていました",
+              "reading": "あいたがっていました",
+              "romaji": null
+            },
+            {
+              "surface": "が",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "かぜ",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "で",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "休んでいます",
+              "reading": "やすんでいます",
+              "romaji": null
+            },
+            {
+              "surface": "。」",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "そう",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "言って",
+              "reading": "いって",
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "その",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "人",
+              "reading": "ひと",
+              "romaji": null
+            },
+            {
+              "surface": "は",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "下",
+              "reading": "した",
+              "romaji": null
+            },
+            {
+              "surface": "へ",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "行きました",
+              "reading": "いきました",
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 75,
+          "speaker": null,
+          "romaji": "sono ato, hana-san ga kami no tsutsumi o motte kimashita.",
+          "translation": "After that, Hana brought a paper package.",
+          "tokens": [
+            {
+              "surface": "その",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "あと",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "はな",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "さんが",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "紙",
+              "reading": "かみ",
+              "romaji": null
+            },
+            {
+              "surface": "の",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "包み",
+              "reading": "つつみ",
+              "romaji": null
+            },
+            {
+              "surface": "を",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "持ってきました",
+              "reading": "もってきました",
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 76,
+          "speaker": null,
+          "romaji": "\"asagohan no kawari ni, to okusan ga iimashita.\"",
+          "translation": "\"For your breakfast, the lady said.\"",
+          "tokens": [
+            {
+              "surface": "「",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "朝ごはん",
+              "reading": "あさごはん",
+              "romaji": null
+            },
+            {
+              "surface": "の",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "代わり",
+              "reading": "かわり",
+              "romaji": null
+            },
+            {
+              "surface": "に",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "と",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "奥さん",
+              "reading": "おくさん",
+              "romaji": null
+            },
+            {
+              "surface": "が",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "言いました",
+              "reading": "いいました",
+              "romaji": null
+            },
+            {
+              "surface": "。」",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 77,
+          "speaker": null,
+          "romaji": "akeru to, shiroi omochi ga itsutsu haitte imashita.",
+          "translation": "I opened it and found five white rice cakes inside.",
+          "tokens": [
+            {
+              "surface": "開ける",
+              "reading": "あける",
+              "romaji": null
+            },
+            {
+              "surface": "と",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "白い",
+              "reading": "しろい",
+              "romaji": null
+            },
+            {
+              "surface": "おも",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "ち",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "が",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "五つ",
+              "reading": "いつつ",
+              "romaji": null
+            },
+            {
+              "surface": "入っていました",
+              "reading": "はいっていました",
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 78,
+          "speaker": null,
+          "romaji": "tsugi no asa, yoji han ni okimashita.",
+          "translation": "The next morning I got up at half past four.",
+          "tokens": [
+            {
+              "surface": "次",
+              "reading": "つぎ",
+              "romaji": null
+            },
+            {
+              "surface": "の",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "朝",
+              "reading": "あさ",
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "四時",
+              "reading": "よじ",
+              "romaji": null
+            },
+            {
+              "surface": "半",
+              "reading": "はん",
+              "romaji": null
+            },
+            {
+              "surface": "に",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "起きました",
+              "reading": "おきました",
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 79,
+          "speaker": null,
+          "romaji": "minna ga okinai you ni, shizuka ni yado o demashita.",
+          "translation": "I left the inn quietly so as not to wake anyone.",
+          "tokens": [
+            {
+              "surface": "みんな",
+              "reading": "みな",
+              "romaji": null
+            },
+            {
+              "surface": "が",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "起きない",
+              "reading": "おきない",
+              "romaji": null
+            },
+            {
+              "surface": "ように",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "静か",
+              "reading": "しずか",
+              "romaji": null
+            },
+            {
+              "surface": "に",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "宿",
+              "reading": "やど",
+              "romaji": null
+            },
+            {
+              "surface": "を",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "出ました",
+              "reading": "でました",
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 80,
+          "speaker": null,
+          "romaji": "yuki wa mou yande ite, hoshi ga futatsu mittsu miemashita.",
+          "translation": "The snow had stopped, and two or three stars were visible.",
+          "tokens": [
+            {
+              "surface": "雪",
+              "reading": "ゆき",
+              "romaji": null
+            },
+            {
+              "surface": "は",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "もう",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "やんでいて",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "星",
+              "reading": "ほし",
+              "romaji": null
+            },
+            {
+              "surface": "が",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "二つ",
+              "reading": "ふたつ",
+              "romaji": null
+            },
+            {
+              "surface": "三つ",
+              "reading": "みっつ",
+              "romaji": null
+            },
+            {
+              "surface": "見えました",
+              "reading": "みえました",
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 81,
+          "speaker": null,
+          "romaji": "kisha wa suite ite, o-kyaku-san wa sannin dake deshita.",
+          "translation": "The train was empty, with only three passengers.",
+          "tokens": [
+            {
+              "surface": "汽車",
+              "reading": "きしゃ",
+              "romaji": null
+            },
+            {
+              "surface": "はすい",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "ていて",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "お",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "客",
+              "reading": "きゃく",
+              "romaji": null
+            },
+            {
+              "surface": "さん",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "は",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "三人",
+              "reading": "さんにん",
+              "romaji": null
+            },
+            {
+              "surface": "だけ",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "でした",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        },
+        {
+          "index": 82,
+          "speaker": null,
+          "romaji": "watashi wa, kinou no yoru no koto wa yume datta no kamo shirenai to omoinagara, shiroku natte iku higashi no sora o mite imashita.",
+          "translation": "I wondered whether last night had been a dream, and watched the eastern sky grow pale.",
+          "tokens": [
+            {
+              "surface": "私",
+              "reading": "わたし",
+              "romaji": null
+            },
+            {
+              "surface": "は",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "昨日",
+              "reading": "きのう",
+              "romaji": null
+            },
+            {
+              "surface": "の",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "夜",
+              "reading": "よる",
+              "romaji": null
+            },
+            {
+              "surface": "の",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "こと",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "は",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "夢",
+              "reading": "ゆめ",
+              "romaji": null
+            },
+            {
+              "surface": "だった",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "のか",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "もし",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "れない",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "と",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "思いながら",
+              "reading": "おもいながら",
+              "romaji": null
+            },
+            {
+              "surface": "、",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "白くなっていく",
+              "reading": "しろくなっていく",
+              "romaji": null
+            },
+            {
+              "surface": "東",
+              "reading": "ひがし",
+              "romaji": null
+            },
+            {
+              "surface": "の",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "空",
+              "reading": "そら",
+              "romaji": null
+            },
+            {
+              "surface": "を",
+              "reading": null,
+              "romaji": null
+            },
+            {
+              "surface": "見ていました",
+              "reading": "みていました",
+              "romaji": null
+            },
+            {
+              "surface": "。",
+              "reading": null,
+              "romaji": null
+            }
+          ]
+        }
+      ]
     }
   ]
 }

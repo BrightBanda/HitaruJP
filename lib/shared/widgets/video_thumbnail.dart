@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ingrain/app/theme/app_colors.dart';
 import 'package:ingrain/features/content/domain/content_item.dart';
+import 'package:ingrain/shared/widgets/network_thumbnail.dart';
 
 /// YouTube serves a still for every video id; other sources have none.
 String? thumbnailUrlFor(ContentItem item) {
@@ -32,12 +33,6 @@ class VideoThumbnail extends StatelessWidget {
     );
     final url = thumbnailUrlFor(item);
     if (url == null) return placeholder;
-    return Image.network(
-      url,
-      fit: BoxFit.cover,
-      errorBuilder: (_, _, _) => placeholder,
-      loadingBuilder: (_, child, progress) =>
-          progress == null ? child : placeholder,
-    );
+    return NetworkThumbnail(url: url, placeholder: placeholder);
   }
 }

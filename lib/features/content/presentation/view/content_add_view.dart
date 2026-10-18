@@ -43,8 +43,6 @@ class _ContentAddViewState extends ConsumerState<ContentAddView> {
         _searchYoutube();
       case AddContentType.dialogue:
         await _submitDialogue();
-      case AddContentType.podcast:
-        return;
     }
   }
 

@@ -37,5 +37,13 @@ abstract interface class DocumentStore {
   );
 
   /// Documents in [collection], in unspecified order.
-  Future<List<Map<String, dynamic>>> listDocs(String uid, String collection);
+  ///
+  /// With [withField], only documents where that field is set (not null),
+  /// filtered by the store itself, so a collection that also holds large
+  /// sibling documents does not download them just to throw them away.
+  Future<List<Map<String, dynamic>>> listDocs(
+    String uid,
+    String collection, {
+    String? withField,
+  });
 }

@@ -376,6 +376,9 @@ class InMemoryDialogueRepository implements DialogueRepository {
   Future<List<DialogueSummary>> listSummaries() async => [dialogue];
 
   @override
+  Future<List<DialogueSummary>> listCachedSummaries() => listSummaries();
+
+  @override
   Future<Dialogue> getDialogue(String id) async => dialogue;
 
   @override
@@ -920,6 +923,22 @@ void main() {
 
       expect(find.text('neko'), findsOneWidget);
       expect(find.text('suki'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('furigana is its own switch and goes over kanji only', (
+      tester,
+    ) async {
+      await pumpDialogue(tester);
+
+      expect(find.text('ねこ'), findsNothing);
+      await tester.tap(find.widgetWithText(FilterChip, 'Furigana'));
+      await tester.pumpAndSettle();
+
+      // 猫 and 好き get readings; the romaji switch is untouched.
+      expect(find.text('ねこ'), findsOneWidget);
+      expect(find.text('す'), findsOneWidget);
+      expect(find.text('neko'), findsNothing);
       expect(tester.takeException(), isNull);
     });
 

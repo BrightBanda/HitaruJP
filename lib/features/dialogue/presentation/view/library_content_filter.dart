@@ -6,10 +6,10 @@ enum LibraryContentFilter {
     title: 'YouTube video',
     description: 'Watch with Japanese subtitles',
   ),
-  podcasts(
-    icon: Icons.headphones_outlined,
-    title: 'Japanese podcasts',
-    description: 'Listen and pick up natural speech',
+  books(
+    icon: Icons.auto_stories_outlined,
+    title: 'Books',
+    description: 'Short stories adapted for learners',
   ),
   dialogues(
     icon: Icons.forum_outlined,

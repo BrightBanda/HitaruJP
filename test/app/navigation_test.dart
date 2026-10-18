@@ -44,17 +44,44 @@ class NavigationDialogueRepository implements DialogueRepository {
     ],
   );
 
+  final book = Dialogue(
+    id: 'book-1',
+    title: 'Night at the Inn',
+    level: 'N4',
+    kind: DialogueKind.book,
+    source: const DialogueSource(
+      attribution: 'Adapted from a public-domain essay.',
+      url: 'https://example.org/original',
+    ),
+    book: const BookInfo(
+      author: '中谷宇吉郎',
+      originalYear: 1946,
+      summary: 'A traveller finds a room on a snowy night.',
+    ),
+    lines: const [
+      DialogueLine(
+        index: 0,
+        tokens: [DialogueToken(surface: '雪', reading: 'ゆき')],
+        translation: 'It was snowing.',
+      ),
+    ],
+  );
+
   @override
   bool isShowingCachedCopy = false;
 
   @override
-  Future<List<DialogueSummary>> listSummaries() async => [dialogue];
+  Future<List<DialogueSummary>> listSummaries() async => [dialogue, book];
 
   @override
-  Future<Dialogue> getDialogue(String id) async => dialogue;
+  Future<List<DialogueSummary>> listCachedSummaries() => listSummaries();
 
   @override
-  Future<Dialogue?> getCachedDialogue(String id) async => dialogue;
+  Future<Dialogue> getDialogue(String id) async =>
+      id == book.id ? book : dialogue;
+
+  @override
+  Future<Dialogue?> getCachedDialogue(String id) async => getDialogue(id);
 
   @override
   Future<void> cacheDialogue(Dialogue dialogue) async {}
@@ -474,7 +501,7 @@ void main() {
   });
 
   group('add content', () {
-    testWidgets('the home Add dropdown lists every type, podcast disabled', (
+    testWidgets('the home Add dropdown lists the types you can add', (
       tester,
     ) async {
       await pumpApp(tester);
@@ -483,15 +510,9 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('YouTube video'), findsOneWidget);
-      expect(find.text('Podcast'), findsOneWidget);
-      expect(find.text('Soon'), findsOneWidget);
-      final podcast = tester.widget<MenuItemButton>(
-        find.ancestor(
-          of: find.text('Podcast'),
-          matching: find.byType(MenuItemButton),
-        ),
-      );
-      expect(podcast.onPressed, isNull);
+      expect(find.text('Dialogue'), findsOneWidget);
+      expect(find.text('Podcast'), findsNothing);
+      expect(find.text('Soon'), findsNothing);
 
       await tester.tap(find.text('YouTube video'));
       await tester.pumpAndSettle();
@@ -532,24 +553,45 @@ void main() {
   });
 
   group('library', () {
-    testWidgets('category cards switch between videos, podcasts, dialogues', (
+    testWidgets('category cards switch between videos, books, dialogues', (
       tester,
     ) async {
       await pumpApp(tester);
       await openLibrary(tester);
 
       expect(find.text('YouTube video'), findsOneWidget);
-      expect(find.text('Japanese podcasts'), findsOneWidget);
+      expect(find.text('Books'), findsOneWidget);
       expect(find.text('Dialogues and stories'), findsOneWidget);
       expect(find.text('Your library is empty'), findsOneWidget);
 
-      await tester.tap(find.text('Japanese podcasts'));
+      await tester.tap(find.text('Books'));
       await tester.pumpAndSettle();
-      expect(find.text('Podcasts are coming soon'), findsOneWidget);
+      expect(find.text('Night at the Inn'), findsOneWidget);
+      expect(find.text('At the station'), findsNothing);
+
+      // A book opens on its details, with the story below them.
+      await tester.tap(find.text('Night at the Inn'));
+      await tester.pumpAndSettle();
+      expect(find.text('中谷宇吉郎  ·  1946'), findsOneWidget);
+      expect(
+        find.text('A traveller finds a room on a snowy night.'),
+        findsOneWidget,
+      );
+      expect(
+        tester.getTopLeft(find.text('中谷宇吉郎  ·  1946')).dy,
+        lessThan(tester.getTopLeft(find.text('雪')).dy),
+      );
+      expect(
+        find.widgetWithText(TextButton, 'View the original'),
+        findsOneWidget,
+      );
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
 
       await tester.tap(find.text('Dialogues and stories'));
       await tester.pumpAndSettle();
       expect(find.text('At the station'), findsOneWidget);
+      expect(find.text('Night at the Inn'), findsNothing);
 
       await tester.tap(find.text('At the station'));
       await tester.pumpAndSettle();

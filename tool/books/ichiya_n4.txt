@@ -1,0 +1,94 @@
+# id: book-ichiya-n4
+# title: I駅の一夜
+# level: N4
+# author: 中谷宇吉郎
+# originalTitle: Ｉ駅の一夜
+# originalYear: 1946
+# description: A scientist on his way to Tokyo is stuck in a snowy, blacked-out town during the war. A kind young innkeeper's wife, who loves his books, gives him a room full of books for the night.
+# attribution: Adapted from 中谷宇吉郎「Ｉ駅の一夜」(1946), which is in the public domain, via Aozora Bunko / Soranoha (text encoding CC0). Rewritten in simple Japanese for HitaruJP.
+# sourceUrl: https://soranoha.org/works/053205_001569/
+# out: Ingrained_backend/content/dialogues/book-ichiya-n4.json
+
+戦争のときの話です。 | sensou no toki no hanashi desu. | This story is from the time of the war.
+そのころ、夜は電気を消さなければなりませんでした。 | sono koro, yoru wa denki o keshinakereba narimasen deshita. | In those days, we had to turn off the lights at night.
+町はいつも暗かったです。 | machi wa itsumo kurakatta desu. | The towns were always dark.
+私は仕事で、東京へ行く汽車に乗っていました。 | watashi wa shigoto de, toukyou e iku kisha ni notte imashita. | I was on a train to Tokyo for work.
+盛岡[もりおか]に着くと、駅のまわりが焼けていました。 | morioka ni tsuku to, eki no mawari ga yakete imashita. | When I reached Morioka, the area around the station had burned.
+その朝、飛行機が来[き]て、町を焼いたのです。 | sono asa, hikouki ga kite, machi o yaita no desu. | That morning, planes had come and burned the town.
+汽車は盛岡[もりおか]までしか行きませんでした。 | kisha wa morioka made shika ikimasen deshita. | The train would go no farther than Morioka.
+私は次の汽車を三時間[さんじかん]待ちました。 | watashi wa tsugi no kisha o sanjikan machimashita. | I waited three hours for the next train.
+でも、人がとても多くて、乗れませんでした。 | demo, hito ga totemo ookute, noremasen deshita. | But there were so many people that I could not get on.
+また二時間待って、やっと次の汽車に乗りました。 | mata nijikan matte, yatto tsugi no kisha ni norimashita. | I waited two more hours and finally got on the next train.
+でも、その汽車も人でいっぱいでした。 | demo, sono kisha mo hito de ippai deshita. | But that train was also full of people.
+私は入り口の近くに、ずっと立っていました。 | watashi wa iriguchi no chikaku ni, zutto tatte imashita. | I stood near the door the whole time.
+夜になると、風[かぜ]が冷たくなりました。 | yoru ni naru to, kaze ga tsumetaku narimashita. | When night came, the wind turned cold.
+足もとてもつかれました。 | ashi mo totemo tsukaremashita. | My legs were very tired, too.
+「このまま東京まで立っていくのは、むりだ。」 | "kono mama toukyou made tatte iku no wa, muri da." | "I can't stand all the way to Tokyo like this."
+車掌さんに話すと、こう言いました。 | shashou-san ni hanasu to, kou iimashita. | I talked to the conductor, and he said this.
+「I駅でおりて、一晩泊まってはどうですか。朝、早い汽車がありますよ。」 | "I-eki de orite, hitoban tomatte wa dou desu ka. asa, hayai kisha ga arimasu yo." | "Why not get off at I Station and stay the night? There is an early train in the morning."
+「でも、今から泊まれる宿は、ないかもしれません。」 | "demo, ima kara tomareru yado wa, nai kamo shiremasen." | "But you may not find an inn to stay at now."
+私はがまんできなくなって、I駅でおりました。 | watashi wa gaman dekinaku natte, I-eki de orimashita. | I could not bear it any longer, and I got off at I Station.
+夜の九時[くじ]すぎでした。 | yoru no kuji sugi deshita. | It was past nine at night.
+雪が降っていて、町は真っ暗でした。 | yuki ga futte ite, machi wa makkura deshita. | It was snowing, and the town was pitch dark.
+駅の前の交番で、おまわりさんに聞きました。 | eki no mae no kouban de, omawari-san ni kikimashita. | At the police box in front of the station, I asked the policeman.
+「この近くに、泊まれる宿はありませんか。」 | "kono chikaku ni, tomareru yado wa arimasen ka." | "Is there an inn near here where I can stay?"
+「今ごろは、むりでしょうね。」おまわりさんは冷たい声で言いました。 | "imagoro wa, muri deshou ne." omawari-san wa tsumetai koe de iimashita. | "At this hour, probably not," the policeman said coldly.
+仕事で東京へ行くところだと話しても、聞いてもらえませんでした。 | shigoto de toukyou e iku tokoro da to hanashite mo, kiite moraemasen deshita. | I told him I was on my way to Tokyo for work, but he would not listen.
+教えてもらった宿に二軒[にけん]行きましたが、どちらも「いっぱいです」と言いました。 | oshiete moratta yado ni nikken ikimashita ga, dochira mo "ippai desu" to iimashita. | I went to the two inns he named, but both said, "We are full."
+交番にもどると、おまわりさんは怒っていました。 | kouban ni modoru to, omawari-san wa okotte imashita. | When I went back to the police box, the policeman was angry.
+「何回[なんかい]来[き]てもだめですよ。ここの電話は、町にはかけられません。」 | "nankai kite mo dame desu yo. koko no denwa wa, machi ni wa kakeraremasen." | "It's no use coming back again. The phone here can't call anywhere in town."
+私はあきらめて、また雪の道を歩きました。 | watashi wa akiramete, mata yuki no michi o arukimashita. | I gave up and walked along the snowy road again.
+雪はどんどん強くなりました。外で寝ることはできません。 | yuki wa dondon tsuyoku narimashita. soto de neru koto wa dekimasen. | The snow grew heavier and heavier. I could not sleep outside.
+そのとき、大きい宿の前に、広くて低い古い家が見えました。 | sono toki, ookii yado no mae ni, hirokute hikui furui ie ga miemashita. | Then I saw a wide, low, old house in front of a big inn.
+昔の宿のような家です。 | mukashi no yado no you na ie desu. | It looked like an inn from the old days.
+思いきって戸を開けると、かぎはかかっていませんでした。 | omoikitte to o akeru to, kagi wa kakatte imasen deshita. | I took a chance and opened the door. It was not locked.
+中は広くて暗くて、奥に小さい電気が一つ、ついていました。 | naka wa hirokute kurakute, oku ni chiisai denki ga hitotsu, tsuite imashita. | It was wide and dark inside, but one small light was on at the back.
+「すみません。ごはんはいりません。一晩だけ泊めてください。」 | "sumimasen. gohan wa irimasen. hitoban dake tomete kudasai." | "Excuse me. I don't need a meal. Please let me stay just one night."
+女の人が出てきて言いました。「すみませんが、いっぱいです。ふとんもありません。」 | onna no hito ga dete kite iimashita. "sumimasen ga, ippai desu. futon mo arimasen." | A woman came out and said, "I'm sorry, but we're full. And we have no futons."
+「ふとんがなくてもいいんです。コートがあります。この雪の中では、外で寝られません。」 | "futon ga nakute mo ii n desu. kooto ga arimasu. kono yuki no naka de wa, soto de neraremasen." | "I don't need a futon. I have a coat. I can't sleep outside in this snow."
+そのとき、奥から若い女の人の声がしました。 | sono toki, oku kara wakai onna no hito no koe ga shimashita. | Then I heard a young woman's voice from the back.
+「はなさん、ふとんは本当に一枚もないの?」 | "hana-san, futon wa hontou ni ichimai mo nai no?" | "Hana, is there really not a single futon?"
+「夏のふとんが二枚あるだけです。」と、はなさんは答えました。 | "natsu no futon ga nimai aru dake desu." to, hana-san wa kotaemashita. | "Only two summer futons," Hana answered.
+「それで十分です。」と私は言いました。 | "sore de juubun desu." to watashi wa iimashita. | "That's plenty," I said.
+「かわいそうですから、泊めてあげてください。お客さん、お名前と住所を教えてくださいませんか。」 | "kawaisou desu kara, tomete agete kudasai. o-kyaku-san, o-namae to juusho o oshiete kudasaimasen ka." | "Poor man. Please let him stay. Sir, would you tell me your name and address?"
+私は名刺を出して、あやしい者ではありませんと話しました。 | watashi wa meishi o dashite, ayashii mono de wa arimasen to hanashimashita. | I handed over my business card and said I was not a suspicious person.
+はなさんは名刺を持って、奥に入りました。なかなか出てきませんでした。 | hana-san wa meishi o motte, oku ni hairimashita. nakanaka dete kimasen deshita. | Hana took the card to the back. She did not come out for a long time.
+奥から、ごとごとと音が聞こえました。 | oku kara, gotogoto to oto ga kikoemashita. | I heard thumping sounds from the back.
+しばらくして、声の女の人が出てきました。 | shibaraku shite, koe no onna no hito ga dete kimashita. | After a while, the woman with the voice came out.
+「失礼しました。このごろは危ないので、すみませんでした。どうぞ、お上がりください。」 | "shitsurei shimashita. konogoro wa abunai node, sumimasen deshita. douzo, o-agari kudasai." | "Forgive my rudeness. These days it is dangerous, so I'm sorry. Please come in."
+「くつは私が持ちます。二階へどうぞ。」 | "kutsu wa watashi ga mochimasu. nikai e douzo." | "I'll take your shoes. Please come up to the second floor."
+その人は暗い階段を、先に上がりました。私は足もとを探しながら、ついて行きました。 | sono hito wa kurai kaidan o, saki ni agarimashita. watashi wa ashimoto o sagashinagara, tsuite ikimashita. | She went up the dark stairs ahead of me. I followed, feeling for each step.
+階段の途中で、その人は言いました。 | kaidan no tochuu de, sono hito wa iimashita. | Halfway up, she said,
+「先生が今夜ここにいらっしゃるなんて、夢のようです。私は先生の本が大好きで、いつも読んでいるんです。」 | "sensei ga konya koko ni irassharu nante, yume no you desu. watashi wa sensei no hon ga daisuki de, itsumo yonde iru n desu." | "I never dreamed you would be here tonight, sir. I love your books and always read them."
+「お客さんの部屋は、もうありません。もうしわけありませんが、私の部屋で休んでもらえませんか。」 | "o-kyaku-san no heya wa, mou arimasen. moushiwake arimasen ga, watashi no heya de yasunde moraemasen ka." | "We have no more rooms. I'm very sorry, but could you rest in my room?"
+一時間も暗い道を歩いて、やっと明るい部屋に入りました。 | ichijikan mo kurai michi o aruite, yatto akarui heya ni hairimashita. | After walking an hour in the dark, I finally entered a bright room.
+小さい部屋でした。 | chiisai heya deshita. | It was a small room.
+その人は青い服を着ていました。三十歳[さんじゅっさい]ぐらいの、頭のよさそうな、きれいな人でした。 | sono hito wa aoi fuku o kite imashita. sanjussai gurai no, atama no yosasou na, kirei na hito deshita. | She was wearing a blue outfit. She was about thirty, clever-looking and beautiful.
+私もおどろきましたが、いちばんおどろいたのは、部屋でした。 | watashi mo odorokimashita ga, ichiban odoroita no wa, heya deshita. | I was surprised, too, but what surprised me most was the room.
+二つの壁が、ぜんぶ本だなで、本がぎっしり並んでいました。 | futatsu no kabe ga, zenbu hondana de, hon ga gisshiri narande imashita. | Two walls were all bookshelves, packed tight with books.
+日本の古い本も、英語の本もありました。 | nihon no furui hon mo, eigo no hon mo arimashita. | There were old Japanese books and English books.
+たたみの上にも本がたくさん置いてあって、ふとんをしく場所が少しだけありました。 | tatami no ue ni mo hon ga takusan oite atte, futon o shiku basho ga sukoshi dake arimashita. | Many books were laid out on the tatami too, with only a little space for a futon.
+私は、さっきまで雪の暗い町を歩いていたことを、すっかり忘れました。 | watashi wa, sakki made yuki no kurai machi o aruite ita koto o, sukkari wasuremashita. | I completely forgot that just a moment ago I had been walking in the dark, snowy town.
+その人がお茶を持[も]ってきてくれました。私は聞きました。 | sono hito ga ocha o motte kite kuremashita. watashi wa kikimashita. | She brought me tea. I asked her,
+「大学で、何を勉強しましたか。」 | "daigaku de, nani o benkyou shimashita ka." | "What did you study at university?"
+「英語の文学です。卒業してから、会社で少し働きました。」 | "eigo no bungaku desu. sotsugyou shite kara, kaisha de sukoshi hatarakimashita." | "English literature. After I graduated, I worked at a company for a while."
+「そのあと国に帰って、学校の先生になりました。夫は、国語の先生です。」 | "sono ato kuni ni kaette, gakkou no sensei ni narimashita. otto wa, kokugo no sensei desu." | "Then I went back home and became a school teacher. My husband teaches Japanese."
+「この宿は、夫の両親が昔からやっています。お父さんが亡くなって、やめようと思いました。」 | "kono yado wa, otto no ryoushin ga mukashi kara yatte imasu. otousan ga nakunatte, yameyou to omoimashita." | "My husband's parents have run this inn for a long time. When his father died, I thought we should close it."
+「でも、この町には宿が少ないんです。毎日、仕事で東京へ行く人が来[き]ます。警察も、やめてはいけないと言います。」 | "demo, kono machi ni wa yado ga sukunai n desu. mainichi, shigoto de toukyou e iku hito ga kimasu. keisatsu mo, yamete wa ikenai to iimasu." | "But there are few inns in this town. Every day, people on their way to Tokyo for work come. The police say we must not close."
+「宿の仕事は大変です。でも、少しは国の役に立っていると思って、がんばっています。」 | "yado no shigoto wa taihen desu. demo, sukoshi wa kuni no yaku ni tatte iru to omotte, ganbatte imasu." | "The inn's work is hard. But I think it helps the country a little, so I keep trying."
+「いちばんこまるのは、本を読む時間がないことです。」 | "ichiban komaru no wa, hon o yomu jikan ga nai koto desu." | "What troubles me most is that I have no time to read."
+私は話を聞きながら、思いました。 | watashi wa hanashi o kikinagara, omoimashita. | Listening to her, I thought.
+この国の力は、こういう人の、見えないところにあるのかもしれません。 | kono kuni no chikara wa, kou iu hito no, mienai tokoro ni aru no kamo shiremasen. | Perhaps the strength of this country lies quietly in people like her, where no one can see.
+つくえの上に、新しい本が一冊ありました。 | tsukue no ue ni, atarashii hon ga issatsu arimashita. | There was one new book on the desk.
+「新しい本ですね。この町で、どうやって買ったのですか。」 | "atarashii hon desu ne. kono machi de, douyatte katta no desu ka." | "That's a new book. How did you buy it in this town?"
+「近くのK町に、めずらしい本屋さんがいます。毎月、東京へ行って、みんなの本を買ってきてくれます。」 | "chikaku no K-machi ni, mezurashii hon'ya-san ga imasu. maitsuki, toukyou e itte, minna no hon o katte kite kuremasu." | "In nearby K Town there is an unusual bookseller. Every month he goes to Tokyo and buys books for everyone."
+「たくさんおしゃべりしました。あしたの朝は早いですね。ゆっくり休んでください。」 | "takusan oshaberi shimashita. ashita no asa wa hayai desu ne. yukkuri yasunde kudasai." | "I have talked a lot. You leave early tomorrow morning. Please rest well."
+「主人も先生に会いたがっていましたが、かぜで休んでいます。」そう言って、その人は下へ行きました。 | "shujin mo sensei ni aitagatte imashita ga, kaze de yasunde imasu." sou itte, sono hito wa shita e ikimashita. | "My husband wanted to meet you, too, but he is resting with a cold." Saying so, she went downstairs.
+そのあと、はなさんが紙の包みを持[も]ってきました。 | sono ato, hana-san ga kami no tsutsumi o motte kimashita. | After that, Hana brought a paper package.
+「朝ごはんの代わりに、と奥さんが言いました。」 | "asagohan no kawari ni, to okusan ga iimashita." | "For your breakfast, the lady said."
+開けると、白いおもちが五つ入っていました。 | akeru to, shiroi omochi ga itsutsu haitte imashita. | I opened it and found five white rice cakes inside.
+次の朝、四時半に起きました。 | tsugi no asa, yoji han ni okimashita. | The next morning I got up at half past four.
+みんなが起きないように、静かに宿を出ました。 | minna ga okinai you ni, shizuka ni yado o demashita. | I left the inn quietly so as not to wake anyone.
+雪はもうやんでいて、星が二つ三つ見えました。 | yuki wa mou yande ite, hoshi ga futatsu mittsu miemashita. | The snow had stopped, and two or three stars were visible.
+汽車はすいていて、お客さんは三人だけでした。 | kisha wa suite ite, o-kyaku-san wa sannin dake deshita. | The train was empty, with only three passengers.
+私は、昨日の夜のことは夢だったのかもしれないと思いながら、白くなっていく東の空を見ていました。 | watashi wa, kinou no yoru no koto wa yume datta no kamo shirenai to omoinagara, shiroku natte iku higashi no sora o mite imashita. | I wondered whether last night had been a dream, and watched the eastern sky grow pale.

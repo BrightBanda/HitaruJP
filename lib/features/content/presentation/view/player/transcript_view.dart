@@ -386,6 +386,7 @@ class _TranscriptViewState extends ConsumerState<TranscriptView> {
           reading: request.reading,
           meaning: request.meaning,
           pos: request.pos,
+          deckId: request.deckId,
         );
     ref.invalidate(dueCountProvider);
 

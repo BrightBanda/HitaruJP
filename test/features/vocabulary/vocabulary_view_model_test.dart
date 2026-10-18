@@ -172,7 +172,10 @@ class FakeReviewRepository implements ReviewRepository {
   }
 
   @override
-  Future<void> saveCard(ReviewCard card) async {}
+  Future<void> saveCard(ReviewCard card) async {
+    final index = cards.indexWhere((c) => c.id == card.id);
+    index < 0 ? cards.add(card) : cards[index] = card;
+  }
 
   @override
   Future<List<ReviewCard>> listDue({DateTime? now}) async =>
@@ -285,6 +288,26 @@ void main() {
         expect(card.sourceItemId, word.id);
       },
     );
+
+    test('a word saved to another deck puts its card there', () async {
+      await build();
+
+      await notifier().saveWord(
+        word: '猫',
+        sourceType: SourceType.manual,
+        sourceId: 'manual',
+        deckId: 'deck-animals',
+      );
+      await notifier().saveWord(
+        word: '犬',
+        sourceType: SourceType.manual,
+        sourceId: 'manual',
+      );
+
+      expect(reviews.cards, hasLength(2));
+      expect(reviews.cards.first.deckId, 'deck-animals');
+      expect(reviews.cards.last.deckId, 'mined-phrases');
+    });
 
     test('saving a blank word is rejected', () async {
       await build();

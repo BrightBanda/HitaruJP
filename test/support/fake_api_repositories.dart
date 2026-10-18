@@ -81,6 +81,9 @@ class FakeCatalogRepository implements CatalogRepository {
   }
 
   @override
+  Future<DailyPicks?> cachedDailyPicks() async => null;
+
+  @override
   Future<List<CatalogVideo>> videosAtLevel(
     JlptLevel level, {
     int limit = 10,

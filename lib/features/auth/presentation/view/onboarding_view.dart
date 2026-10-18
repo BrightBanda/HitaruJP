@@ -65,9 +65,7 @@ class _OnboardingViewState extends ConsumerState<OnboardingView> {
     final authState = ref.watch(authViewModelProvider);
     final theme = Theme.of(context);
 
-    if (authState.isLoading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
+    if (authState.isLoading) return const _StartupSplash();
     if (authState.isSignedIn) return const OnboardingFlowView();
 
     return DoubleBackToExit(
@@ -205,6 +203,37 @@ class _OnboardingViewState extends ConsumerState<OnboardingView> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// What shows while the session is restored on a first launch (returning
+/// learners start from their cached profile and skip it): the app's mark,
+/// so it reads as the app starting rather than a page stuck loading.
+class _StartupSplash extends StatelessWidget {
+  const _StartupSplash();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset(
+              'assets/branding/logo_mark.png',
+              width: 88,
+              height: 88,
+              cacheWidth: 264,
+            ),
+            const SizedBox(height: 24),
+            const SizedBox(
+              width: 120,
+              child: LinearProgressIndicator(minHeight: 3),
+            ),
+          ],
+        ),
       ),
     );
   }

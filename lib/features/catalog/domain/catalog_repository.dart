@@ -9,6 +9,11 @@ abstract interface class CatalogRepository {
   /// when the server is unreachable, and throws only when there are none.
   Future<DailyPicks> dailyPicks();
 
-  /// Published videos at [level], newest first.
+  /// The last picks fetched on this device, without asking the server; null
+  /// when there are none. Still current until [DailyPicks.validUntil].
+  Future<DailyPicks?> cachedDailyPicks();
+
+  /// Published videos at [level], newest first. A recent answer cached on
+  /// the device is used without asking the server.
   Future<List<CatalogVideo>> videosAtLevel(JlptLevel level, {int limit = 10});
 }

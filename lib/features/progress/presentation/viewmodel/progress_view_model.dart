@@ -2,7 +2,9 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ingrain/core/error/app_error.dart';
+import 'package:ingrain/core/storage/snapshot_cache.dart';
 import 'package:ingrain/core/utils/clock.dart';
+import 'package:ingrain/features/auth/presentation/viewmodel/auth_view_model.dart';
 import 'package:ingrain/features/immersion/domain/immersion_repository.dart';
 import 'package:ingrain/features/immersion/presentation/viewmodel/immersion_session_view_model.dart';
 import 'package:ingrain/features/progress/domain/progress_calculator.dart';
@@ -51,7 +53,38 @@ class ProgressViewModel extends Notifier<ProgressUiState> {
     _reviewRepository = ref.watch(reviewRepositoryProvider);
     _clock = ref.watch(clockProvider);
     _load();
-    return const ProgressUiState.loading();
+    // Last launch's numbers while today's are worked out; a summary from an
+    // earlier day would show yesterday's minutes as today's, so it waits.
+    final cached = _readSnapshot();
+    return cached == null
+        ? const ProgressUiState.loading()
+        : ProgressUiState.data(cached);
+  }
+
+  String? get _snapshotKey {
+    final uid = ref.read(authRepositoryProvider).currentUid;
+    return uid == null ? null : 'progress_$uid';
+  }
+
+  ProgressSummary? _readSnapshot() {
+    final key = _snapshotKey;
+    if (key == null) return null;
+    final snapshot = ref.read(snapshotCacheProvider).read(key, (json) {
+      final map = Map<String, dynamic>.from(json as Map);
+      return (
+        day: DateTime.parse(map['day'] as String),
+        summary: ProgressSummary.fromJson(
+          Map<String, dynamic>.from(map['summary'] as Map),
+        ),
+      );
+    });
+    if (snapshot == null) return null;
+    final now = _clock.now;
+    final sameDay =
+        snapshot.day.year == now.year &&
+        snapshot.day.month == now.month &&
+        snapshot.day.day == now.day;
+    return sameDay ? snapshot.summary : null;
   }
 
   Future<void> refresh() => _load();
@@ -64,16 +97,25 @@ class ProgressViewModel extends Notifier<ProgressUiState> {
 
     try {
       final now = _clock.now;
-      final sessions = await _immersionRepository.watchRecentSessions().first;
-      final sentences = await _sentenceRepository.watchAll().first;
-      final vocabulary = await _vocabularyRepository.watchAll().first;
+      // Independent reads, so they run side by side rather than paying five
+      // round trips one after another.
+      final sessionsFuture = _immersionRepository.watchRecentSessions().first;
+      final sentencesFuture = _sentenceRepository.watchAll().first;
+      final vocabularyFuture = _vocabularyRepository.watchAll().first;
       // Today's study queue, within the daily limits, so a freshly imported
       // deck of thousands of new cards does not read as thousands "due".
-      final dueCards = (await buildStudyQueue(
-        ref,
-        await ref.read(srsSettingsProvider.future),
-      )).cards;
-      final reviewEvents = await _reviewRepository.listReviewHistory();
+      final dueCardsFuture = ref
+          .read(srsSettingsProvider.future)
+          .then((settings) => buildStudyQueue(ref, settings))
+          .then((queue) => queue.cards);
+      final reviewEventsFuture = _reviewRepository.listReviewHistory();
+      final (sessions, sentences, vocabulary, dueCards, reviewEvents) = await (
+        sessionsFuture,
+        sentencesFuture,
+        vocabularyFuture,
+        dueCardsFuture,
+        reviewEventsFuture,
+      ).wait;
 
       final summary = _calculator.summarize(
         sessions: sessions,
@@ -85,6 +127,15 @@ class ProgressViewModel extends Notifier<ProgressUiState> {
         dailyGoalMinutes: goalMinutes,
       );
       state = ProgressUiState.data(summary);
+      final key = _snapshotKey;
+      if (key != null) {
+        unawaited(
+          ref.read(snapshotCacheProvider).write(key, {
+            'day': now.toIso8601String(),
+            'summary': summary.toJson(),
+          }),
+        );
+      }
     } catch (e, st) {
       state = ProgressUiState.error(
         AppError.unknown(e, message: st.toString()),

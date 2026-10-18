@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ingrain/core/providers.dart';
 import 'package:ingrain/core/storage/local_document_store.dart';
 import 'package:ingrain/features/auth/data/user_profile_dto.dart';
 import 'package:ingrain/features/auth/domain/auth_state.dart';
@@ -165,11 +166,18 @@ void main() {
       await Future<void>.delayed(Duration.zero);
     }
 
-    setUp(() {
+    late SharedPreferences prefs;
+
+    setUp(() async {
+      SharedPreferences.setMockInitialValues({});
+      prefs = await SharedPreferences.getInstance();
       // Fresh install: nobody is signed in until a test emits a session.
       session = FakeAuthSession(uid: '');
       container = ProviderContainer(
-        overrides: [authRepositoryProvider.overrideWithValue(session)],
+        overrides: [
+          authRepositoryProvider.overrideWithValue(session),
+          sharedPreferencesProvider.overrideWithValue(prefs),
+        ],
       );
       // ProviderContainer is lazy: force the notifier to build now so it is already
       // subscribed to the auth stream before a test emits a session change.
@@ -205,7 +213,11 @@ void main() {
         final state = container.read(authViewModelProvider);
         expect(state.isSignedIn, isTrue);
         expect(state.isOnboarded, isTrue);
-        expect(session.ensureProfileCalls, 1);
+        expect(
+          session.ensureProfileCalls,
+          0,
+          reason: 'the profile already exists, so nothing is seeded',
+        );
       },
     );
 
@@ -218,6 +230,36 @@ void main() {
 
         expect(container.read(authViewModelProvider).isSignedIn, isTrue);
         expect(container.read(authViewModelProvider).isOnboarded, isFalse);
+        expect(
+          session.ensureProfileCalls,
+          1,
+          reason: 'no profile yet: seed it',
+        );
+      },
+    );
+
+    test(
+      'a returning learner starts from the profile cached on the device',
+      () async {
+        session.name = 'Aiko';
+        session.emit('user-1');
+        await pump();
+
+        // The next launch: same signed-in user, profile not yet read.
+        final next = ProviderContainer(
+          overrides: [
+            authRepositoryProvider.overrideWithValue(
+              FakeAuthSession(uid: 'user-1'),
+            ),
+            sharedPreferencesProvider.overrideWithValue(prefs),
+          ],
+        );
+        addTearDown(next.dispose);
+
+        final state = next.read(authViewModelProvider);
+        expect(state.isLoading, isFalse);
+        expect(state.isOnboarded, isTrue);
+        expect(state.displayName, 'Aiko');
       },
     );
 
@@ -240,7 +282,10 @@ void main() {
           name: 'Old',
         );
         final blockedContainer = ProviderContainer(
-          overrides: [authRepositoryProvider.overrideWithValue(blocked)],
+          overrides: [
+            authRepositoryProvider.overrideWithValue(blocked),
+            sharedPreferencesProvider.overrideWithValue(prefs),
+          ],
         );
         addTearDown(() async {
           blockedContainer.dispose();

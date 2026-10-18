@@ -57,4 +57,56 @@ void main() {
     expect(dialogue.lines.single.tokens.single.romaji, isNull);
     expect(dialogue.source.url, isNull);
   });
+
+  test(
+    'a book keeps its author details and line-level romaji and translation',
+    () {
+      final map = {
+        'id': 'book-1',
+        'title': 'Night at the Inn',
+        'level': 'N4',
+        'kind': 'book',
+        'author': '中谷宇吉郎',
+        'originalTitle': 'Ｉ駅の一夜',
+        'originalYear': 1946,
+        'description': 'A snowy night.',
+        'lines': [
+          {
+            'index': 0,
+            'romaji': 'yuki desu.',
+            'translation': 'It is snow.',
+            'tokens': [
+              {'surface': '雪', 'reading': 'ゆき'},
+            ],
+          },
+        ],
+      };
+
+      final book = DialogueDto.fromMap(map).toDomain();
+      final restored = DialogueDto.fromMap(dialogueToMap(book)).toDomain();
+      final summary = DialogueSummaryDto(book).toDomain();
+
+      expect(restored.kind, DialogueKind.book);
+      expect(restored.book!.author, '中谷宇吉郎');
+      expect(restored.book!.originalYear, 1946);
+      expect(restored.book!.summary, 'A snowy night.');
+      expect(restored.lines.single.romaji, 'yuki desu.');
+      expect(restored.lines.single.translation, 'It is snow.');
+      // The cached list keeps the author too, so offline cards still show it.
+      expect(summary.book!.author, '中谷宇吉郎');
+    },
+  );
+
+  test('an unknown kind from a newer server reads as a dialogue', () {
+    final dialogue = DialogueDto.fromMap({
+      'id': 'x',
+      'title': 'X',
+      'level': 'N5',
+      'kind': 'podcast',
+      'lines': const [],
+    }).toDomain();
+
+    expect(dialogue.kind, DialogueKind.dialogue);
+    expect(dialogue.book, isNull);
+  });
 }

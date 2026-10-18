@@ -20,8 +20,12 @@ class LibraryDialogueListView extends ConsumerWidget {
   /// A long press on one of the learner's own dialogues starts edit mode.
   final ValueChanged<String>? onStartEditing;
 
+  /// Show only books, or everything except books (dialogues and stories).
+  final bool books;
+
   const LibraryDialogueListView({
     super.key,
+    this.books = false,
     this.selectedIds,
     this.onToggle,
     this.onStartEditing,
@@ -33,43 +37,56 @@ class LibraryDialogueListView extends ConsumerWidget {
     final isCached = ref.read(dialogueRepositoryProvider).isShowingCachedCopy;
 
     return dialogues.when(
-      data: (items) => Column(
-        children: [
-          if (isCached) const _CachedCopyBanner(),
-          Expanded(
-            child: items.isEmpty
-                ? _EmptyDialogues(onBrowse: () => _openNhk(context))
-                : GridView.builder(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          mainAxisSpacing: 10,
-                          crossAxisSpacing: 10,
-                          mainAxisExtent: 136,
-                        ),
-                    itemCount: items.length,
-                    itemBuilder: (context, index) {
-                      final dialogue = items[index];
-                      final own = UserDialogueRepository.isUserDialogueId(
-                        dialogue.id,
-                      );
-                      final selected = selectedIds;
-                      return DialogueSummaryCard(
-                        dialogue: dialogue,
-                        editing: selected != null,
-                        editable: own,
-                        selected: selected?.contains(dialogue.id) ?? false,
-                        onToggle: () => onToggle?.call(dialogue.id),
-                        onLongPress: () => own
-                            ? onStartEditing?.call(dialogue.id)
-                            : _explainLocked(context),
-                      );
-                    },
-                  ),
-          ),
-        ],
-      ),
+      data: (all) {
+        final items = [
+          for (final item in all)
+            if ((item.kind == DialogueKind.book) == books) item,
+        ];
+        return Column(
+          children: [
+            if (isCached) const _CachedCopyBanner(),
+            Expanded(
+              child: items.isEmpty
+                  ? (books
+                        ? const EmptyState(
+                            icon: Icons.auto_stories,
+                            color: AppColors.book,
+                            title: 'No books yet',
+                            message: 'Adapted stories will appear here.',
+                          )
+                        : _EmptyDialogues(onBrowse: () => _openNhk(context)))
+                  : GridView.builder(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            mainAxisSpacing: 10,
+                            crossAxisSpacing: 10,
+                            mainAxisExtent: 136,
+                          ),
+                      itemCount: items.length,
+                      itemBuilder: (context, index) {
+                        final dialogue = items[index];
+                        final own = UserDialogueRepository.isUserDialogueId(
+                          dialogue.id,
+                        );
+                        final selected = selectedIds;
+                        return DialogueSummaryCard(
+                          dialogue: dialogue,
+                          editing: selected != null,
+                          editable: own,
+                          selected: selected?.contains(dialogue.id) ?? false,
+                          onToggle: () => onToggle?.call(dialogue.id),
+                          onLongPress: () => own
+                              ? onStartEditing?.call(dialogue.id)
+                              : _explainLocked(context),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        );
+      },
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, _) => _DialogueLoadError(
         onRetry: () =>
@@ -133,9 +150,24 @@ class DialogueSummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isStory = dialogue.kind == DialogueKind.story;
     const accent = AppColors.primaryMain;
-    final kindColor = isStory ? AppColors.story : AppColors.dialogue;
+    final (kindColor, kindIcon, kindLabel) = switch (dialogue.kind) {
+      DialogueKind.story => (
+        AppColors.story,
+        Icons.menu_book_outlined,
+        'Story',
+      ),
+      DialogueKind.book => (
+        AppColors.book,
+        Icons.auto_stories_outlined,
+        'Book',
+      ),
+      DialogueKind.dialogue => (
+        AppColors.dialogue,
+        Icons.forum_outlined,
+        'Dialogue',
+      ),
+    };
 
     final card = Card(
       margin: EdgeInsets.zero,
@@ -166,9 +198,7 @@ class DialogueSummaryCard extends StatelessWidget {
                               : Icons.radio_button_unchecked)
                         : editing
                         ? Icons.lock_outline
-                        : isStory
-                        ? Icons.menu_book_outlined
-                        : Icons.forum_outlined,
+                        : kindIcon,
                     color: editing ? accent : kindColor,
                     size: 20,
                   ),
@@ -201,8 +231,9 @@ class DialogueSummaryCard extends StatelessWidget {
                 ),
               ),
               Text(
-                '${isStory ? 'Story' : 'Dialogue'}  ·  '
-                '${dialogue.lineCount} lines',
+                dialogue.book != null
+                    ? '$kindLabel  ·  ${dialogue.book!.author}'
+                    : '$kindLabel  ·  ${dialogue.lineCount} lines',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.bodySmall,

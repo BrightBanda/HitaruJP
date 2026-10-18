@@ -23,12 +23,27 @@ final catalogRepositoryProvider = Provider<CatalogRepository>(
 
 /// Today's recommended videos.
 ///
-/// Waits for the profile sync first, so a learner who just finished onboarding
-/// or changed their level gets picks for the level they actually chose. Fetches
-/// again when the app returns to the foreground on a new day.
+/// Picks already fetched today for the learner's level come from the device,
+/// with no server call: the API can take long to wake, and they would not
+/// change. Otherwise this waits for the profile sync first, so a learner who
+/// just finished onboarding or changed their level gets picks for the level
+/// they actually chose. Fetches again when the app returns to the foreground
+/// on a new day.
 final dailyPicksProvider = FutureProvider<DailyPicks>((ref) async {
-  await ref.watch(profileSyncProvider.future);
-  final picks = await ref.watch(catalogRepositoryProvider).dailyPicks();
+  final repository = ref.watch(catalogRepositoryProvider);
+  final level = ref.watch(
+    authViewModelProvider.select((state) => state.profile?.level),
+  );
+  final cached = await repository.cachedDailyPicks();
+  final DailyPicks picks;
+  if (cached != null &&
+      !cached.isStale(DateTime.now()) &&
+      (level == null || cached.level == level)) {
+    picks = cached;
+  } else {
+    await ref.watch(profileSyncProvider.future);
+    picks = await repository.dailyPicks();
+  }
 
   ref.listen(appLifecycleProvider, (_, next) {
     if (next == AppLifecycleState.resumed && picks.isStale(DateTime.now())) {
@@ -58,10 +73,9 @@ class CatalogOpener extends Notifier<Set<String>> {
   Set<String> build() => const {};
 
   /// Returns the library item's id, ready for `/content/<id>`, plus whether a
-  /// transcript came with it.
-  Future<({String contentId, bool hasTranscript})> open(
-    CatalogVideo video,
-  ) async {
+  /// transcript came with it and, when every source failed, why not.
+  Future<({String contentId, bool hasTranscript, String? transcriptError})>
+  open(CatalogVideo video) async {
     final youtubeId = video.youtubeId;
     if (youtubeId == null) {
       throw StateError('Only YouTube videos can be opened in the player.');
@@ -94,6 +108,7 @@ class CatalogOpener extends Notifier<Set<String>> {
       return (
         contentId: imported.item.id,
         hasTranscript: imported.hasTranscript,
+        transcriptError: imported.transcriptError,
       );
     } finally {
       if (ref.mounted) state = {...state}..remove(video.id);

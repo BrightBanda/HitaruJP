@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ingrain/core/utils/duration_format.dart';
 import 'package:ingrain/features/content/domain/video_search.dart';
+import 'package:ingrain/features/content/presentation/view/transcript_fetch_status.dart';
 import 'package:ingrain/features/content/presentation/viewmodel/content_view_model.dart';
 import 'package:ingrain/shared/widgets/colorful.dart';
+import 'package:ingrain/shared/widgets/network_thumbnail.dart';
 import 'package:ingrain/shared/widgets/web_transcript_notice.dart';
 
 enum _ImportState { idle, adding, added }
@@ -43,7 +45,14 @@ class _YoutubeSearchResultsState extends ConsumerState<YoutubeSearchResults> {
       if (!mounted) return;
       setState(() => _states[video.videoId] = _ImportState.added);
 
-      if (!result.hasTranscript) {
+      if (result.transcriptError case final error?) {
+        showTranscriptFailedSnackBar(
+          messenger,
+          ref,
+          contentId: result.item.id,
+          error: error,
+        );
+      } else if (!result.hasTranscript) {
         messenger.showSnackBar(
           SnackBar(
             content: Text(
@@ -184,10 +193,9 @@ class _VideoResultCard extends StatelessWidget {
                     child: Stack(
                       fit: StackFit.expand,
                       children: [
-                        Image.network(
-                          video.thumbnailUrl,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) => ColoredBox(
+                        NetworkThumbnail(
+                          url: video.thumbnailUrl,
+                          placeholder: ColoredBox(
                             color: accent.withValues(alpha: 0.14),
                             child: Icon(Icons.smart_display, color: accent),
                           ),
@@ -280,6 +288,7 @@ class _VideoResultCard extends StatelessWidget {
                 ),
               ],
             ),
+            TranscriptFetchStatusLine(videoId: video.videoId),
           ],
         ),
       ),

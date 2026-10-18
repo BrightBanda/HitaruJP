@@ -9,12 +9,6 @@ enum AddContentType {
     icon: Icons.smart_display_outlined,
     color: AppColors.video,
   ),
-  podcast(
-    label: 'Podcast',
-    icon: Icons.headphones_outlined,
-    color: AppColors.podcast,
-    isAvailable: false,
-  ),
   dialogue(
     label: 'Dialogue',
     icon: Icons.forum_outlined,
@@ -25,15 +19,15 @@ enum AddContentType {
     required this.label,
     required this.icon,
     required this.color,
-    this.isAvailable = true,
   });
 
   final String label;
   final IconData icon;
   final Color color;
 
-  /// Podcasts have no player yet, so they are listed but cannot be picked.
-  final bool isAvailable;
+  /// Every type can be added now. A type that is not ready yet can return
+  /// false here to be listed as "Soon" and not pickable.
+  bool get isAvailable => true;
 
   String get route => '/content/add?type=$name';
 

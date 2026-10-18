@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ingrain/app/router.dart';
 import 'package:ingrain/core/platform/picture_in_picture.dart';
+import 'package:ingrain/core/platform/video_overlay.dart';
 import 'package:ingrain/features/content/presentation/player_host/player_host.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 
@@ -50,6 +52,7 @@ class _PlayerLayerState extends ConsumerState<_PlayerLayer> {
   /// the host, so a drag moves only the stand-in instead of rebuilding the app.
   final _dragPosition = ValueNotifier<Offset?>(null);
   bool _wasMinimized = false;
+  StreamSubscription<VideoOverlayEvent>? _overlayEvents;
 
   // From the latest build, for the drag handlers.
   Rect _miniRect = Rect.zero;
@@ -63,7 +66,19 @@ class _PlayerLayerState extends ConsumerState<_PlayerLayer> {
   static const _parked = -4000.0;
 
   @override
+  void initState() {
+    super.initState();
+    // "Back to HitaruJP" on the floating window opens the full player.
+    _overlayEvents = VideoOverlay.instance.events.listen((event) {
+      final contentId = ref.read(playerHostProvider).contentId;
+      if (!event.closed || !event.expanded || contentId == null) return;
+      ref.read(appRouterProvider).push('/content/$contentId');
+    });
+  }
+
+  @override
   void dispose() {
+    _overlayEvents?.cancel();
     _dragPosition.dispose();
     super.dispose();
   }
@@ -94,6 +109,9 @@ class _PlayerLayerState extends ConsumerState<_PlayerLayer> {
           controlsBuilder: host.minimized
               ? (context, _) => _MiniControls(
                   onClose: notifier.close,
+                  onFloat: VideoOverlay.isSupported
+                      ? notifier.floatOverApps
+                      : null,
                   onTogglePlay: notifier.togglePlayback,
                   onExpand: () => ref
                       .read(appRouterProvider)
@@ -113,7 +131,10 @@ class _PlayerLayerState extends ConsumerState<_PlayerLayer> {
 
         _media = MediaQuery.of(context);
         _miniRect = _computeMiniRect(host);
-        final rect = host.minimized
+        final rect = host.floating
+            // The window over other apps plays it; this one waits unseen.
+            ? const Rect.fromLTWH(_parked, 0, 320, 180)
+            : host.minimized
             ? _miniRect
             // Off screen while the player screen is covered or not yet laid
             // out: the video keeps playing, it just is not drawn.
@@ -228,6 +249,9 @@ class _DragStandIn extends StatelessWidget {
 /// a surface that drags the window or, on a tap, opens the full player.
 class _MiniControls extends ConsumerStatefulWidget {
   final VoidCallback onClose;
+
+  /// Floats the video over other apps; null where that is not possible.
+  final VoidCallback? onFloat;
   final VoidCallback onTogglePlay;
   final VoidCallback onExpand;
   final ValueChanged<Offset> onDrag;
@@ -235,6 +259,7 @@ class _MiniControls extends ConsumerStatefulWidget {
 
   const _MiniControls({
     required this.onClose,
+    this.onFloat,
     required this.onTogglePlay,
     required this.onExpand,
     required this.onDrag,
@@ -285,6 +310,16 @@ class _MiniControlsState extends ConsumerState<_MiniControls> {
           right: 0,
           child: _MiniButton(icon: Icons.close, onPressed: widget.onClose),
         ),
+        if (widget.onFloat case final onFloat?)
+          Positioned(
+            top: 0,
+            left: 0,
+            child: _MiniButton(
+              icon: Icons.picture_in_picture_alt,
+              tooltip: 'Float over other apps',
+              onPressed: onFloat,
+            ),
+          ),
         Positioned(
           bottom: 0,
           left: 0,
@@ -301,8 +336,13 @@ class _MiniControlsState extends ConsumerState<_MiniControls> {
 class _MiniButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback onPressed;
+  final String? tooltip;
 
-  const _MiniButton({required this.icon, required this.onPressed});
+  const _MiniButton({
+    required this.icon,
+    required this.onPressed,
+    this.tooltip,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -311,6 +351,7 @@ class _MiniButton extends StatelessWidget {
       type: MaterialType.transparency,
       child: IconButton(
         icon: Icon(icon, color: Colors.white, size: 20),
+        tooltip: tooltip,
         visualDensity: VisualDensity.compact,
         style: IconButton.styleFrom(backgroundColor: Colors.black45),
         onPressed: onPressed,

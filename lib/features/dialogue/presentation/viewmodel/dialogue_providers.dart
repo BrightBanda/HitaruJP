@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:ingrain/core/providers.dart';
@@ -39,16 +41,39 @@ class DialogueListViewModel extends AsyncNotifier<List<DialogueSummary>> {
   late DialogueRepository _repository;
   late UserDialogueRepository _userRepository;
 
+  /// Shows the device's copy (cached catalogue and bundled samples) as soon
+  /// as it is read, then the API's list once it answers. The API sleeps when
+  /// idle and can take a while to wake; the home page should not wait on it.
   @override
-  Future<List<DialogueSummary>> build() {
+  Future<List<DialogueSummary>> build() async {
     _repository = ref.watch(dialogueRepositoryProvider);
     _userRepository = ref.watch(userDialogueRepositoryProvider);
-    return _load();
+    // Firestore is asked once, for both the cached and the fresh list.
+    final own = _ownDialogues();
+    final fresh = _load(own);
+    List<DialogueSummary> cached;
+    try {
+      cached = await _repository.listCachedSummaries();
+    } catch (_) {
+      cached = const [];
+    }
+    if (cached.isEmpty) return fresh;
+
+    unawaited(
+      fresh.then(
+        (list) {
+          if (ref.mounted) state = AsyncData(list);
+        },
+        // The cached list stays up when the API cannot be reached.
+        onError: (Object _) {},
+      ),
+    );
+    return [...await own, ...cached];
   }
 
+  /// Reloads in place, keeping the current list up until the new one is in.
   Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_load);
+    state = await AsyncValue.guard(() => _load(_ownDialogues()));
   }
 
   /// Renames one of the learner's own dialogues.
@@ -84,18 +109,27 @@ class DialogueListViewModel extends AsyncNotifier<List<DialogueSummary>> {
 
   /// An unreachable catalogue only fails the list when the user has nothing of
   /// their own to show either.
-  Future<List<DialogueSummary>> _load() async {
-    List<DialogueSummary> own;
+  /// [ownFuture] (the learner's own, from Firestore) and the catalogue (from
+  /// the API) load side by side.
+  Future<List<DialogueSummary>> _load(
+    Future<List<DialogueSummary>> ownFuture,
+  ) async {
+    final catalogue = _repository.listSummaries();
+    final own = await ownFuture;
     try {
-      own = await _userRepository.listAll();
-    } catch (_) {
-      own = const [];
-    }
-    try {
-      return [...own, ...await _repository.listSummaries()];
+      return [...own, ...await catalogue];
     } catch (_) {
       if (own.isEmpty) rethrow;
       return own;
+    }
+  }
+
+  /// Never fails: without its own dialogues the list still has the catalogue.
+  Future<List<DialogueSummary>> _ownDialogues() async {
+    try {
+      return await _userRepository.listAll();
+    } catch (_) {
+      return const [];
     }
   }
 }

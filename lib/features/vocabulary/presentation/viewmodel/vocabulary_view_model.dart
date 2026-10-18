@@ -74,6 +74,7 @@ class VocabularyViewModel extends AsyncNotifier<List<VocabularyItem>> {
     String? contextSentence,
     String? sessionId,
     VocabState vocabState = VocabState.encountered,
+    String deckId = minedPhrasesDeckId,
   }) async {
     final trimmed = word.trim();
     if (trimmed.isEmpty) return null;
@@ -104,7 +105,7 @@ class VocabularyViewModel extends AsyncNotifier<List<VocabularyItem>> {
           state: vocabState,
           createdAt: _clock.now,
         );
-        await _createReviewCard(saved);
+        await _createReviewCard(saved, deckId);
         ref.invalidate(dueCountProvider);
       }
       await refresh();
@@ -127,6 +128,7 @@ class VocabularyViewModel extends AsyncNotifier<List<VocabularyItem>> {
     String? reading,
     String? meaning,
     String? pos,
+    String deckId = minedPhrasesDeckId,
   }) async {
     return saveWord(
       word: word,
@@ -142,6 +144,7 @@ class VocabularyViewModel extends AsyncNotifier<List<VocabularyItem>> {
         sentence.index,
       ),
       sessionId: sessionId,
+      deckId: deckId,
     );
   }
 
@@ -187,14 +190,20 @@ class VocabularyViewModel extends AsyncNotifier<List<VocabularyItem>> {
     await _repository.update(updates);
   }
 
-  Future<void> _createReviewCard(VocabularyItem item) async {
-    await _reviewRepository.createCard(
+  Future<void> _createReviewCard(VocabularyItem item, String deckId) async {
+    final card = await _reviewRepository.createCard(
       cardType: CardType.vocabulary,
       sourceItemId: item.id,
       promptText: item.word,
       answerText: VocabularyViewModel.answerFor(item),
       createdAt: item.createdAt,
     );
+    // New cards land in the built-in deck; a word saved to another deck is
+    // moved there.
+    if (deckId != minedPhrasesDeckId) {
+      await _reviewRepository.saveCard(card.copyWith(deckId: deckId));
+    }
+    ref.invalidate(deckSummariesProvider);
   }
 
   /// Back-of-card text for a vocabulary card: reading and meaning when known,

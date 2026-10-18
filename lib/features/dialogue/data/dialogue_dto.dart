@@ -24,6 +24,7 @@ class DialogueDto {
         url: (map['sourceUrl'] ?? source['url']) as String?,
       ),
       updatedAt: _date(map['updatedAt']),
+      book: _book(map),
       lines: lines,
     );
   }
@@ -44,6 +45,7 @@ class DialogueDto {
         url: (map['sourceUrl'] ?? source['url']) as String?,
       ),
       updatedAt: _date(map['updatedAt']),
+      book: _book(map),
     );
   }
 
@@ -66,6 +68,17 @@ class DialogueDto {
       tokens: tokens,
       romaji: _text(map['romaji']),
       translation: _text(map['translation']),
+    );
+  }
+
+  static BookInfo? _book(Map<String, dynamic> map) {
+    final author = _text(map['author']);
+    if (author == null) return null;
+    return BookInfo(
+      author: author,
+      originalTitle: _text(map['originalTitle']),
+      originalYear: (map['originalYear'] as num?)?.toInt(),
+      summary: _text(map['description']),
     );
   }
 
@@ -99,6 +112,7 @@ class DialogueSummaryDto {
         'sourceUrl': summary.source.url,
         if (summary.updatedAt != null)
           'updatedAt': summary.updatedAt!.toIso8601String(),
+        if (summary.book case final book?) ..._bookToMap(book),
       };
 
   DialogueSummaryDto.fromMap(Map<String, dynamic> data) : map = Map.from(data);
@@ -117,6 +131,7 @@ Map<String, dynamic> dialogueToMap(Dialogue dialogue) => {
   'sourceUrl': dialogue.source.url,
   if (dialogue.updatedAt != null)
     'updatedAt': dialogue.updatedAt!.toIso8601String(),
+  if (dialogue.book case final book?) ..._bookToMap(book),
   'lines': [
     for (final line in dialogue.lines)
       {
@@ -134,4 +149,11 @@ Map<String, dynamic> dialogueToMap(Dialogue dialogue) => {
         ],
       },
   ],
+};
+
+Map<String, dynamic> _bookToMap(BookInfo book) => {
+  'author': book.author,
+  if (book.originalTitle != null) 'originalTitle': book.originalTitle,
+  if (book.originalYear != null) 'originalYear': book.originalYear,
+  if (book.summary != null) 'description': book.summary,
 };

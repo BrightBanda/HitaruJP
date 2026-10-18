@@ -11,6 +11,7 @@ import 'package:ingrain/features/immersion/presentation/view/immersion_session_s
 import 'package:ingrain/features/sentence_mining/presentation/view/sentence_save_sheet.dart';
 import 'package:ingrain/features/sentence_mining/presentation/viewmodel/sentence_mining_view_model.dart';
 import 'package:ingrain/features/srs/presentation/viewmodel/review_view_model.dart';
+import 'package:ingrain/features/vocabulary/domain/dictionary_index.dart';
 import 'package:ingrain/features/vocabulary/presentation/view/vocabulary_lookup_sheet.dart';
 import 'package:ingrain/features/vocabulary/presentation/view/vocabulary_save_sheet.dart';
 import 'package:ingrain/features/vocabulary/presentation/viewmodel/vocabulary_view_model.dart';
@@ -41,6 +42,7 @@ class _DialogueReaderViewState extends ConsumerState<DialogueReaderView> {
       dialogueReaderViewModelProvider(dialogueId),
     );
     final settings = ref.watch(settingsViewModelProvider).settings;
+    final dictionary = ref.watch(dictionaryProvider).value;
     final showRomaji = settings?.showRomaji ?? false;
     final isCached = ref.read(dialogueRepositoryProvider).isShowingCachedCopy;
 
@@ -91,7 +93,17 @@ class _DialogueReaderViewState extends ConsumerState<DialogueReaderView> {
                     SliverPadding(
                       padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
                       sliver: SliverToBoxAdapter(
-                        child: _DialogueHeader(dialogue: dialogue),
+                        child: dialogue.kind == DialogueKind.book
+                            ? _BookHeader(
+                                dialogue: dialogue,
+                                onOpenSource: dialogue.source.url == null
+                                    ? null
+                                    : () => _openSource(
+                                        context,
+                                        dialogue.source.url!,
+                                      ),
+                              )
+                            : _DialogueHeader(dialogue: dialogue),
                       ),
                     ),
                     // Stays under the app bar while the lines scroll past.
@@ -101,9 +113,6 @@ class _DialogueReaderViewState extends ConsumerState<DialogueReaderView> {
                         showRomaji: showRomaji,
                         showFurigana: _showFurigana,
                         showTranslation: _showTranslation,
-                        hasFurigana: dialogue.lines.any(
-                          (l) => l.tokens.any((t) => t.reading != null),
-                        ),
                         hasTranslation: dialogue.lines.any(
                           (l) => l.translation != null,
                         ),
@@ -121,15 +130,36 @@ class _DialogueReaderViewState extends ConsumerState<DialogueReaderView> {
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
                       sliver: SliverList.separated(
                         itemCount: dialogue.lines.length,
-                        separatorBuilder: (_, _) => const SizedBox(height: 12),
+                        separatorBuilder: (_, _) => SizedBox(
+                          height: dialogue.kind == DialogueKind.book ? 6 : 12,
+                        ),
                         itemBuilder: (context, index) {
                           final line = dialogue.lines[index];
+                          if (dialogue.kind == DialogueKind.book) {
+                            return _BookParagraph(
+                              line: line,
+                              showRomaji: showRomaji,
+                              showFurigana: _showFurigana,
+                              showTranslation: _showTranslation,
+                              dictionary: dictionary,
+                              onTokenTap: (token) => _openLookup(
+                                context,
+                                ref,
+                                dialogue,
+                                line,
+                                token,
+                              ),
+                              onMine: () =>
+                                  _mineLine(context, ref, dialogue, line),
+                            );
+                          }
                           return _DialogueLineCard(
                             dialogue: dialogue,
                             line: line,
                             showRomaji: showRomaji,
                             showFurigana: _showFurigana,
                             showTranslation: _showTranslation,
+                            dictionary: dictionary,
                             onTokenTap: (token) => _openLookup(
                               context,
                               ref,
@@ -206,6 +236,7 @@ class _DialogueReaderViewState extends ConsumerState<DialogueReaderView> {
           reading: request.reading,
           meaning: request.meaning,
           pos: request.pos,
+          deckId: request.deckId,
           sourceType: SourceType.dialogue,
           sourceId: dialogue.id,
           sourceTitle: dialogue.title,
@@ -358,6 +389,7 @@ class _DialogueLineCard extends StatelessWidget {
   final bool showRomaji;
   final bool showFurigana;
   final bool showTranslation;
+  final DictionaryIndex? dictionary;
   final ValueChanged<DialogueToken> onTokenTap;
   final VoidCallback onMine;
 
@@ -367,6 +399,7 @@ class _DialogueLineCard extends StatelessWidget {
     required this.showRomaji,
     required this.showFurigana,
     required this.showTranslation,
+    required this.dictionary,
     required this.onTokenTap,
     required this.onMine,
   });
@@ -398,6 +431,8 @@ class _DialogueLineCard extends StatelessWidget {
                   line: line,
                   showRomaji: showRomaji,
                   showFurigana: showFurigana,
+                  fallbackReading: (surface) =>
+                      dictionary?.match(surface)?.reading,
                   onTokenTap: onTokenTap,
                 ),
               ),
@@ -453,7 +488,6 @@ class _ReaderOptionsBar extends SliverPersistentHeaderDelegate {
   final bool showRomaji;
   final bool showFurigana;
   final bool showTranslation;
-  final bool hasFurigana;
   final bool hasTranslation;
   final VoidCallback onFurigana;
   final VoidCallback onRomaji;
@@ -463,7 +497,6 @@ class _ReaderOptionsBar extends SliverPersistentHeaderDelegate {
     required this.showRomaji,
     required this.showFurigana,
     required this.showTranslation,
-    required this.hasFurigana,
     required this.hasTranslation,
     required this.onFurigana,
     required this.onRomaji,
@@ -496,20 +529,30 @@ class _ReaderOptionsBar extends SliverPersistentHeaderDelegate {
           child: Row(
             children: [
               FilterChip(
+                avatar: const Icon(Icons.text_fields, size: 18),
+                label: const Text('Furigana'),
+                selected: showFurigana,
+                onSelected: (_) => onFurigana(),
+              ),
+              const SizedBox(width: 8),
+              FilterChip(
                 avatar: const Icon(Icons.translate, size: 18),
                 label: const Text('Romaji'),
                 selected: showRomaji,
                 onSelected: (_) => onRomaji(),
               ),
-              const SizedBox(width: 8),
-              FilterChip(
-                avatar: const Icon(Icons.subtitles_outlined, size: 18),
-                label: Text(
-                  showTranslation ? 'Hide translation' : 'See translation',
+              // Only when the author wrote a translation for some line.
+              if (hasTranslation) ...[
+                const SizedBox(width: 8),
+                FilterChip(
+                  avatar: const Icon(Icons.subtitles_outlined, size: 18),
+                  label: Text(
+                    showTranslation ? 'Hide translation' : 'See translation',
+                  ),
+                  selected: showTranslation,
+                  onSelected: (_) => onTranslation(),
                 ),
-                selected: showTranslation,
-                onSelected: (_) => onTranslation(),
-              ),
+              ],
             ],
           ),
         ),
@@ -522,6 +565,186 @@ class _ReaderOptionsBar extends SliverPersistentHeaderDelegate {
       old.showRomaji != showRomaji ||
       old.showFurigana != showFurigana ||
       old.showTranslation != showTranslation ||
-      old.hasFurigana != hasFurigana ||
       old.hasTranslation != hasTranslation;
+}
+
+/// A book's details, shown before its text: what it is, who wrote the
+/// original, and where it came from.
+class _BookHeader extends StatelessWidget {
+  final Dialogue dialogue;
+  final VoidCallback? onOpenSource;
+
+  const _BookHeader({required this.dialogue, this.onOpenSource});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final book = dialogue.book;
+    final byline = [
+      if (book != null) book.author,
+      if (book?.originalYear != null) '${book!.originalYear}',
+    ].join('  ·  ');
+    return Card(
+      margin: EdgeInsets.zero,
+      color: AppColors.book.withValues(alpha: 0.1),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                IconBadge(
+                  color: AppColors.book,
+                  icon: Icons.auto_stories,
+                  size: 52,
+                  solid: true,
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(dialogue.title, style: theme.textTheme.titleLarge),
+                      if (byline.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(byline, style: theme.textTheme.bodyMedium),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                Pill(label: dialogue.level, color: AppColors.book, solid: true),
+                Pill(
+                  label: '${dialogue.lines.length} lines',
+                  color: AppColors.book,
+                ),
+                const Pill(
+                  label: 'Adapted for learners',
+                  color: AppColors.book,
+                ),
+              ],
+            ),
+            if (book?.summary != null) ...[
+              const SizedBox(height: 12),
+              Text(
+                book!.summary!,
+                style: theme.textTheme.bodyMedium?.copyWith(height: 1.5),
+              ),
+            ],
+            if (book?.originalTitle != null) ...[
+              const SizedBox(height: 10),
+              Text(
+                'Original: ${book!.originalTitle}',
+                style: theme.textTheme.bodySmall,
+              ),
+            ],
+            if (dialogue.source.attribution != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                dialogue.source.attribution!,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
+                ),
+              ),
+            ],
+            if (onOpenSource != null) ...[
+              const SizedBox(height: 8),
+              TextButton.icon(
+                onPressed: onOpenSource,
+                icon: const Icon(Icons.open_in_new, size: 18),
+                label: const Text('View the original'),
+              ),
+            ],
+            const SizedBox(height: 4),
+            Text(
+              'Tap a word to look it up. Bookmark a paragraph to review it later.',
+              style: theme.textTheme.bodySmall,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// One line of a book as running text, not a chat bubble.
+class _BookParagraph extends StatelessWidget {
+  final DialogueLine line;
+  final bool showRomaji;
+  final bool showFurigana;
+  final bool showTranslation;
+  final DictionaryIndex? dictionary;
+  final ValueChanged<DialogueToken> onTokenTap;
+  final VoidCallback onMine;
+
+  const _BookParagraph({
+    required this.line,
+    required this.showRomaji,
+    required this.showFurigana,
+    required this.showTranslation,
+    required this.dictionary,
+    required this.onTokenTap,
+    required this.onMine,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                DialogueTokenRow(
+                  line: line,
+                  showRomaji: showRomaji,
+                  showFurigana: showFurigana,
+                  spacing: 1,
+                  fallbackReading: (surface) =>
+                      dictionary?.match(surface)?.reading,
+                  onTokenTap: onTokenTap,
+                ),
+                if (showRomaji && line.romaji != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(line.romaji!, style: theme.textTheme.bodySmall),
+                  ),
+                if (showTranslation && line.translation != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      line.translation!,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontStyle: FontStyle.italic,
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.75,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          IconButton(
+            tooltip: 'Mine sentence',
+            icon: const Icon(Icons.bookmark_add_outlined),
+            color: AppColors.book,
+            onPressed: onMine,
+          ),
+        ],
+      ),
+    );
+  }
 }

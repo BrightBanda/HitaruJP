@@ -15,6 +15,7 @@ import 'package:ingrain/features/profile/presentation/widgets/learner_avatar.dar
 import 'package:ingrain/features/progress/presentation/viewmodel/progress_view_model.dart';
 import 'package:ingrain/shared/layout/window_size.dart';
 import 'package:ingrain/shared/widgets/colorful.dart';
+import 'package:ingrain/shared/widgets/skeleton.dart';
 import 'package:ingrain/shared/widgets/video_thumbnail.dart';
 
 class ImmersionHomeView extends ConsumerWidget {
@@ -57,7 +58,7 @@ class ImmersionHomeView extends ConsumerWidget {
         },
         child: contentList.when(
           data: (items) => _buildHome(context, ref, items, dialogues),
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const _HomeSkeleton(),
           error: (_, _) => const Center(child: Text('Failed to load content')),
         ),
       ),
@@ -76,7 +77,11 @@ class ImmersionHomeView extends ConsumerWidget {
     final recents = recentContent(items, limit: recentLimit);
     final video = recommendedVideo(items);
     final dialogue = dialogueOfTheDay(
-      dialogues.value ?? const [],
+      // Books have their own shelf in the Library.
+      [
+        for (final item in dialogues.value ?? const <DialogueSummary>[])
+          if (item.kind != DialogueKind.book) item,
+      ],
       DateTime.now(),
     );
 
@@ -816,17 +821,87 @@ class _LoadingTile extends StatelessWidget {
   const _LoadingTile({required this.color});
 
   @override
-  Widget build(BuildContext context) => Container(
-    height: 84,
-    decoration: BoxDecoration(
-      color: color.withValues(alpha: 0.12),
-      borderRadius: BorderRadius.circular(20),
-    ),
-    child: Center(
-      child: SizedBox.square(
-        dimension: 20,
-        child: CircularProgressIndicator(strokeWidth: 2, color: color),
+  Widget build(BuildContext context) => SkeletonPulse(
+    child: Container(
+      height: 84,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        children: [
+          const SkeletonBox(width: 48, height: 48, radius: 14),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SkeletonBox.line(widthFactor: 0.7, height: 14),
+                const SizedBox(height: 8),
+                SkeletonBox.line(widthFactor: 0.45),
+              ],
+            ),
+          ),
+        ],
       ),
     ),
   );
+}
+
+/// The home page's shape while the library loads: the greeting, today's goal,
+/// the shortcuts and the first picks, as placeholders in place.
+class _HomeSkeleton extends StatelessWidget {
+  const _HomeSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return SkeletonPulse(
+      child: ListView(
+        // Scrollable, so pull-to-refresh still works while loading.
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SkeletonBox.line(widthFactor: 0.55, height: 22),
+                    const SizedBox(height: 8),
+                    SkeletonBox.line(widthFactor: 0.8),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              const SkeletonBox(width: 52, height: 52, radius: 16),
+            ],
+          ),
+          const SizedBox(height: 16),
+          const SkeletonBox(height: 168, radius: 24),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              for (var i = 0; i < 3; i++) ...[
+                if (i > 0) const SizedBox(width: 10),
+                const Expanded(child: SkeletonBox(height: 76, radius: 18)),
+              ],
+            ],
+          ),
+          const SizedBox(height: 22),
+          SkeletonBox.line(widthFactor: 0.4, height: 16),
+          const SizedBox(height: 12),
+          const AspectRatio(
+            aspectRatio: 16 / 9,
+            child: SkeletonBox(height: double.infinity, radius: 18),
+          ),
+          const SizedBox(height: 10),
+          const SkeletonBox(height: 92, radius: 18),
+          const SizedBox(height: 10),
+          const SkeletonBox(height: 92, radius: 18),
+        ],
+      ),
+    );
+  }
 }

@@ -10,6 +10,18 @@ class DailyActivity {
   });
 
   bool get hasActivity => seconds > 0 || reviews > 0;
+
+  Map<String, Object> toJson() => {
+    'day': day.toIso8601String(),
+    'seconds': seconds,
+    'reviews': reviews,
+  };
+
+  factory DailyActivity.fromJson(Map<String, dynamic> json) => DailyActivity(
+    day: DateTime.parse(json['day'] as String),
+    seconds: (json['seconds'] as num).toInt(),
+    reviews: (json['reviews'] as num?)?.toInt() ?? 0,
+  );
 }
 
 class ProgressSummary {
@@ -61,6 +73,47 @@ class ProgressSummary {
   );
 
   int get dailyGoalSeconds => dailyGoalMinutes * 60;
+
+  /// For the copy kept on the device between launches.
+  Map<String, Object> toJson() => {
+    'todaySeconds': todaySeconds,
+    'weekSeconds': weekSeconds,
+    'lifetimeSeconds': lifetimeSeconds,
+    'currentStreak': currentStreak,
+    'longestStreak': longestStreak,
+    'totalSentences': totalSentences,
+    'sentencesThisWeek': sentencesThisWeek,
+    'totalWords': totalWords,
+    'wordsLearningOrBetter': wordsLearningOrBetter,
+    'dueCount': dueCount,
+    'reviewedToday': reviewedToday,
+    'totalReviews': totalReviews,
+    'dailyGoalMinutes': dailyGoalMinutes,
+    'last7Days': [for (final day in last7Days) day.toJson()],
+  };
+
+  factory ProgressSummary.fromJson(Map<String, dynamic> json) {
+    int field(String name) => (json[name] as num?)?.toInt() ?? 0;
+    return ProgressSummary(
+      todaySeconds: field('todaySeconds'),
+      weekSeconds: field('weekSeconds'),
+      lifetimeSeconds: field('lifetimeSeconds'),
+      currentStreak: field('currentStreak'),
+      longestStreak: field('longestStreak'),
+      totalSentences: field('totalSentences'),
+      sentencesThisWeek: field('sentencesThisWeek'),
+      totalWords: field('totalWords'),
+      wordsLearningOrBetter: field('wordsLearningOrBetter'),
+      dueCount: field('dueCount'),
+      reviewedToday: field('reviewedToday'),
+      totalReviews: field('totalReviews'),
+      dailyGoalMinutes: field('dailyGoalMinutes'),
+      last7Days: [
+        for (final day in json['last7Days'] as List? ?? const [])
+          DailyActivity.fromJson(Map<String, dynamic>.from(day as Map)),
+      ],
+    );
+  }
 
   /// Clamped 0..1 progress of today's immersion time towards the daily goal.
   double get todayGoalProgress {

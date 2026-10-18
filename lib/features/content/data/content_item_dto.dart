@@ -14,6 +14,7 @@ class ContentItemDto {
     int totalImmersionSeconds = 0,
     DateTime? lastOpenedAt,
     int? durationSeconds,
+    DateTime? addedAt,
   }) : map = {
          'id': id,
          'sourceType': sourceType.name,
@@ -26,9 +27,25 @@ class ContentItemDto {
          if (lastOpenedAt != null)
            'lastOpenedAt': lastOpenedAt.toIso8601String(),
          if (durationSeconds != null) 'durationSeconds': durationSeconds,
+         if (addedAt != null) 'addedAt': addedAt.toIso8601String(),
        };
 
   ContentItemDto.fromMap(Map<String, dynamic> data) : map = Map.from(data);
+
+  ContentItemDto.fromDomain(ContentItem item)
+    : this(
+        id: item.id,
+        sourceType: item.sourceType,
+        sourceUrl: item.sourceUrl,
+        title: item.title,
+        channelTitle: item.channelTitle,
+        thumbnailUrl: item.thumbnailUrl,
+        lastPositionSeconds: item.lastPositionSeconds,
+        totalImmersionSeconds: item.totalImmersionSeconds,
+        lastOpenedAt: item.lastOpenedAt,
+        durationSeconds: item.durationSeconds,
+        addedAt: item.addedAt,
+      );
 
   ContentItem toDomain() {
     return ContentItem(
@@ -49,6 +66,7 @@ class ContentItemDto {
         return str != null ? DateTime.parse(str) : DateTime.now();
       }(),
       durationSeconds: (map['durationSeconds'] as num?)?.toInt(),
+      addedAt: DateTime.tryParse(map['addedAt'] as String? ?? ''),
     );
   }
 }

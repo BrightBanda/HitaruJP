@@ -90,11 +90,16 @@ class FirestoreDocumentStore implements DocumentStore {
   @override
   Future<List<Map<String, dynamic>>> listDocs(
     String uid,
-    String collection,
-  ) async {
-    final snapshot = await _firestore
-        .collection(collectionPath(uid, collection))
-        .get();
+    String collection, {
+    String? withField,
+  }) async {
+    Query<Map<String, dynamic>> query = _firestore.collection(
+      collectionPath(uid, collection),
+    );
+    // Served by Firestore's automatic single-field index; documents missing
+    // the field are left out.
+    if (withField != null) query = query.where(withField, isNull: false);
+    final snapshot = await query.get();
     return snapshot.docs
         .map((doc) => doc.data())
         .whereType<Map<String, dynamic>>()

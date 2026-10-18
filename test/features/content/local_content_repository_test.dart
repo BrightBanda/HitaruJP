@@ -20,6 +20,28 @@ void main() {
   });
 
   group('LocalContentRepository', () {
+    test(
+      'lists the video added last first, even if an older one was opened since',
+      () async {
+        await repository.create(
+          sourceUrl: 'https://www.youtube.com/watch?v=aaaaaaaaaa1',
+          title: 'First',
+        );
+        await Future<void>.delayed(const Duration(milliseconds: 5));
+        await repository.create(
+          sourceUrl: 'https://www.youtube.com/watch?v=bbbbbbbbbb2',
+          title: 'Second',
+        );
+        await Future<void>.delayed(const Duration(milliseconds: 5));
+        // Opening the first one again must not lift it above the newer video.
+        await repository.updateLastPosition('aaaaaaaaaa1', 30);
+
+        final titles = (await repository.watchAll().first).map((i) => i.title);
+
+        expect(titles, ['Second', 'First']);
+      },
+    );
+
     test('extracts video ID correctly from standard YouTube URL', () async {
       final item = await repository.create(
         sourceUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',

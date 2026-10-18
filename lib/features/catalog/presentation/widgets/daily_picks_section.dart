@@ -8,8 +8,11 @@ import 'package:ingrain/features/ads/presentation/ad_providers.dart';
 import 'package:ingrain/core/utils/duration_format.dart';
 import 'package:ingrain/features/catalog/domain/catalog_video.dart';
 import 'package:ingrain/features/catalog/presentation/viewmodel/catalog_providers.dart';
+import 'package:ingrain/features/content/presentation/view/transcript_fetch_status.dart';
 import 'package:ingrain/features/profile/presentation/widgets/learner_preference_style.dart';
 import 'package:ingrain/shared/widgets/colorful.dart';
+import 'package:ingrain/shared/widgets/network_thumbnail.dart';
+import 'package:ingrain/shared/widgets/skeleton.dart';
 import 'package:ingrain/shared/widgets/web_transcript_notice.dart';
 
 /// Opens [video] in the player, telling the learner what is going on.
@@ -28,7 +31,14 @@ Future<void> openCatalogVideo(
     final opened = await ref.read(catalogOpenerProvider.notifier).open(video);
     final route = '/content/${opened.contentId}';
     replace ? router.pushReplacement(route) : router.push(route);
-    if (!opened.hasTranscript) {
+    if (opened.transcriptError case final error?) {
+      showTranscriptFailedSnackBar(
+        messenger,
+        ref,
+        contentId: opened.contentId,
+        error: error,
+      );
+    } else if (!opened.hasTranscript) {
       messenger.showSnackBar(
         SnackBar(
           content: Text(
@@ -267,6 +277,7 @@ class _PickHeroCard extends ConsumerWidget {
                   ],
                   const SizedBox(height: 10),
                   _MetaRow(video: video),
+                  TranscriptFetchStatusLine(videoId: video.youtubeId),
                 ],
               ),
             ),
@@ -337,6 +348,7 @@ class CatalogVideoRow extends ConsumerWidget {
                     ),
                     const SizedBox(height: 6),
                     _MetaRow(video: video, compact: true),
+                    TranscriptFetchStatusLine(videoId: video.youtubeId),
                   ],
                 ),
               ),
@@ -372,8 +384,26 @@ class _ShelfCard extends ConsumerWidget {
                   fit: StackFit.expand,
                   children: [
                     _CatalogThumbnail(video: video, iconSize: 32),
-                    if (opening)
+                    if (opening) ...[
                       const Center(child: _PlayButton(busy: true, size: 34)),
+                      // The shelf has a fixed height, so the fetch status
+                      // goes over the thumbnail rather than under the title.
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        child: ColoredBox(
+                          color: const Color(0xB3000000),
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(8, 0, 8, 6),
+                            child: TranscriptFetchStatusLine(
+                              videoId: video.youtubeId,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                     if (video.durationSeconds case final seconds?)
                       Positioned(
                         right: 6,
@@ -551,13 +581,7 @@ class _CatalogThumbnail extends StatelessWidget {
     );
     final url = video.thumbnailUrl;
     if (url == null) return placeholder;
-    return Image.network(
-      url,
-      fit: BoxFit.cover,
-      errorBuilder: (_, _, _) => placeholder,
-      loadingBuilder: (_, child, progress) =>
-          progress == null ? child : placeholder,
-    );
+    return NetworkThumbnail(url: url, placeholder: placeholder);
   }
 }
 
@@ -566,16 +590,48 @@ class _PicksLoading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tint = Theme.of(context).colorScheme.primary.withValues(alpha: 0.08);
-    Widget block(double height) => Container(
-      height: height,
-      decoration: BoxDecoration(
-        color: tint,
-        borderRadius: BorderRadius.circular(18),
+    return SkeletonPulse(
+      child: Column(
+        children: [
+          const AspectRatio(
+            aspectRatio: 16 / 9,
+            child: SkeletonBox(height: double.infinity, radius: 18),
+          ),
+          const SizedBox(height: 10),
+          for (var i = 0; i < 2; i++) ...[
+            if (i > 0) const SizedBox(height: 10),
+            const _RowSkeleton(),
+          ],
+        ],
       ),
     );
-    return Column(
-      children: [block(250), const SizedBox(height: 10), block(92)],
+  }
+}
+
+/// A [CatalogVideoRow] still loading: thumbnail and two lines of text.
+class _RowSkeleton extends StatelessWidget {
+  const _RowSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(10),
+      child: Row(
+        children: [
+          const SkeletonBox(width: 128, height: 72),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SkeletonBox.line(height: 14),
+                const SizedBox(height: 8),
+                SkeletonBox.line(widthFactor: 0.6),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

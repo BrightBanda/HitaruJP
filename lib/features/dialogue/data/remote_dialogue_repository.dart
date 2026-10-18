@@ -53,6 +53,22 @@ class RemoteDialogueRepository implements DialogueRepository {
       if (catalogue.isEmpty && samples.isEmpty) rethrow;
       isShowingCachedCopy = true;
     }
+    return _withSamples(catalogue, samples);
+  }
+
+  @override
+  Future<List<DialogueSummary>> listCachedSummaries() async {
+    final (catalogue, samples) = await (
+      _cache.getSummaries().catchError((Object _) => <DialogueSummary>[]),
+      _loadSamples(),
+    ).wait;
+    return _withSamples(catalogue, samples);
+  }
+
+  static List<DialogueSummary> _withSamples(
+    List<DialogueSummary> catalogue,
+    List<Dialogue> samples,
+  ) {
     final ids = {for (final item in catalogue) item.id};
     return [
       ...catalogue,

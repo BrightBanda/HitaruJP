@@ -3,11 +3,15 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ingrain/core/providers.dart';
+import 'package:ingrain/core/storage/snapshot_cache.dart';
 import 'package:ingrain/features/auth/presentation/viewmodel/auth_view_model.dart';
+import 'package:ingrain/features/content/data/content_item_dto.dart';
+import 'package:ingrain/features/content/data/fallback_transcript_fetcher.dart';
 import 'package:ingrain/features/content/data/local_content_repository.dart';
 import 'package:ingrain/features/content/data/remote_video_search_repository.dart';
 import 'package:ingrain/features/content/data/remote_youtube_transcript_fetcher.dart';
 import 'package:ingrain/features/content/data/transcript_parser.dart';
+import 'package:ingrain/features/content/data/youtube_data_api_captions.dart';
 import 'package:ingrain/features/content/data/youtube_transcript_fetcher.dart';
 import 'package:ingrain/features/content/data/youtube_url_parser.dart';
 import 'package:ingrain/features/content/data/youtube_video_search_repository.dart';
@@ -33,18 +37,118 @@ final youtubeTranscriptFetcherProvider = Provider<YoutubeTranscriptFetcher>((
   return YoutubeTranscriptFetcher();
 });
 
+/// [youtubeTranscriptFetcherProvider] with retries and fallbacks behind it:
+/// the server on mobile, then the official YouTube Data API when a key was
+/// built in. See [FallbackTranscriptFetcher].
+final fallbackTranscriptFetcherProvider = Provider<FallbackTranscriptFetcher>((
+  ref,
+) {
+  final officialApi = YoutubeDataApiCaptions();
+  ref.onDispose(officialApi.close);
+  return FallbackTranscriptFetcher(
+    primary: ref.watch(youtubeTranscriptFetcherProvider),
+    // On web the primary already is the server. Built only when reached:
+    // most fetches never get that far.
+    server: kIsWeb
+        ? null
+        : _LazyFetcher(
+            () => RemoteYoutubeTranscriptFetcher(ref.read(apiClientProvider)),
+          ),
+    officialApi: officialApi,
+  );
+});
+
+class _LazyFetcher implements YoutubeTranscriptFetcher {
+  final YoutubeTranscriptFetcher Function() _create;
+  late final YoutubeTranscriptFetcher _fetcher = _create();
+
+  _LazyFetcher(this._create);
+
+  @override
+  Future<YoutubeTranscriptResult> fetch(String videoId) =>
+      _fetcher.fetch(videoId);
+}
+
+/// Transcript fetches under way, by YouTube video id, and how far each has
+/// got, for the loading cards to show.
+class TranscriptFetchStatus
+    extends Notifier<Map<String, TranscriptFetchStage>> {
+  @override
+  Map<String, TranscriptFetchStage> build() => const {};
+
+  void set(String videoId, TranscriptFetchStage stage) {
+    state = {...state, videoId: stage};
+  }
+
+  void clear(String videoId) {
+    if (!state.containsKey(videoId)) return;
+    state = {...state}..remove(videoId);
+  }
+}
+
+final transcriptFetchStatusProvider =
+    NotifierProvider<TranscriptFetchStatus, Map<String, TranscriptFetchStage>>(
+      TranscriptFetchStatus.new,
+    );
+
 class ContentViewModel extends AsyncNotifier<List<ContentItem>> {
   late ContentRepository _repository;
 
+  /// Paints the library saved on this device at once, then replaces it with
+  /// Firestore's copy when that arrives.
   @override
-  FutureOr<List<ContentItem>> build() async {
+  FutureOr<List<ContentItem>> build() {
     _repository = ref.watch(contentRepositoryProvider);
-    return _repository.watchAll().first;
+    final cached = _readSnapshot();
+    if (cached == null) return _fetch();
+    Future.microtask(() async {
+      try {
+        final fresh = await _fetch();
+        if (ref.mounted) state = AsyncData(fresh);
+      } catch (_) {
+        // Offline: the saved copy stays up.
+      }
+    });
+    return cached;
   }
 
+  /// Reloads in place: the list on screen stays up until the new one is in,
+  /// instead of the page flashing back to its loading state.
   Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = AsyncData(await _repository.watchAll().first);
+    state = await AsyncValue.guard(_fetch);
+  }
+
+  String? get _snapshotKey {
+    final uid = ref.read(authRepositoryProvider).currentUid;
+    return uid == null ? null : 'content_$uid';
+  }
+
+  List<ContentItem>? _readSnapshot() {
+    final key = _snapshotKey;
+    if (key == null) return null;
+    return ref
+        .read(snapshotCacheProvider)
+        .read(
+          key,
+          (json) => [
+            for (final doc in json as List)
+              ContentItemDto.fromMap(Map<String, dynamic>.from(doc as Map))
+                  .toDomain(),
+          ],
+        );
+  }
+
+  Future<List<ContentItem>> _fetch() async {
+    final items = await _repository.watchAll().first;
+    final key = _snapshotKey;
+    if (key != null) {
+      unawaited(
+        ref.read(snapshotCacheProvider).write(key, [
+          for (final item in items) ContentItemDto.fromDomain(item).map,
+        ]),
+      );
+    }
+    return items;
   }
 
   Future<ContentItem?> addContent({
@@ -104,14 +208,7 @@ class ContentViewModel extends AsyncNotifier<List<ContentItem>> {
       );
     }
 
-    YoutubeTranscriptResult? fetched;
-    try {
-      fetched = await ref
-          .read(youtubeTranscriptFetcherProvider)
-          .fetch(video.videoId);
-    } on YoutubeTranscriptException {
-      fetched = null;
-    }
+    final (:fetched, :error) = await _fetchTranscript(video.videoId);
 
     // A fetcher that cannot tell the length (the web one) reports 0; keep the
     // length search already gave us rather than overwrite it.
@@ -128,6 +225,60 @@ class ContentViewModel extends AsyncNotifier<List<ContentItem>> {
     final item = created.copyWith(durationSeconds: duration);
     await _repository.save(item);
 
+    final hasTranscript = await _saveFetchedTranscript(item, fetched);
+    await refresh();
+    return YoutubeImport(
+      item,
+      hasTranscript: hasTranscript,
+      transcriptError: error,
+    );
+  }
+
+  /// Fetches the transcript again for a library video that came without one,
+  /// such as after YouTube refused it. The id of a YouTube item is its video
+  /// id.
+  Future<YoutubeImport> refetchTranscript(String contentId) async {
+    final item = await _repository.getContent(contentId);
+    final (:fetched, :error) = await _fetchTranscript(contentId);
+    final hasTranscript = await _saveFetchedTranscript(item, fetched);
+    await refresh();
+    return YoutubeImport(
+      item,
+      hasTranscript: hasTranscript,
+      wasInLibrary: true,
+      transcriptError: error,
+    );
+  }
+
+  /// Runs the fallback chain, publishing each stage to
+  /// [transcriptFetchStatusProvider]. A failure comes back as [error] rather
+  /// than thrown: the video is still worth adding without its transcript.
+  Future<({YoutubeTranscriptResult? fetched, String? error})> _fetchTranscript(
+    String videoId,
+  ) async {
+    final status = ref.read(transcriptFetchStatusProvider.notifier);
+    try {
+      final fetched = await ref
+          .read(fallbackTranscriptFetcherProvider)
+          .fetch(
+            videoId,
+            onStage: (stage) {
+              if (ref.mounted) status.set(videoId, stage);
+            },
+          );
+      return (fetched: fetched, error: null);
+    } on YoutubeTranscriptException catch (error) {
+      return (fetched: null, error: error.message);
+    } finally {
+      if (ref.mounted) status.clear(videoId);
+    }
+  }
+
+  /// Saves [fetched]'s text as [item]'s transcript; false when there is none.
+  Future<bool> _saveFetchedTranscript(
+    ContentItem item,
+    YoutubeTranscriptResult? fetched,
+  ) async {
     final text = fetched?.transcriptText;
     final hasTranscript = text != null && text.trim().isNotEmpty;
     if (hasTranscript) {
@@ -135,15 +286,14 @@ class ContentViewModel extends AsyncNotifier<List<ContentItem>> {
         item.id,
         TranscriptParser.parse(
           text,
-          durationSeconds: duration,
+          durationSeconds: item.durationSeconds ?? 0,
           format: TranscriptFormat.srt,
         ),
       );
     }
     ref.invalidate(transcriptProvider(item.id));
     ref.invalidate(contentItemProvider(item.id));
-    await refresh();
-    return YoutubeImport(item, hasTranscript: hasTranscript);
+    return hasTranscript;
   }
 
   Future<void> deleteContent(String id) => deleteContents([id]);
@@ -202,10 +352,15 @@ class YoutubeImport {
   /// True when the video was already saved and nothing was fetched.
   final bool wasInLibrary;
 
+  /// Why the transcript could not be fetched, when every source failed. Null
+  /// when it came, or when the video simply has no Japanese captions.
+  final String? transcriptError;
+
   const YoutubeImport(
     this.item, {
     required this.hasTranscript,
     this.wasInLibrary = false,
+    this.transcriptError,
   });
 }
 

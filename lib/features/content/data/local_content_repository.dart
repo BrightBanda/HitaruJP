@@ -28,11 +28,16 @@ class LocalContentRepository implements ContentRepository {
   @override
   Stream<List<ContentItem>> watchAll() async* {
     final uid = await _auth.ensureUid();
-    final docs = await _store.listDocs(uid, collection);
+    // Transcripts share the collection and carry no `id`; filtering on it
+    // keeps every transcript's sentences from being downloaded and decoded
+    // just to list the library.
+    final docs = await _store.listDocs(uid, collection, withField: 'id');
+    // Newest first: the video added last is on top of the Library.
     yield docs
         .where(isContentDocument)
         .map((d) => ContentItemDto.fromMap(d).toDomain())
-        .toList();
+        .toList()
+      ..sort((a, b) => b.addedOrOpenedAt.compareTo(a.addedOrOpenedAt));
   }
 
   /// `contentHistory` also holds the `<contentId>__transcript` siblings, and
@@ -49,18 +54,7 @@ class LocalContentRepository implements ContentRepository {
       uid,
       collection,
       item.id,
-      ContentItemDto(
-        id: item.id,
-        sourceType: item.sourceType,
-        sourceUrl: item.sourceUrl,
-        title: item.title,
-        channelTitle: item.channelTitle,
-        thumbnailUrl: item.thumbnailUrl,
-        lastPositionSeconds: item.lastPositionSeconds,
-        totalImmersionSeconds: item.totalImmersionSeconds,
-        lastOpenedAt: item.lastOpenedAt,
-        durationSeconds: item.durationSeconds,
-      ).map,
+      ContentItemDto.fromDomain(item).map,
     );
   }
 
@@ -83,6 +77,7 @@ class LocalContentRepository implements ContentRepository {
       channelTitle: channelTitle,
       thumbnailUrl: thumbnailUrl,
       lastOpenedAt: DateTime.now(),
+      addedAt: DateTime.now(),
     );
     await save(item);
     return item;

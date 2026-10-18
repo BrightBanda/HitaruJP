@@ -6,6 +6,12 @@ class DialogueTokenRow extends StatelessWidget {
   final DialogueLine line;
   final bool showRomaji;
   final bool showFurigana;
+
+  /// Gap between words: wider for chat lines, tight for running text.
+  final double spacing;
+
+  /// The reading to print over a word that has none of its own.
+  final String? Function(String surface)? fallbackReading;
   final ValueChanged<DialogueToken> onTokenTap;
 
   const DialogueTokenRow({
@@ -13,6 +19,8 @@ class DialogueTokenRow extends StatelessWidget {
     required this.line,
     required this.showRomaji,
     this.showFurigana = false,
+    this.spacing = 5,
+    this.fallbackReading,
     required this.onTokenTap,
   });
 
@@ -20,7 +28,7 @@ class DialogueTokenRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Wrap(
-      spacing: 5,
+      spacing: spacing,
       runSpacing: 8,
       children: [
         for (final token in line.tokens)
@@ -34,7 +42,12 @@ class DialogueTokenRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (showFurigana)
-                    _RubyText(token: token, style: theme.textTheme.bodyLarge)
+                    _RubyText(
+                      token: token,
+                      reading:
+                          token.reading ?? fallbackReading?.call(token.surface),
+                      style: theme.textTheme.bodyLarge,
+                    )
                   else
                     Text(token.surface, style: theme.textTheme.bodyLarge),
                   if (showRomaji && token.romaji != null)
@@ -58,13 +71,18 @@ class DialogueTokenRow extends StatelessWidget {
 /// above them, so the kanji and their readings stay lined up.
 class _RubyText extends StatelessWidget {
   final DialogueToken token;
+  final String? reading;
   final TextStyle? style;
 
-  const _RubyText({required this.token, required this.style});
+  const _RubyText({
+    required this.token,
+    required this.reading,
+    required this.style,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final segments = rubySegments(token.surface, token.reading);
+    final segments = rubySegments(token.surface, reading);
     final rubyStyle = Theme.of(context).textTheme.bodySmall
         ?.copyWith(fontSize: 10, height: 1.1);
     return Row(

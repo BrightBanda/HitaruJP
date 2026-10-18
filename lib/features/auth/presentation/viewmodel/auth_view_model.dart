@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:ingrain/core/providers.dart';
+import 'package:ingrain/core/storage/snapshot_cache.dart';
 import 'package:ingrain/firebase_options.dart';
 import 'package:ingrain/features/auth/data/firebase_auth_repository.dart';
 import 'package:ingrain/features/auth/data/user_profile_dto.dart';
@@ -40,7 +41,35 @@ class AuthViewModel extends Notifier<AuthState> {
     _auth = ref.watch(authRepositoryProvider);
     ref.onDispose(() => _subscription?.cancel());
     _bootstrap();
+    // A returning learner starts from the profile saved on this device, so
+    // the app opens straight onto the home page instead of waiting for
+    // Firestore. _bootstrap refreshes it from the server right after.
+    final uid = _auth.currentUid;
+    final cached = uid == null ? null : _cachedProfile(uid);
+    if (uid != null && cached != null) return _readyFrom(uid, cached);
     return const AuthState.loading();
+  }
+
+  static String _profileKey(String uid) => 'profile_$uid';
+
+  Map<String, dynamic>? _cachedProfile(String uid) => ref
+      .read(snapshotCacheProvider)
+      .read(_profileKey(uid), (json) => Map<String, dynamic>.from(json as Map));
+
+  void _cacheProfile(String uid, Map<String, dynamic> document) {
+    unawaited(
+      ref.read(snapshotCacheProvider).write(_profileKey(uid), document),
+    );
+  }
+
+  static AuthState _readyFrom(String uid, Map<String, dynamic> document) {
+    final profile = UserProfileDto.fromMapSafe(document);
+    final name = profile?.displayName;
+    return AuthState.ready(
+      uid: uid,
+      displayName: name != null && name.trim().isNotEmpty ? name : null,
+      profile: profile,
+    );
   }
 
   /// Follows the Firebase session rather than probing it once. This is the single
@@ -67,17 +96,18 @@ class AuthViewModel extends Notifier<AuthState> {
       return;
     }
     try {
-      await _auth.ensureProfile();
-      final profile = UserProfileDto.fromMapSafe(await _auth.profileDocument());
+      // One read for a returning learner; only a first sign-in, with no
+      // profile yet, pays for the seed write and a second read.
+      var document = await _auth.profileDocument();
+      if (document.isEmpty) {
+        await _auth.ensureProfile();
+        document = await _auth.profileDocument();
+      }
       // The stream outlives any single listener: a sign-out or a provider rebuild
       // can dispose this notifier while the profile read is still in flight.
       if (!ref.mounted) return;
-      final name = profile?.displayName;
-      state = AuthState.ready(
-        uid: uid,
-        displayName: name != null && name.trim().isNotEmpty ? name : null,
-        profile: profile,
-      );
+      state = _readyFrom(uid, document);
+      if (document.isNotEmpty) _cacheProfile(uid, document);
       // Best effort: "last active" is a statistic, not worth failing over.
       unawaited(
         _auth
@@ -88,6 +118,8 @@ class AuthViewModel extends Notifier<AuthState> {
       );
     } catch (error) {
       if (!ref.mounted) return;
+      // Offline with a saved profile: keep showing it rather than an error.
+      if (state.uid == uid && state.profile != null) return;
       state = AuthState.ready(
         uid: uid,
         error: 'Could not load your profile: $error',
@@ -183,6 +215,11 @@ class AuthViewModel extends Notifier<AuthState> {
       displayName: name,
       profile: profile,
     );
+    final cached = _cachedProfile(state.uid) ?? {'uid': state.uid};
+    _cacheProfile(state.uid, {
+      ...cached,
+      ...UserProfileDto.learnerFields(profile),
+    });
     try {
       if (nameChanged) await _auth.setDisplayName(name);
       await _auth.updateProfile(UserProfileDto.learnerFields(profile));

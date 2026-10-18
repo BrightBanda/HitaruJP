@@ -111,13 +111,15 @@ class LocalDocumentStore implements DocumentStore {
   @override
   Future<List<Map<String, dynamic>>> listDocs(
     String uid,
-    String collection,
-  ) async {
+    String collection, {
+    String? withField,
+  }) async {
     final coll = await _loadCollection(uid, collection);
     return coll.values
         .map(
           (v) => Map<String, dynamic>.from((v as Map).cast<String, dynamic>()),
         )
+        .where((doc) => withField == null || doc[withField] != null)
         .toList();
   }
 

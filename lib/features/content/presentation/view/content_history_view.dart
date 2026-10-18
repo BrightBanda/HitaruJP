@@ -59,7 +59,7 @@ class _ContentHistoryViewState extends ConsumerState<ContentHistoryView> {
         if (UserDialogueRepository.isUserDialogueId(dialogue.id))
           (id: dialogue.id, title: dialogue.title),
     ],
-    LibraryContentFilter.podcasts => const [],
+    LibraryContentFilter.books => const [],
   };
 
   @override
@@ -235,7 +235,9 @@ class _ContentHistoryViewState extends ConsumerState<ContentHistoryView> {
               onToggle: _toggle,
               onStartEditing: _startEditing,
             ),
-            LibraryContentFilter.podcasts => const _PodcastsComingSoon(),
+            LibraryContentFilter.books => const LibraryDialogueListView(
+              books: true,
+            ),
             LibraryContentFilter.videos => uiState.when(
               data: (items) => items.isEmpty
                   ? _buildEmpty(context)
@@ -372,18 +374,6 @@ class _ContentHistoryViewState extends ConsumerState<ContentHistoryView> {
       },
     );
   }
-}
-
-class _PodcastsComingSoon extends StatelessWidget {
-  const _PodcastsComingSoon();
-
-  @override
-  Widget build(BuildContext context) => const EmptyState(
-    icon: Icons.headphones,
-    color: AppColors.primaryMain,
-    title: 'Podcasts are coming soon',
-    message: 'Until then, try a YouTube video or a dialogue.',
-  );
 }
 
 class _RenameDialog extends StatefulWidget {
