@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ingrain/core/utils/duration_format.dart';
 import 'package:ingrain/features/content/domain/video_search.dart';
-import 'package:ingrain/features/content/presentation/view/transcript_fetch_status.dart';
+import 'package:ingrain/features/content/presentation/view/transcript_failed_snackbar.dart';
 import 'package:ingrain/features/content/presentation/viewmodel/content_view_model.dart';
 import 'package:ingrain/shared/widgets/colorful.dart';
 import 'package:ingrain/shared/widgets/network_thumbnail.dart';
@@ -288,7 +288,6 @@ class _VideoResultCard extends StatelessWidget {
                 ),
               ],
             ),
-            TranscriptFetchStatusLine(videoId: video.videoId),
           ],
         ),
       ),

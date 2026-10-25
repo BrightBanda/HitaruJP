@@ -107,8 +107,15 @@ class _ImmersionPlayerViewState extends ConsumerState<ImmersionPlayerView>
       if (!mounted) return;
       if (value.error != YoutubeError.none &&
           value.error != YoutubeError.unknown) {
+        debugPrint(
+          'YouTube error ${value.error.code} (${value.error.name}) '
+          'for video "$_videoId" (content ${widget.contentId})',
+        );
         setState(() {
-          _playerError = _mapYoutubeError(value.error);
+          // The code and id make a report from the field traceable.
+          _playerError =
+              '${_mapYoutubeError(value.error)}\n'
+              'YouTube error ${value.error.code} · video $_videoId';
           _videoReady = false;
           _videoLoadStarted = false;
         });
@@ -217,6 +224,16 @@ class _ImmersionPlayerViewState extends ConsumerState<ImmersionPlayerView>
         content.id;
 
     _videoId = resolvedId;
+    // Never hand YouTube something that is not a video id: it answers with
+    // a bare "invalid parameter" that says nothing about the cause.
+    if (YoutubeUrlParser.tryParse(resolvedId) != resolvedId) {
+      setState(
+        () => _playerError =
+            'This video’s link is broken. Remove it and add it again.\n'
+            'Saved as: ${content.sourceUrl}',
+      );
+      return;
+    }
     _videoLoadStarted = true;
     setState(() {
       _playerError = null;

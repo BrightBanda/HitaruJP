@@ -6,12 +6,10 @@ import 'package:ingrain/core/providers.dart';
 import 'package:ingrain/core/storage/snapshot_cache.dart';
 import 'package:ingrain/features/auth/presentation/viewmodel/auth_view_model.dart';
 import 'package:ingrain/features/content/data/content_item_dto.dart';
-import 'package:ingrain/features/content/data/fallback_transcript_fetcher.dart';
 import 'package:ingrain/features/content/data/local_content_repository.dart';
 import 'package:ingrain/features/content/data/remote_video_search_repository.dart';
 import 'package:ingrain/features/content/data/remote_youtube_transcript_fetcher.dart';
 import 'package:ingrain/features/content/data/transcript_parser.dart';
-import 'package:ingrain/features/content/data/youtube_data_api_captions.dart';
 import 'package:ingrain/features/content/data/youtube_transcript_fetcher.dart';
 import 'package:ingrain/features/content/data/youtube_url_parser.dart';
 import 'package:ingrain/features/content/data/youtube_video_search_repository.dart';
@@ -36,60 +34,6 @@ final youtubeTranscriptFetcherProvider = Provider<YoutubeTranscriptFetcher>((
   }
   return YoutubeTranscriptFetcher();
 });
-
-/// [youtubeTranscriptFetcherProvider] with retries and fallbacks behind it:
-/// the server on mobile, then the official YouTube Data API when a key was
-/// built in. See [FallbackTranscriptFetcher].
-final fallbackTranscriptFetcherProvider = Provider<FallbackTranscriptFetcher>((
-  ref,
-) {
-  final officialApi = YoutubeDataApiCaptions();
-  ref.onDispose(officialApi.close);
-  return FallbackTranscriptFetcher(
-    primary: ref.watch(youtubeTranscriptFetcherProvider),
-    // On web the primary already is the server. Built only when reached:
-    // most fetches never get that far.
-    server: kIsWeb
-        ? null
-        : _LazyFetcher(
-            () => RemoteYoutubeTranscriptFetcher(ref.read(apiClientProvider)),
-          ),
-    officialApi: officialApi,
-  );
-});
-
-class _LazyFetcher implements YoutubeTranscriptFetcher {
-  final YoutubeTranscriptFetcher Function() _create;
-  late final YoutubeTranscriptFetcher _fetcher = _create();
-
-  _LazyFetcher(this._create);
-
-  @override
-  Future<YoutubeTranscriptResult> fetch(String videoId) =>
-      _fetcher.fetch(videoId);
-}
-
-/// Transcript fetches under way, by YouTube video id, and how far each has
-/// got, for the loading cards to show.
-class TranscriptFetchStatus
-    extends Notifier<Map<String, TranscriptFetchStage>> {
-  @override
-  Map<String, TranscriptFetchStage> build() => const {};
-
-  void set(String videoId, TranscriptFetchStage stage) {
-    state = {...state, videoId: stage};
-  }
-
-  void clear(String videoId) {
-    if (!state.containsKey(videoId)) return;
-    state = {...state}..remove(videoId);
-  }
-}
-
-final transcriptFetchStatusProvider =
-    NotifierProvider<TranscriptFetchStatus, Map<String, TranscriptFetchStage>>(
-      TranscriptFetchStatus.new,
-    );
 
 class ContentViewModel extends AsyncNotifier<List<ContentItem>> {
   late ContentRepository _repository;
@@ -250,27 +194,19 @@ class ContentViewModel extends AsyncNotifier<List<ContentItem>> {
     );
   }
 
-  /// Runs the fallback chain, publishing each stage to
-  /// [transcriptFetchStatusProvider]. A failure comes back as [error] rather
-  /// than thrown: the video is still worth adding without its transcript.
+  /// One fetch, no retries: a slow add is worse than a missing transcript,
+  /// which the learner can fetch again or paste. A failure comes back as
+  /// [error] rather than thrown: the video is still worth adding without it.
   Future<({YoutubeTranscriptResult? fetched, String? error})> _fetchTranscript(
     String videoId,
   ) async {
-    final status = ref.read(transcriptFetchStatusProvider.notifier);
     try {
       final fetched = await ref
-          .read(fallbackTranscriptFetcherProvider)
-          .fetch(
-            videoId,
-            onStage: (stage) {
-              if (ref.mounted) status.set(videoId, stage);
-            },
-          );
+          .read(youtubeTranscriptFetcherProvider)
+          .fetch(videoId);
       return (fetched: fetched, error: null);
     } on YoutubeTranscriptException catch (error) {
       return (fetched: null, error: error.message);
-    } finally {
-      if (ref.mounted) status.clear(videoId);
     }
   }
 

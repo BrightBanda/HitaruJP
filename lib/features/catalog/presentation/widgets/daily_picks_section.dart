@@ -8,7 +8,7 @@ import 'package:ingrain/features/ads/presentation/ad_providers.dart';
 import 'package:ingrain/core/utils/duration_format.dart';
 import 'package:ingrain/features/catalog/domain/catalog_video.dart';
 import 'package:ingrain/features/catalog/presentation/viewmodel/catalog_providers.dart';
-import 'package:ingrain/features/content/presentation/view/transcript_fetch_status.dart';
+import 'package:ingrain/features/content/presentation/view/transcript_failed_snackbar.dart';
 import 'package:ingrain/features/profile/presentation/widgets/learner_preference_style.dart';
 import 'package:ingrain/shared/widgets/colorful.dart';
 import 'package:ingrain/shared/widgets/network_thumbnail.dart';
@@ -277,7 +277,6 @@ class _PickHeroCard extends ConsumerWidget {
                   ],
                   const SizedBox(height: 10),
                   _MetaRow(video: video),
-                  TranscriptFetchStatusLine(videoId: video.youtubeId),
                 ],
               ),
             ),
@@ -348,7 +347,6 @@ class CatalogVideoRow extends ConsumerWidget {
                     ),
                     const SizedBox(height: 6),
                     _MetaRow(video: video, compact: true),
-                    TranscriptFetchStatusLine(videoId: video.youtubeId),
                   ],
                 ),
               ),
@@ -384,26 +382,8 @@ class _ShelfCard extends ConsumerWidget {
                   fit: StackFit.expand,
                   children: [
                     _CatalogThumbnail(video: video, iconSize: 32),
-                    if (opening) ...[
+                    if (opening)
                       const Center(child: _PlayButton(busy: true, size: 34)),
-                      // The shelf has a fixed height, so the fetch status
-                      // goes over the thumbnail rather than under the title.
-                      Positioned(
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        child: ColoredBox(
-                          color: const Color(0xB3000000),
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(8, 0, 8, 6),
-                            child: TranscriptFetchStatusLine(
-                              videoId: video.youtubeId,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
                     if (video.durationSeconds case final seconds?)
                       Positioned(
                         right: 6,
