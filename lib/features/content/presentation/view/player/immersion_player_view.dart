@@ -223,8 +223,13 @@ class _ImmersionPlayerViewState extends ConsumerState<ImmersionPlayerView>
       _videoReady = false;
     });
 
+    // Continue where the learner left off last time.
+    final resumeAt = _host.resumePositionFor(content);
     try {
-      await _controller.loadVideoById(videoId: resolvedId);
+      await _controller.loadVideoById(
+        videoId: resolvedId,
+        startSeconds: resumeAt?.inSeconds.toDouble(),
+      );
     } catch (_) {
       // The bridge waits for the iframe API itself, but it can still time out
       // or fail on weak mobile connections.
@@ -240,6 +245,19 @@ class _ImmersionPlayerViewState extends ConsumerState<ImmersionPlayerView>
     _host.loadedVideoId = resolvedId;
     if (!mounted) return;
     setState(() => _videoReady = true);
+    if (resumeAt != null) _showResumed(resumeAt);
+  }
+
+  void _showResumed(Duration at) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Continuing where you left off (${formatDuration(at)})'),
+        action: SnackBarAction(
+          label: 'Start over',
+          onPressed: () => _controller.seekTo(seconds: 0, allowSeekAhead: true),
+        ),
+      ),
+    );
   }
 
   /// Re-issues the load command after a failure.
@@ -252,8 +270,13 @@ class _ImmersionPlayerViewState extends ConsumerState<ImmersionPlayerView>
       _videoLoadStarted = true;
     });
 
+    final content = ref.read(contentItemProvider(widget.contentId)).value;
+    final resumeAt = content == null ? null : _host.resumePositionFor(content);
     try {
-      await _controller.loadVideoById(videoId: videoId);
+      await _controller.loadVideoById(
+        videoId: videoId,
+        startSeconds: resumeAt?.inSeconds.toDouble(),
+      );
     } catch (_) {
       _videoLoadStarted = false;
       if (!mounted) return;

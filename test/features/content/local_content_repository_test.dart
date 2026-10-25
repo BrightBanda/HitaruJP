@@ -20,6 +20,23 @@ void main() {
   });
 
   group('LocalContentRepository', () {
+    test('saves the playback position for next time', () async {
+      await repository.create(
+        sourceUrl: 'https://www.youtube.com/watch?v=aaaaaaaaaa1',
+        title: 'First',
+      );
+      await repository.updateLastPosition('aaaaaaaaaa1', 142);
+
+      final item = await repository.getContent('aaaaaaaaaa1');
+      expect(item.lastPositionSeconds, 142);
+    });
+
+    test('saving a position does not bring back a deleted video', () async {
+      await repository.updateLastPosition('zzzzzzzzzz9', 30);
+
+      expect(await repository.watchAll().first, isEmpty);
+    });
+
     test(
       'lists the video added last first, even if an older one was opened since',
       () async {

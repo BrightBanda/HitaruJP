@@ -110,7 +110,7 @@ class _PlayerLayerState extends ConsumerState<_PlayerLayer> {
               ? (context, _) => _MiniControls(
                   onClose: notifier.close,
                   onFloat: VideoOverlay.isSupported
-                      ? notifier.floatOverApps
+                      ? () => _float(context)
                       : null,
                   onTogglePlay: notifier.togglePlayback,
                   onExpand: () => ref
@@ -178,6 +178,24 @@ class _PlayerLayerState extends ConsumerState<_PlayerLayer> {
         );
       },
     );
+  }
+
+  Future<void> _float(BuildContext context) async {
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    final result = await ref.read(playerHostProvider.notifier).floatOverApps();
+    final message = switch (result) {
+      FloatResult.floating => null,
+      FloatResult.notReady =>
+        'The video is still loading. Try again once it starts playing.',
+      FloatResult.noPermission =>
+        'Allow "Display over other apps" for HitaruJP to float videos.',
+      FloatResult.unavailable => 'This video cannot float right now.',
+    };
+    if (message != null) {
+      messenger
+        ?..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(message)));
+    }
   }
 
   void _drag(Offset delta) {

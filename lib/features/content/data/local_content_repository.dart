@@ -87,6 +87,8 @@ class LocalContentRepository implements ContentRepository {
   Future<void> updateLastPosition(String id, int seconds) async {
     final uid = await _auth.ensureUid();
     final existing = await _store.getDoc(uid, collection, id);
+    // Deleted meanwhile: do not bring back a document with only a position.
+    if (existing.isEmpty) return;
     existing['lastPositionSeconds'] = seconds;
     existing['lastOpenedAt'] = DateTime.now().toIso8601String();
     await _store.setDoc(uid, collection, id, existing);

@@ -2,8 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ingrain/core/lifecycle.dart';
 import 'package:ingrain/core/platform/picture_in_picture.dart';
 import 'package:ingrain/core/platform/video_overlay.dart';
+import 'package:ingrain/features/content/domain/content_item.dart';
 import 'package:ingrain/features/content/presentation/view/player/immersion_player_view.dart';
 import 'package:ingrain/features/content/presentation/viewmodel/content_view_model.dart';
 import 'package:ingrain/features/immersion/presentation/viewmodel/immersion_session_view_model.dart';
@@ -59,6 +61,20 @@ class PlayerHostState {
   );
 }
 
+/// What [PlayerHost.floatOverApps] managed.
+enum FloatResult {
+  floating,
+
+  /// The video has not loaded far enough to know where to start it.
+  notReady,
+
+  /// "Display over other apps" was not allowed.
+  noPermission,
+
+  /// Not Android, or nothing is loaded.
+  unavailable,
+}
+
 final playerHostProvider = NotifierProvider<PlayerHost, PlayerHostState>(
   PlayerHost.new,
 );
@@ -81,6 +97,19 @@ class PlayerHost extends Notifier<PlayerHostState> {
   /// run while the provider is being disposed and cannot read its state.
   bool _floating = false;
 
+  /// Where each video got to this run, by content id: fresher than the
+  /// library's copy, which is only re-read on the next fetch.
+  final Map<String, Duration> _positions = {};
+
+  /// Nothing saved yet this run.
+  static const _unsaved = Duration(seconds: -1);
+  Duration _lastSavedPosition = _unsaved;
+  DateTime _lastSavedAt = DateTime.fromMillisecondsSinceEpoch(0);
+
+  /// Saves while playing are at most this often; pausing, closing and
+  /// leaving the app save at once.
+  static const _saveInterval = Duration(seconds: 15);
+
   /// Whether YouTube's captions are on, and the speed chosen, kept here so
   /// the controls still show them when the player screen is reopened.
   bool captionsOn = false;
@@ -97,6 +126,13 @@ class PlayerHost extends Notifier<PlayerHostState> {
   PlayerHostState build() {
     final overlayEvents = VideoOverlay.instance.events.listen(_onOverlayEvent);
     ref.onDispose(overlayEvents.cancel);
+    // The app may be killed in the background, so leaving it saves.
+    ref.listen(appLifecycleProvider, (_, next) {
+      if (next == AppLifecycleState.paused ||
+          next == AppLifecycleState.hidden) {
+        _savePosition(force: true);
+      }
+    });
     ref.onDispose(_disposeController);
     return const PlayerHostState();
   }
@@ -114,6 +150,7 @@ class PlayerHost extends Notifier<PlayerHostState> {
       Future.microtask(() {
         if (ref.mounted && _contentId == contentId) {
           state = state.copyWith(minimized: false);
+          _hideYoutubeControls(existing, false);
         }
       });
       return existing;
@@ -140,6 +177,8 @@ class PlayerHost extends Notifier<PlayerHostState> {
     );
     _controller = controller;
     _contentId = contentId;
+    _lastSavedPosition = _unsaved;
+    _lastSavedAt = DateTime.now();
     loadedVideoId = null;
     captionsOn = false;
     playbackRate = 1.0;
@@ -168,7 +207,52 @@ class PlayerHost extends Notifier<PlayerHostState> {
     return controller;
   }
 
+  /// Where to start [item] so the learner continues where they left off;
+  /// null to start at the beginning (never watched, barely started, or
+  /// finished).
+  Duration? resumePositionFor(ContentItem item) {
+    final position =
+        _positions[item.id] ?? Duration(seconds: item.lastPositionSeconds);
+    if (position < const Duration(seconds: 5)) return null;
+    final length = item.durationSeconds;
+    if (length != null &&
+        length > 0 &&
+        position > Duration(seconds: length) - const Duration(seconds: 10)) {
+      return null;
+    }
+    return position;
+  }
+
+  /// Stores the current position in the library, so the next play of this
+  /// video continues from it. Unless [force]d, only once enough time and
+  /// video have passed since the last save.
+  void _savePosition({bool force = false, Duration? position}) {
+    final contentId = _contentId;
+    if (contentId == null) return;
+    final at = position ?? _positions[contentId];
+    if (at == null) return;
+    final now = DateTime.now();
+    if (!force &&
+        (now.difference(_lastSavedAt) < _saveInterval ||
+            (at - _lastSavedPosition).abs() < const Duration(seconds: 5))) {
+      return;
+    }
+    if (at == _lastSavedPosition) return;
+    _lastSavedAt = now;
+    _lastSavedPosition = at;
+    unawaited(
+      ref
+          .read(contentRepositoryProvider)
+          .updateLastPosition(contentId, at.inSeconds)
+          .catchError(
+            (Object error) => debugPrint('Position not saved: $error'),
+          ),
+    );
+  }
+
   void _reportPosition(String contentId, Duration position) {
+    _positions[contentId] = position;
+    if (state.playing) _savePosition();
     ref.read(playbackPositionProvider.notifier).setPosition(position);
     ref
         .read(immersionSessionViewModelProvider(contentId).notifier)
@@ -216,6 +300,13 @@ class PlayerHost extends Notifier<PlayerHostState> {
       // picture-in-picture window, on phones that have one.
       PictureInPicture.instance.setAutoEnter(isPlaying);
     }
+    if (value.playerState == PlayerState.ended) {
+      // Watched to the end: next time starts from the beginning.
+      _positions[contentId] = Duration.zero;
+      _savePosition(force: true, position: Duration.zero);
+    } else if (stopped) {
+      _savePosition(force: true);
+    }
     _syncSession(contentId, isPlaying: isPlaying, stopped: stopped);
   }
 
@@ -242,10 +333,52 @@ class PlayerHost extends Notifier<PlayerHostState> {
     }
   }
 
-  /// Shrinks the video into the small window.
+  /// Shrinks the video into the small window, playing, with YouTube's own
+  /// controls out of sight (the window has its own).
   void minimize() {
-    if (_controller == null) return;
+    final controller = _controller;
+    if (controller == null) return;
     state = state.copyWith(minimized: true, slot: () => null);
+    _savePosition(force: true);
+    _hideYoutubeControls(controller, true);
+    // After the move into the window: a WebView that was briefly off screen
+    // can come back paused.
+    Future.delayed(const Duration(milliseconds: 350), () {
+      if (ref.mounted &&
+          identical(controller, _controller) &&
+          state.minimized) {
+        controller.playVideo();
+      }
+    });
+  }
+
+  /// Crops YouTube's title bar and control bar out of view by making the
+  /// embedded player taller than its window: the video stays exactly where
+  /// it was, centred, and only YouTube's chrome above and below it is cut.
+  /// The package cannot turn YouTube's controls off without reloading (and
+  /// rebuffering) the video.
+  void _hideYoutubeControls(YoutubePlayerController controller, bool hide) {
+    const crop = 64;
+    final js = hide
+        ? '''
+(function () {
+  document.documentElement.style.overflow = 'hidden';
+  var f = document.querySelector('.embed-container iframe');
+  if (!f) return;
+  f.style.setProperty('top', '-${crop}px', 'important');
+  f.style.setProperty('height', 'calc(100% + ${crop * 2}px)', 'important');
+})();'''
+        : '''
+(function () {
+  var f = document.querySelector('.embed-container iframe');
+  if (!f) return;
+  f.style.removeProperty('top');
+  f.style.setProperty('height', '100%', 'important');
+})();''';
+    controller.webViewController.runJavaScript(js).catchError((Object _) {
+      // The page is not ready; YouTube hides its controls while playing
+      // anyway.
+    });
   }
 
   /// What leaving the player screen does: a playing video carries on in the
@@ -267,6 +400,7 @@ class PlayerHost extends Notifier<PlayerHostState> {
     final contentId = _contentId;
     final controller = _controller;
     if (controller == null || contentId == null) return;
+    _savePosition(force: true);
     controller.pauseVideo();
     final session = ref.read(immersionSessionViewModelProvider(contentId));
     if (session.isRunning && !session.isPaused) {
@@ -290,15 +424,21 @@ class PlayerHost extends Notifier<PlayerHostState> {
   }
 
   /// Moves the video into a window over other apps and sends the app to the
-  /// background. False when it could not (no permission, not Android).
-  Future<bool> floatOverApps() async {
+  /// background, saying what stopped it when it could not.
+  Future<FloatResult> floatOverApps() async {
     final controller = _controller;
     final contentId = _contentId;
-    final videoId = loadedVideoId;
-    if (controller == null || contentId == null || videoId == null) {
-      return false;
+    if (!VideoOverlay.isSupported || controller == null || contentId == null) {
+      return FloatResult.unavailable;
     }
-    if (state.floating) return true;
+    if (state.floating) return FloatResult.floating;
+    final videoId = loadedVideoId;
+    final playerState = controller.value.playerState;
+    if (videoId == null ||
+        playerState == PlayerState.unknown ||
+        playerState == PlayerState.unStarted) {
+      return FloatResult.notReady;
+    }
 
     Duration position;
     try {
@@ -314,14 +454,15 @@ class PlayerHost extends Notifier<PlayerHostState> {
       position: position,
       title: ref.read(contentItemProvider(contentId)).asData?.value.title,
     );
-    if (!shown || !ref.mounted || !identical(controller, _controller)) {
-      return false;
+    if (!ref.mounted || !identical(controller, _controller)) {
+      return FloatResult.unavailable;
     }
+    if (!shown) return FloatResult.noPermission;
     // Set first, so the pause below is not taken for the learner stopping.
     _floating = true;
     state = state.copyWith(floating: true, playing: true);
     controller.pauseVideo();
-    return true;
+    return FloatResult.floating;
   }
 
   /// Follows the floating window: its position drives the transcript and the
@@ -351,6 +492,7 @@ class PlayerHost extends Notifier<PlayerHostState> {
 
     _floating = false;
     state = state.copyWith(floating: false, playing: false);
+    _savePosition(force: true, position: event.position);
     controller.seekTo(
       seconds: event.position.inMilliseconds / 1000,
       allowSeekAhead: true,
