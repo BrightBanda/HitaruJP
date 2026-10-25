@@ -72,11 +72,18 @@ class _TranscriptViewState extends ConsumerState<TranscriptView> {
   final ScrollController _scrollController = ScrollController();
   final Map<int, GlobalKey> _lineKeys = {};
   int? _lastScrolledIndex;
-  DateTime? _userScrolledAt;
 
-  /// After the learner scrolls by hand, auto-scroll waits this long before
-  /// pulling the list back to the current line.
-  static const _manualScrollGrace = Duration(seconds: 4);
+  /// Whether the list follows the line being played. Scrolling by hand stops
+  /// it, so the learner can read back without being pulled away; the "Now
+  /// playing" button (or scrolling the line back into view) resumes it.
+  bool _following = true;
+
+  /// The line playing now, or the last one when between lines.
+  int _activeIndex = -1;
+
+  /// Set while following is off and the playing line is out of sight: which
+  /// way the button points, up or down.
+  AxisDirection? _jumpDirection;
 
   /// Only used to reach a line that has not been built yet.
   static const _estimatedLineHeight = 56.0;
@@ -117,10 +124,9 @@ class _TranscriptViewState extends ConsumerState<TranscriptView> {
     if (!mounted || !_scrollController.hasClients) return;
 
     if (currentIndex < 0 || currentIndex == _lastScrolledIndex) return;
-
-    final scrolledAt = _userScrolledAt;
-    if (scrolledAt != null &&
-        DateTime.now().difference(scrolledAt) < _manualScrollGrace) {
+    if (!_following) {
+      // The playing line may just have moved out of view.
+      _updateJumpButton();
       return;
     }
     _lastScrolledIndex = currentIndex;
@@ -151,6 +157,64 @@ class _TranscriptViewState extends ConsumerState<TranscriptView> {
     });
   }
 
+  /// Where the playing line is relative to what is on screen: null when it
+  /// can be seen, else the way to scroll to reach it.
+  AxisDirection? _offscreenDirection() {
+    final index = _activeIndex;
+    if (index < 0 || !_scrollController.hasClients) return null;
+    final position = _scrollController.position;
+    final box = _lineKeys[index]?.currentContext?.findRenderObject();
+    if (box is RenderBox && box.attached && box.hasSize) {
+      final viewport = RenderAbstractViewport.of(box);
+      // The scroll offsets that would put the line at the top, and at the
+      // bottom, of the list.
+      final atTop = viewport.getOffsetToReveal(box, 0).offset;
+      final atBottom = viewport.getOffsetToReveal(box, 1).offset;
+      final slack = box.size.height / 2;
+      if (position.pixels > atTop + slack) return AxisDirection.up;
+      if (position.pixels < atBottom - slack) return AxisDirection.down;
+      return null;
+    }
+    // Not built, so well out of view; which side is all that matters.
+    return index * _estimatedLineHeight < position.pixels
+        ? AxisDirection.up
+        : AxisDirection.down;
+  }
+
+  void _updateJumpButton() {
+    if (!mounted) return;
+    final direction = _following ? null : _offscreenDirection();
+    if (direction != _jumpDirection) {
+      setState(() => _jumpDirection = direction);
+    }
+  }
+
+  /// "Now playing": follow the video again, starting with a glide back.
+  void _resumeFollowing() {
+    setState(() {
+      _following = true;
+      _jumpDirection = null;
+      _lastScrolledIndex = null;
+    });
+    _maybeScrollToCurrent(_activeIndex);
+  }
+
+  bool _onScroll(ScrollNotification notification) {
+    if (notification is UserScrollNotification &&
+        notification.direction != ScrollDirection.idle) {
+      _following = false;
+      _lastScrolledIndex = null;
+    }
+    if (_following) return false;
+    if (notification is ScrollEndNotification &&
+        _offscreenDirection() == null) {
+      // Scrolled back to the playing line by hand: pick up following.
+      _following = true;
+    }
+    _updateJumpButton();
+    return false;
+  }
+
   @override
   Widget build(BuildContext context) {
     final controller = ref.watch(playerControllerProvider);
@@ -165,6 +229,7 @@ class _TranscriptViewState extends ConsumerState<TranscriptView> {
     final currentIndex = ref.watch(
       currentSentenceIndexProvider(widget.contentId!),
     );
+    if (currentIndex >= 0) _activeIndex = currentIndex;
 
     return transcriptAsync.when(
       data: (sentences) {
@@ -181,15 +246,10 @@ class _TranscriptViewState extends ConsumerState<TranscriptView> {
         // Half a screen of space below the last line lets even the final
         // lines scroll up to the centre.
         return LayoutBuilder(
-          builder: (context, constraints) =>
-              NotificationListener<UserScrollNotification>(
-                onNotification: (notification) {
-                  if (notification.direction != ScrollDirection.idle) {
-                    _userScrolledAt = DateTime.now();
-                    _lastScrolledIndex = null;
-                  }
-                  return false;
-                },
+          builder: (context, constraints) => Stack(
+            children: [
+              NotificationListener<ScrollNotification>(
+                onNotification: _onScroll,
                 child: ListView.separated(
                   controller: _scrollController,
                   itemCount: sentences.length,
@@ -208,9 +268,14 @@ class _TranscriptViewState extends ConsumerState<TranscriptView> {
                     return GestureDetector(
                       key: _keyFor(index),
                       onTap: controller != null
-                          ? () => controller.seekTo(
-                              seconds: sentence.startSeconds.toDouble(),
-                            )
+                          ? () {
+                              // Playing from here: follow it again.
+                              _following = true;
+                              _updateJumpButton();
+                              controller.seekTo(
+                                seconds: sentence.startSeconds.toDouble(),
+                              );
+                            }
                           : null,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
@@ -293,6 +358,19 @@ class _TranscriptViewState extends ConsumerState<TranscriptView> {
                   },
                 ),
               ),
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 6,
+                child: Center(
+                  child: _NowPlayingButton(
+                    direction: _jumpDirection,
+                    onPressed: _resumeFollowing,
+                  ),
+                ),
+              ),
+            ],
+          ),
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -449,5 +527,50 @@ class _TranscriptViewState extends ConsumerState<TranscriptView> {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(const SnackBar(content: Text('Sentence saved for review')));
+  }
+}
+
+/// Brings the transcript back to the line being played. Slides in while that
+/// line is out of view, pointing the way to it.
+class _NowPlayingButton extends StatelessWidget {
+  /// Null hides the button.
+  final AxisDirection? direction;
+  final VoidCallback onPressed;
+
+  const _NowPlayingButton({required this.direction, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    final visible = direction != null;
+    return IgnorePointer(
+      ignoring: !visible,
+      child: AnimatedSlide(
+        offset: visible ? Offset.zero : const Offset(0, 0.6),
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOutCubic,
+        child: AnimatedOpacity(
+          opacity: visible ? 1 : 0,
+          duration: const Duration(milliseconds: 180),
+          child: FilledButton.icon(
+            onPressed: onPressed,
+            icon: Icon(
+              direction == AxisDirection.up
+                  ? Icons.arrow_upward_rounded
+                  : Icons.arrow_downward_rounded,
+              size: 16,
+            ),
+            label: const Text('Now playing'),
+            style: FilledButton.styleFrom(
+              visualDensity: VisualDensity.compact,
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              minimumSize: const Size(0, 32),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              textStyle: Theme.of(context).textTheme.labelMedium,
+              elevation: 3,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

@@ -10,9 +10,9 @@ import 'package:ingrain/features/content/presentation/view/add_content_type.dart
 import 'package:ingrain/features/content/presentation/viewmodel/content_view_model.dart';
 import 'package:ingrain/features/dialogue/domain/dialogue.dart';
 import 'package:ingrain/features/dialogue/presentation/viewmodel/dialogue_providers.dart';
+import 'package:ingrain/features/growth/presentation/companion_widgets.dart';
 import 'package:ingrain/features/onboarding/presentation/widgets/home_tour.dart';
 import 'package:ingrain/features/progress/domain/progress_summary.dart';
-import 'package:ingrain/features/profile/presentation/widgets/learner_avatar.dart';
 import 'package:ingrain/features/progress/presentation/viewmodel/progress_view_model.dart';
 import 'package:ingrain/shared/layout/window_size.dart';
 import 'package:ingrain/shared/widgets/colorful.dart';
@@ -44,25 +44,27 @@ class ImmersionHomeView extends ConsumerWidget {
         ],
       ),
       body: HomeTourLauncher(
-        child: RefreshIndicator(
-          onRefresh: () async {
-            await Future.wait([
-              ref.refresh(contentViewModelProvider.future),
-              ref.read(dialogueListViewModelProvider.notifier).refresh(),
-              ref.read(progressViewModelProvider.notifier).refresh(),
-              ref
-                  .refresh(dailyPicksProvider.future)
-                  .then<void>((_) {}, onError: (_) {}),
-              ref
-                  .refresh(levelVideosProvider.future)
-                  .then<void>((_) {}, onError: (_) {}),
-            ]);
-          },
-          child: contentList.when(
-            data: (items) => _buildHome(context, ref, items, dialogues),
-            loading: () => const _HomeSkeleton(),
-            error: (_, _) =>
-                const Center(child: Text('Failed to load content')),
+        child: GrowthCelebrations(
+          child: RefreshIndicator(
+            onRefresh: () async {
+              await Future.wait([
+                ref.refresh(contentViewModelProvider.future),
+                ref.read(dialogueListViewModelProvider.notifier).refresh(),
+                ref.read(progressViewModelProvider.notifier).refresh(),
+                ref
+                    .refresh(dailyPicksProvider.future)
+                    .then<void>((_) {}, onError: (_) {}),
+                ref
+                    .refresh(levelVideosProvider.future)
+                    .then<void>((_) {}, onError: (_) {}),
+              ]);
+            },
+            child: contentList.when(
+              data: (items) => _buildHome(context, ref, items, dialogues),
+              loading: () => const _HomeSkeleton(),
+              error: (_, _) =>
+                  const Center(child: Text('Failed to load content')),
+            ),
           ),
         ),
       ),
@@ -113,10 +115,8 @@ class ImmersionHomeView extends ConsumerWidget {
           ),
           if (showAvatar) ...[
             const SizedBox(width: 12),
-            GestureDetector(
-              onTap: () => context.go('/profile'),
-              child: const LearnerAvatar(size: 52, rounded: true),
-            ),
+            // The companion, with its level: tap for the companion page.
+            const CompanionBadge(size: 56),
           ],
         ],
       ),
@@ -228,6 +228,8 @@ class ImmersionHomeView extends ConsumerWidget {
                       const SizedBox(height: 22),
                       hero,
                       const SizedBox(height: 12),
+                      const CompanionCard(),
+                      const SizedBox(height: 4),
                       shortcuts,
                       ...dialogueSection,
                     ],

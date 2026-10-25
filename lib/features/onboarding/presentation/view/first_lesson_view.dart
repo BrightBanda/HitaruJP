@@ -6,7 +6,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ingrain/features/auth/presentation/viewmodel/auth_view_model.dart';
+import 'package:ingrain/core/providers.dart';
 import 'package:ingrain/features/content/domain/content_item.dart';
+import 'package:ingrain/features/growth/domain/growth_rules.dart';
+import 'package:ingrain/features/growth/presentation/companion_widgets.dart';
+import 'package:ingrain/features/growth/presentation/growth_reveal.dart';
+import 'package:ingrain/features/progress/presentation/viewmodel/progress_view_model.dart';
 import 'package:ingrain/features/immersion/domain/immersion_session.dart';
 import 'package:ingrain/features/immersion/presentation/view/immersion_session_scope.dart';
 import 'package:ingrain/features/onboarding/presentation/viewmodel/first_run_view_model.dart';
@@ -14,7 +19,6 @@ import 'package:ingrain/features/onboarding/presentation/widgets/confetti.dart';
 import 'package:ingrain/features/onboarding/presentation/widgets/guide_bubble.dart';
 import 'package:ingrain/features/profile/domain/avatar_character.dart';
 import 'package:ingrain/features/profile/presentation/widgets/avatar_painter.dart';
-import 'package:ingrain/features/profile/presentation/widgets/learner_avatar.dart';
 import 'package:ingrain/features/settings/presentation/viewmodel/settings_view_model.dart';
 import 'package:ingrain/features/vocabulary/presentation/viewmodel/vocabulary_view_model.dart';
 import 'package:ingrain/shared/layout/window_size.dart';
@@ -113,6 +117,12 @@ abstract final class FirstLesson {
 }
 
 enum _Stage { intro, reading, tapWord, wordShown, saved, quiz, done }
+
+/// Where the first lesson's XP alone takes a new learner: out of the egg.
+Growth _hatchedGrowth(WidgetRef ref) {
+  final rules = ref.read(growthRulesProvider);
+  return GrowthCalculator(rules).growthAt(rules.firstLessonXp);
+}
 
 /// The guided first lesson a new learner gets right after onboarding.
 ///
@@ -233,7 +243,18 @@ class _FirstLessonViewState extends ConsumerState<FirstLessonView> {
 
   void _finish() {
     final uid = ref.read(authViewModelProvider).uid;
-    if (uid.isNotEmpty) ref.read(firstRunProvider.notifier).finishLesson(uid);
+    if (uid.isNotEmpty) {
+      ref.read(firstRunProvider.notifier).finishLesson(uid);
+      // The egg hatched on the celebration screen: the home page must not
+      // celebrate it a second time.
+      final hatched = _hatchedGrowth(ref);
+      GrowthCelebrations.markSeen(
+        ref.read(sharedPreferencesProvider),
+        uid,
+        hatched.stage,
+        hatched.level,
+      );
+    }
     context.go('/immerse');
   }
 
@@ -849,18 +870,12 @@ class _Celebration extends ConsumerWidget {
                 child: Column(
                   children: [
                     const Spacer(),
-                    TweenAnimationBuilder<double>(
-                      tween: Tween(begin: 0, end: 1),
-                      duration: const Duration(milliseconds: 700),
-                      curve: Curves.elasticOut,
-                      builder: (context, t, child) =>
-                          Transform.scale(scale: 0.4 + 0.6 * t, child: child),
-                      child: AvatarPortrait(
-                        character: character,
-                        size: 148,
-                        rounded: true,
-                        outlined: true,
-                      ),
+                    // The lesson's XP hatches the egg, right here.
+                    GrowthReveal(
+                      character: character,
+                      from: GrowthStage.egg,
+                      to: _hatchedGrowth(ref).stage,
+                      size: 140,
                     ),
                     const SizedBox(height: 24),
                     Text(
@@ -904,10 +919,11 @@ class _Celebration extends ConsumerWidget {
                         const SizedBox(width: 10),
                         Expanded(
                           child: _Stat(
-                            icon: Icons.flag,
-                            color: const Color(0xFF2FA866),
-                            value: '$goal min',
-                            label: 'Daily goal',
+                            icon: Icons.auto_awesome,
+                            color: const Color(0xFFFFB020),
+                            value:
+                                '+${ref.read(growthRulesProvider).firstLessonXp} XP',
+                            label: 'Egg hatched!',
                             delay: 2,
                           ),
                         ),
@@ -915,7 +931,8 @@ class _Celebration extends ConsumerWidget {
                     ),
                     const SizedBox(height: 20),
                     Text(
-                      'Come back tomorrow to keep your streak going.',
+                      'Your goal is $goal minutes a day. Come back tomorrow '
+                      'to keep your streak going.',
                       textAlign: TextAlign.center,
                       style: theme.textTheme.bodyMedium,
                     ),

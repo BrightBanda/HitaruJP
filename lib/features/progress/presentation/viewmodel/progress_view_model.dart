@@ -1,10 +1,15 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ingrain/core/error/app_error.dart';
 import 'package:ingrain/core/storage/snapshot_cache.dart';
 import 'package:ingrain/core/utils/clock.dart';
+import 'package:ingrain/core/providers.dart';
 import 'package:ingrain/features/auth/presentation/viewmodel/auth_view_model.dart';
+import 'package:ingrain/features/growth/data/activity_history.dart';
+import 'package:ingrain/features/growth/data/growth_repository.dart';
+import 'package:ingrain/features/growth/domain/growth_rules.dart';
 import 'package:ingrain/features/immersion/domain/immersion_repository.dart';
 import 'package:ingrain/features/immersion/presentation/viewmodel/immersion_session_view_model.dart';
 import 'package:ingrain/features/progress/domain/progress_calculator.dart';
@@ -22,16 +27,41 @@ class ProgressUiState {
   final ProgressSummary? summary;
   final AppError? error;
 
-  const ProgressUiState._({required this.isLoading, this.summary, this.error});
+  /// XP, level and companion stage. Worked out from the same history as
+  /// [summary]; while that loads, from the last XP seen on this device.
+  final Growth? growth;
 
-  const ProgressUiState.loading() : this._(isLoading: true);
+  const ProgressUiState._({
+    required this.isLoading,
+    this.summary,
+    this.error,
+    this.growth,
+  });
 
-  const ProgressUiState.data(ProgressSummary summary)
-    : this._(isLoading: false, summary: summary);
+  const ProgressUiState.loading({Growth? growth})
+    : this._(isLoading: true, growth: growth);
 
-  const ProgressUiState.error(AppError error)
-    : this._(isLoading: false, error: error);
+  const ProgressUiState.data(ProgressSummary summary, {Growth? growth})
+    : this._(isLoading: false, summary: summary, growth: growth);
+
+  const ProgressUiState.error(AppError error, {Growth? growth})
+    : this._(isLoading: false, error: error, growth: growth);
 }
+
+/// The numbers behind XP and levels (tuned in the admin's growth simulator).
+final growthRulesProvider = Provider<GrowthRules>((ref) => const GrowthRules());
+
+final growthRepositoryProvider = Provider<GrowthRepository>(
+  (ref) => GrowthRepository(
+    ref.watch(documentStoreProvider),
+    ref.watch(authRepositoryProvider),
+  ),
+);
+
+/// The learner's XP, level and companion stage; null until first known.
+final growthProvider = Provider<Growth?>(
+  (ref) => ref.watch(progressViewModelProvider.select((s) => s.growth)),
+);
 
 final progressViewModelProvider =
     NotifierProvider<ProgressViewModel, ProgressUiState>(ProgressViewModel.new);
@@ -55,10 +85,26 @@ class ProgressViewModel extends Notifier<ProgressUiState> {
     _load();
     // Last launch's numbers while today's are worked out; a summary from an
     // earlier day would show yesterday's minutes as today's, so it waits.
+    // XP only ever grows, so the last XP seen is always fair to show.
     final cached = _readSnapshot();
+    final cachedXp = _readXpSnapshot();
+    final growth = cachedXp == null
+        ? null
+        : GrowthCalculator(ref.read(growthRulesProvider)).growthAt(cachedXp);
     return cached == null
-        ? const ProgressUiState.loading()
-        : ProgressUiState.data(cached);
+        ? ProgressUiState.loading(growth: growth)
+        : ProgressUiState.data(cached, growth: growth);
+  }
+
+  String? get _xpSnapshotKey {
+    final uid = ref.read(authRepositoryProvider).currentUid;
+    return uid == null ? null : 'growth_xp_$uid';
+  }
+
+  int? _readXpSnapshot() {
+    final key = _xpSnapshotKey;
+    if (key == null) return null;
+    return ref.read(snapshotCacheProvider).read(key, (json) => json as int);
   }
 
   String? get _snapshotKey {
@@ -109,12 +155,25 @@ class ProgressViewModel extends Notifier<ProgressUiState> {
           .then((settings) => buildStudyQueue(ref, settings))
           .then((queue) => queue.cards);
       final reviewEventsFuture = _reviewRepository.listReviewHistory();
-      final (sessions, sentences, vocabulary, dueCards, reviewEvents) = await (
+      final growthRepository = ref.read(growthRepositoryProvider);
+      // Growth is a bonus: a failed read must not cost the learner the rest.
+      final bestXpFuture = growthRepository.bestXp().catchError(
+        (Object _) => 0,
+      );
+      final (
+        sessions,
+        sentences,
+        vocabulary,
+        dueCards,
+        reviewEvents,
+        bestXp,
+      ) = await (
         sessionsFuture,
         sentencesFuture,
         vocabularyFuture,
         dueCardsFuture,
         reviewEventsFuture,
+        bestXpFuture,
       ).wait;
 
       final summary = _calculator.summarize(
@@ -126,7 +185,27 @@ class ProgressViewModel extends Notifier<ProgressUiState> {
         today: now,
         dailyGoalMinutes: goalMinutes,
       );
-      state = ProgressUiState.data(summary);
+      final growth = GrowthCalculator(ref.read(growthRulesProvider)).compute(
+        dayActivitiesFrom(
+          sessions: sessions,
+          sentences: sentences,
+          vocabulary: vocabulary,
+          reviewEvents: reviewEvents,
+        ),
+        dailyGoalMinutes: goalMinutes,
+        today: now,
+        floorXp: math.max(bestXp, _readXpSnapshot() ?? 0),
+      );
+      state = ProgressUiState.data(summary, growth: growth);
+      if (growth.xp > bestXp) {
+        unawaited(
+          growthRepository.recordBest(growth).catchError((Object _) {}),
+        );
+      }
+      final xpKey = _xpSnapshotKey;
+      if (xpKey != null) {
+        unawaited(ref.read(snapshotCacheProvider).write(xpKey, growth.xp));
+      }
       final key = _snapshotKey;
       if (key != null) {
         unawaited(
@@ -139,6 +218,7 @@ class ProgressViewModel extends Notifier<ProgressUiState> {
     } catch (e, st) {
       state = ProgressUiState.error(
         AppError.unknown(e, message: st.toString()),
+        growth: state.growth,
       );
     }
   }

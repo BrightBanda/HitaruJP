@@ -10,6 +10,7 @@ import 'package:ingrain/features/content/presentation/view/transcript_editor_vie
 import 'package:ingrain/features/content/presentation/view/player/immersion_player_view.dart';
 import 'package:ingrain/features/dialogue/presentation/view/dialogue_reader_view.dart';
 import 'package:ingrain/features/immersion/presentation/view/immersion_home_view.dart';
+import 'package:ingrain/features/growth/presentation/companion_widgets.dart';
 import 'package:ingrain/features/kana/presentation/kana_view.dart';
 import 'package:ingrain/features/onboarding/presentation/view/first_lesson_view.dart';
 import 'package:ingrain/features/onboarding/presentation/viewmodel/first_run_view_model.dart';
@@ -125,6 +126,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             ),
           ),
         ),
+      ),
+      GoRoute(
+        path: '/companion',
+        builder: (context, state) => const PageFrame(child: CompanionView()),
       ),
       GoRoute(
         path: '/search',
