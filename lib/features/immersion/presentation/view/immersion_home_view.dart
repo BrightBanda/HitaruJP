@@ -10,6 +10,7 @@ import 'package:ingrain/features/content/presentation/view/add_content_type.dart
 import 'package:ingrain/features/content/presentation/viewmodel/content_view_model.dart';
 import 'package:ingrain/features/dialogue/domain/dialogue.dart';
 import 'package:ingrain/features/dialogue/presentation/viewmodel/dialogue_providers.dart';
+import 'package:ingrain/features/onboarding/presentation/widgets/home_tour.dart';
 import 'package:ingrain/features/progress/domain/progress_summary.dart';
 import 'package:ingrain/features/profile/presentation/widgets/learner_avatar.dart';
 import 'package:ingrain/features/progress/presentation/viewmodel/progress_view_model.dart';
@@ -42,24 +43,27 @@ class ImmersionHomeView extends ConsumerWidget {
           const SizedBox(width: 12),
         ],
       ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          await Future.wait([
-            ref.refresh(contentViewModelProvider.future),
-            ref.read(dialogueListViewModelProvider.notifier).refresh(),
-            ref.read(progressViewModelProvider.notifier).refresh(),
-            ref
-                .refresh(dailyPicksProvider.future)
-                .then<void>((_) {}, onError: (_) {}),
-            ref
-                .refresh(levelVideosProvider.future)
-                .then<void>((_) {}, onError: (_) {}),
-          ]);
-        },
-        child: contentList.when(
-          data: (items) => _buildHome(context, ref, items, dialogues),
-          loading: () => const _HomeSkeleton(),
-          error: (_, _) => const Center(child: Text('Failed to load content')),
+      body: HomeTourLauncher(
+        child: RefreshIndicator(
+          onRefresh: () async {
+            await Future.wait([
+              ref.refresh(contentViewModelProvider.future),
+              ref.read(dialogueListViewModelProvider.notifier).refresh(),
+              ref.read(progressViewModelProvider.notifier).refresh(),
+              ref
+                  .refresh(dailyPicksProvider.future)
+                  .then<void>((_) {}, onError: (_) {}),
+              ref
+                  .refresh(levelVideosProvider.future)
+                  .then<void>((_) {}, onError: (_) {}),
+            ]);
+          },
+          child: contentList.when(
+            data: (items) => _buildHome(context, ref, items, dialogues),
+            loading: () => const _HomeSkeleton(),
+            error: (_, _) =>
+                const Center(child: Text('Failed to load content')),
+          ),
         ),
       ),
     );
@@ -117,13 +121,17 @@ class ImmersionHomeView extends ConsumerWidget {
         ],
       ),
     );
-    final hero = _HeroCard(
-      summary: summary,
-      continueItem: recents.firstOrNull,
-      dialogue: dialogue,
+    final hero = KeyedSubtree(
+      key: HomeTourTargets.goal,
+      child: _HeroCard(
+        summary: summary,
+        continueItem: recents.firstOrNull,
+        dialogue: dialogue,
+      ),
     );
     final shortcuts = _Shortcuts(dueCount: summary?.dueCount);
     final picks = DailyPicksSection(
+      key: HomeTourTargets.picks,
       // Offline with nothing cached: fall back to the learner's own library.
       fallback: video == null
           ? _PromptTile(

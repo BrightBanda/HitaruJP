@@ -64,7 +64,7 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('a new learner answers all five questions', (tester) async {
+  testWidgets('a new learner answers all six questions', (tester) async {
     phone(tester);
     final session = FakeAuthSession(uid: 'u1', name: null);
     final container = await pump(
@@ -74,7 +74,7 @@ void main() {
     );
 
     expect(find.text('Why are you learning Japanese?'), findsOneWidget);
-    expect(find.text('1/5'), findsOneWidget);
+    expect(find.text('1/6'), findsOneWidget);
     await tapVisible(tester, find.text('Travel'));
     await tapVisible(tester, find.text('Anime & Manga'));
     await continueOn(tester, 'Continue');
@@ -94,6 +94,15 @@ void main() {
 
     expect(find.text('What do you love watching?'), findsOneWidget);
     await tapVisible(tester, find.text('Podcasts'));
+    expect(
+      find.text('Great for listening on the go.'),
+      findsOneWidget,
+      reason: 'the guide reacts to the answer',
+    );
+    await continueOn(tester, 'Continue');
+
+    expect(find.text('How much time a day?'), findsOneWidget);
+    await tapVisible(tester, find.text('Serious'));
     await continueOn(tester, 'Continue');
 
     expect(find.text('What should we call you?'), findsOneWidget);
@@ -129,11 +138,11 @@ void main() {
 
     await tapVisible(tester, find.text('Travel'));
     await continueOn(tester, 'Continue');
-    expect(find.text('2/5'), findsOneWidget);
+    expect(find.text('2/6'), findsOneWidget);
 
     await tester.tap(find.byTooltip('Back'));
     await tester.pumpAndSettle();
-    expect(find.text('1/5'), findsOneWidget);
+    expect(find.text('1/6'), findsOneWidget);
     expect(find.byTooltip('Back'), findsNothing);
   });
 

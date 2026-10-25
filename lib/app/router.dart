@@ -11,6 +11,8 @@ import 'package:ingrain/features/content/presentation/view/player/immersion_play
 import 'package:ingrain/features/dialogue/presentation/view/dialogue_reader_view.dart';
 import 'package:ingrain/features/immersion/presentation/view/immersion_home_view.dart';
 import 'package:ingrain/features/kana/presentation/kana_view.dart';
+import 'package:ingrain/features/onboarding/presentation/view/first_lesson_view.dart';
+import 'package:ingrain/features/onboarding/presentation/viewmodel/first_run_view_model.dart';
 import 'package:ingrain/features/profile/presentation/edit_profile_view.dart';
 import 'package:ingrain/features/profile/presentation/profile_view.dart';
 import 'package:ingrain/features/search/presentation/view/search_view.dart';
@@ -42,7 +44,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         return '/onboarding';
       }
       if (isOnboarded && location == '/onboarding') {
-        return '/immerse';
+        // Just finished the questions: the guided first lesson comes next.
+        // Read, not watched: finishing the lesson navigates by itself.
+        return ref.read(firstRunProvider).lessonPending
+            ? '/first-lesson'
+            : '/immerse';
       }
       return null;
     },
@@ -85,6 +91,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/onboarding',
         builder: (context, state) => const OnboardingView(),
+      ),
+      GoRoute(
+        path: '/first-lesson',
+        builder: (context, state) => const FirstLessonView(),
       ),
       GoRoute(
         path: '/flashcards/study',

@@ -8,6 +8,7 @@ import 'package:ingrain/features/kana/data/local_kana_progress_repository.dart';
 import 'package:ingrain/features/kana/domain/kana_chart.dart';
 import 'package:ingrain/features/kana/domain/kana_knowledge.dart';
 import 'package:ingrain/features/kana/presentation/kana_progress_view_model.dart';
+import 'package:ingrain/features/onboarding/presentation/viewmodel/first_run_view_model.dart';
 import 'package:ingrain/features/onboarding/presentation/viewmodel/onboarding_view_model.dart';
 import 'package:ingrain/features/profile/domain/avatar_character.dart';
 import 'package:ingrain/features/profile/domain/learner_preferences.dart';
@@ -79,6 +80,14 @@ void main() {
 
       expect(draft().step, OnboardingStep.interests);
       vm.toggleInterest(ContentInterest.anime);
+      expect(draft().reaction, isNotNull, reason: 'the guide reacts');
+      vm.next();
+
+      expect(draft().step, OnboardingStep.goal);
+      expect(draft().reaction, isNull, reason: 'each step starts fresh');
+      expect(draft().canContinue, isTrue, reason: 'a goal is preselected');
+      vm.selectDailyGoal(15);
+      expect(draft().dailyGoalMinutes, 15);
       vm.next();
 
       expect(draft().step, OnboardingStep.name);
@@ -109,6 +118,8 @@ void main() {
           ..toggleInterest(ContentInterest.music)
           ..toggleInterest(ContentInterest.gaming)
           ..next()
+          ..selectDailyGoal(20)
+          ..next()
           ..setDisplayName('  Ken ')
           ..next()
           ..chooseAvatar(AvatarCharacter.tanuki);
@@ -134,6 +145,11 @@ void main() {
         expect(session.profileFields['interests'], ['music', 'gaming']);
         expect(session.profileFields['onboardingCompletedAt'], isNotNull);
         expect(session.setDisplayNameCalls, ['Ken']);
+
+        // The first-open tour is queued for this learner.
+        final run = c.read(firstRunProvider);
+        expect(run.lessonPending, isTrue);
+        expect(run.homeTipsPending, isTrue);
       },
     );
 

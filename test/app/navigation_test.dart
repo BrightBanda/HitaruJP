@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ingrain/features/onboarding/presentation/viewmodel/first_run_view_model.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -158,8 +159,9 @@ void main() {
     WidgetTester tester, {
     List extraOverrides = const [],
     FakeCatalogRepository? catalog,
+    Map<String, Object> storedPrefs = const {},
   }) async {
-    SharedPreferences.setMockInitialValues({});
+    SharedPreferences.setMockInitialValues(storedPrefs);
     final prefs = await SharedPreferences.getInstance();
 
     final container = ProviderContainer(
@@ -222,6 +224,46 @@ void main() {
   }
 
   group('home', () {
+    testWidgets('a learner fresh from the first lesson gets a home tour', (
+      tester,
+    ) async {
+      final container = await pumpApp(
+        tester,
+        storedPrefs: {FirstRunViewModel.tipsKey('uid-1'): true},
+      );
+      // The tour waits a moment for the page to settle.
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Your daily goal'), findsOneWidget);
+      await tester.tap(find.text('Next'));
+      await tester.pumpAndSettle();
+      expect(find.text('Today’s picks'), findsOneWidget);
+      await tester.tap(find.text('Next'));
+      await tester.pumpAndSettle();
+      expect(find.text('Your library'), findsOneWidget);
+      await tester.tap(find.text('Next'));
+      await tester.pumpAndSettle();
+      expect(
+        find.text('コーヒー is already waiting for you here!'),
+        findsOneWidget,
+      );
+      await tester.tap(find.text('Got it!'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Your library'), findsNothing);
+      expect(container.read(firstRunProvider).homeTipsPending, isFalse);
+    });
+
+    testWidgets('no tour for a learner who has not just onboarded', (
+      tester,
+    ) async {
+      await pumpApp(tester);
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pumpAndSettle();
+      expect(find.text('Your daily goal'), findsNothing);
+    });
+
     testWidgets('shows start, recommendations and no back button', (
       tester,
     ) async {

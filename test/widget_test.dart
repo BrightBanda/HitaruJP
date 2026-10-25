@@ -7,7 +7,7 @@ import 'support/test_overrides.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  testWidgets('App shows onboarding when not onboarded', (
+  testWidgets('a new install is welcomed, then asked to sign in', (
     WidgetTester tester,
   ) async {
     SharedPreferences.setMockInitialValues({});
@@ -20,6 +20,11 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    expect(find.text('Learn Japanese from things you love'), findsOneWidget);
+
+    await tester.tap(find.text('I already have an account'));
+    await tester.pumpAndSettle();
     expect(find.text('Welcome to HitaruJP'), findsOneWidget);
+    expect(prefs.getBool('first_run_welcome_seen'), isTrue);
   });
 }

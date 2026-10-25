@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ingrain/features/onboarding/presentation/viewmodel/onboarding_view_model.dart';
-import 'package:ingrain/features/profile/domain/avatar_character.dart';
-import 'package:ingrain/features/profile/presentation/widgets/learner_avatar.dart';
+import 'package:ingrain/features/onboarding/presentation/widgets/guide_bubble.dart';
 import 'package:ingrain/features/profile/presentation/widgets/preference_pickers.dart';
 import 'package:ingrain/shared/layout/window_size.dart';
 import 'package:ingrain/shared/widgets/double_back_to_exit.dart';
 
-/// First-run questions, one per screen: why, level, interests, name, avatar.
+/// First-run questions, one per screen: why, level, interests, daily goal,
+/// name, avatar. The guide (Kitsune, then the learner's own pick) asks each
+/// one and reacts to the answers.
 ///
 /// Shown to a signed-in learner who has not finished onboarding. Back steps
 /// through the questions; on the first one it behaves like any root screen.
@@ -26,6 +27,10 @@ class OnboardingFlowView extends ConsumerWidget {
     OnboardingStep.interests: (
       'What do you love watching?',
       'Your daily videos will lean towards these.',
+    ),
+    OnboardingStep.goal: (
+      'How much time a day?',
+      'Pick a goal you can keep. You can change it any time.',
     ),
     OnboardingStep.name: (
       'What should we call you?',
@@ -71,10 +76,10 @@ class OnboardingFlowView extends ConsumerWidget {
                     key: ValueKey(draft.step),
                     padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
                     children: [
-                      _Prompt(
-                        character: draft.avatar ?? AvatarCharacter.fallback,
-                        title: title,
-                        subtitle: subtitle,
+                      GuideBubble(
+                        character: draft.avatar ?? guideCharacter,
+                        message: title,
+                        detail: draft.reaction ?? subtitle,
                       ),
                       const SizedBox(height: 20),
                       switch (draft.step) {
@@ -92,6 +97,10 @@ class OnboardingFlowView extends ConsumerWidget {
                           selected: draft.interests,
                           onToggle: viewModel.toggleInterest,
                         ),
+                        OnboardingStep.goal => _GoalPicker(
+                          selected: draft.dailyGoalMinutes,
+                          onSelect: viewModel.selectDailyGoal,
+                        ),
                         OnboardingStep.name => _NameField(
                           onSubmitted: viewModel.next,
                         ),
@@ -99,8 +108,7 @@ class OnboardingFlowView extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             AvatarShowcase(
-                              character:
-                                  draft.avatar ?? AvatarCharacter.fallback,
+                              character: draft.avatar ?? guideCharacter,
                               displayName: draft.displayName,
                             ),
                             const SizedBox(height: 20),
@@ -207,49 +215,83 @@ class _TopBar extends StatelessWidget {
   }
 }
 
-/// The character asking the question, in a speech bubble.
-class _Prompt extends StatelessWidget {
-  final AvatarCharacter character;
-  final String title;
-  final String subtitle;
+/// The daily goal choices, each with what it amounts to.
+class _GoalPicker extends StatelessWidget {
+  final int selected;
+  final ValueChanged<int> onSelect;
 
-  const _Prompt({
-    required this.character,
-    required this.title,
-    required this.subtitle,
-  });
+  const _GoalPicker({required this.selected, required this.onSelect});
+
+  static const _details = {
+    5: ('Casual', 'A short clip or one dialogue', Icons.eco_outlined),
+    10: ('Regular', 'One video, a few new words', Icons.local_cafe_outlined),
+    15: ('Serious', 'A video and a quick review', Icons.trending_up),
+    20: ('Intense', 'Real immersion, every day', Icons.local_fire_department),
+  };
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
+    final primary = theme.colorScheme.primary;
+    return Column(
       children: [
-        AvatarPortrait(character: character, size: 64, rounded: true),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surface,
-              border: Border.all(color: theme.colorScheme.outlineVariant),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(20),
-                topRight: Radius.circular(20),
-                bottomRight: Radius.circular(20),
-                bottomLeft: Radius.circular(6),
+        for (final minutes in dailyGoalChoices)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Semantics(
+              selected: minutes == selected,
+              button: true,
+              child: Material(
+                color: minutes == selected
+                    ? primary.withValues(alpha: 0.12)
+                    : theme.colorScheme.surface,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18),
+                  side: BorderSide(
+                    color: minutes == selected
+                        ? primary
+                        : theme.colorScheme.outlineVariant,
+                    width: minutes == selected ? 2 : 1,
+                  ),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: InkWell(
+                  onTap: () => onSelect(minutes),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+                    child: Row(
+                      children: [
+                        Icon(_details[minutes]!.$3, color: primary),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _details[minutes]!.$1,
+                                style: theme.textTheme.titleMedium,
+                              ),
+                              Text(
+                                _details[minutes]!.$2,
+                                style: theme.textTheme.bodySmall,
+                              ),
+                            ],
+                          ),
+                        ),
+                        Text(
+                          '$minutes min',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: primary,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: theme.textTheme.titleLarge),
-                const SizedBox(height: 4),
-                Text(subtitle, style: theme.textTheme.bodyMedium),
-              ],
-            ),
           ),
-        ),
       ],
     );
   }

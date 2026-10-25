@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ingrain/app/theme/app_colors.dart';
 import 'package:ingrain/features/auth/presentation/viewmodel/auth_view_model.dart';
 import 'package:ingrain/features/onboarding/presentation/view/onboarding_flow_view.dart';
+import 'package:ingrain/features/onboarding/presentation/view/welcome_view.dart';
+import 'package:ingrain/features/onboarding/presentation/viewmodel/first_run_view_model.dart';
 import 'package:ingrain/shared/widgets/app_logo.dart';
 import 'package:ingrain/shared/widgets/colorful.dart';
 import 'package:ingrain/shared/widgets/double_back_to_exit.dart';
@@ -32,6 +34,11 @@ class _OnboardingViewState extends ConsumerState<OnboardingView> {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  void _leaveWelcome({required bool createAccount}) {
+    setState(() => _isCreateMode = createAccount);
+    ref.read(firstRunProvider.notifier).markWelcomeSeen();
   }
 
   Future<T?> _run<T>(Future<T> Function() action) async {
@@ -67,6 +74,13 @@ class _OnboardingViewState extends ConsumerState<OnboardingView> {
 
     if (authState.isLoading) return const _StartupSplash();
     if (authState.isSignedIn) return const OnboardingFlowView();
+    // A new install sees what the app is about before being asked to sign in.
+    if (!ref.watch(firstRunProvider.select((s) => s.welcomeSeen))) {
+      return WelcomeView(
+        onGetStarted: () => _leaveWelcome(createAccount: true),
+        onSignIn: () => _leaveWelcome(createAccount: false),
+      );
+    }
 
     return DoubleBackToExit(
       child: Scaffold(

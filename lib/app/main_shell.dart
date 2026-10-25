@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ingrain/features/auth/presentation/viewmodel/auth_view_model.dart';
+import 'package:ingrain/features/onboarding/presentation/widgets/home_tour.dart';
 import 'package:ingrain/features/profile/presentation/widgets/learner_avatar.dart';
 import 'package:ingrain/shared/layout/window_size.dart';
 import 'package:ingrain/shared/widgets/app_logo.dart';
@@ -145,7 +146,13 @@ class MainShellView extends StatelessWidget {
             destinations: [
               for (final (index, tab) in _tabs.indexed)
                 NavigationDestination(
-                  icon: Icon(tab.$1),
+                  // Only the unselected icon carries the key: the home tour
+                  // points at these tabs while the learner is on Immerse.
+                  icon: KeyedSubtree(
+                    key: _tourKey(tab.$3),
+                    child: Icon(tab.$1),
+                  ),
+                  selectedIcon: Icon(tab.$1),
                   label: tab.$2,
                   tooltip: index == _learnIndex ? 'Learn: vocab or kana' : null,
                 ),
@@ -155,6 +162,13 @@ class MainShellView extends StatelessWidget {
       ),
     );
   }
+
+  /// The home tour's target for the destination at [path], if it has one.
+  static GlobalKey? _tourKey(String path) => switch (path) {
+    '/library' => HomeTourTargets.library,
+    '/flashcards' => HomeTourTargets.flashcards,
+    _ => null,
+  };
 
   int _currentIndex(BuildContext context) {
     final location = GoRouterState.of(context).uri.path;
@@ -256,7 +270,10 @@ class _Rail extends StatelessWidget {
         destinations: [
           for (final d in destinations)
             NavigationRailDestination(
-              icon: Icon(d.icon),
+              icon: KeyedSubtree(
+                key: MainShellView._tourKey(d.path),
+                child: Icon(d.icon),
+              ),
               selectedIcon: Icon(d.selectedIcon),
               label: Text(d.label),
             ),
@@ -321,9 +338,12 @@ class _Sidebar extends ConsumerWidget {
               for (final (index, d) in destinations.indexed)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 4),
-                  child: _SidebarItem(
-                    destination: d,
-                    selected: index == selectedIndex,
+                  child: KeyedSubtree(
+                    key: MainShellView._tourKey(d.path),
+                    child: _SidebarItem(
+                      destination: d,
+                      selected: index == selectedIndex,
+                    ),
                   ),
                 ),
               const Spacer(),
