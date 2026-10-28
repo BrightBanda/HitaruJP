@@ -5,6 +5,7 @@ import 'package:ingrain/features/immersion/presentation/view/immersion_session_s
 import 'package:ingrain/features/progress/presentation/viewmodel/progress_view_model.dart';
 import 'package:ingrain/features/srs/domain/review_card.dart';
 import 'package:ingrain/features/srs/presentation/viewmodel/review_view_model.dart';
+import 'package:ingrain/features/vocabulary/presentation/viewmodel/vocabulary_view_model.dart';
 import 'package:ingrain/shared/widgets/colorful.dart';
 
 /// Studies the due cards of one deck, or of every deck when [deckId] is null.
@@ -161,18 +162,31 @@ class _FlashcardStudyViewState extends ConsumerState<FlashcardStudyView> {
 }
 
 /// The flashcard face: what to recall, on the hero gradient.
-class _PromptCard extends StatelessWidget {
+class _PromptCard extends ConsumerWidget {
   final ReviewCard card;
 
   const _PromptCard({required this.card});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final (label, icon) = switch (card.cardType) {
       CardType.vocabulary => ('Word', Icons.translate),
       CardType.sentence => ('Sentence', Icons.format_quote),
       CardType.basic => ('Card', Icons.style),
+    };
+    // Vocabulary cards recall a word together with its reading (`猫 (ねこ)`);
+    // the saved word is resolved so older cards that only stored the kanji
+    // still show the hiragana.
+    final prompt = switch (card.cardType) {
+      CardType.vocabulary =>
+        ref
+                .watch(vocabularyItemProvider(card.sourceItemId))
+                .value
+                ?.displayWithReading ??
+            card.promptText,
+      CardType.sentence => card.promptText,
+      CardType.basic => card.promptText,
     };
     return GradientPanel(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
@@ -184,7 +198,7 @@ class _PromptCard extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           Text(
-            card.promptText,
+            prompt,
             textAlign: TextAlign.center,
             style: theme.textTheme.headlineSmall?.copyWith(
               fontSize: 26,

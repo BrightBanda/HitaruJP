@@ -204,6 +204,17 @@ class _FirstLessonViewState extends ConsumerState<FirstLessonView> {
     if (_saving) return;
     setState(() => _saving = true);
     const word = FirstLesson.target;
+    // A word that is already saved is not saved again: saving it just records
+    // another encounter. Say so instead of quietly going through the motions.
+    final alreadySaved =
+        await ref.read(vocabularyRepositoryProvider).findByWord(word.surface) !=
+        null;
+    if (!mounted) return;
+    if (alreadySaved) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('This word is already saved')),
+      );
+    }
     // Best effort: offline, Firestore queues the write; the lesson goes on.
     unawaited(
       ref

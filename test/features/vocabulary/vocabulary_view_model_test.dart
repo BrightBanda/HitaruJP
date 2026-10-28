@@ -283,7 +283,7 @@ void main() {
         expect(reviews.cards, hasLength(1));
         final card = reviews.cards.single;
         expect(card.cardType, CardType.vocabulary);
-        expect(card.promptText, '猫');
+        expect(card.promptText, '猫 (ねこ)');
         expect(card.answerText, 'ねこ — cat (animal)');
         expect(card.sourceItemId, word.id);
       },

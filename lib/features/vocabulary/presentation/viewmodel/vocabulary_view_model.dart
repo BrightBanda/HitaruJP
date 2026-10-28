@@ -39,6 +39,11 @@ final vocabularyViewModelProvider =
       VocabularyViewModel.new,
     );
 
+/// One saved word by id, for surfaces that need its display form.
+final vocabularyItemProvider = FutureProvider.family<VocabularyItem?, String>(
+  (ref, id) async => ref.read(vocabularyRepositoryProvider).get(id),
+);
+
 class VocabularyViewModel extends AsyncNotifier<List<VocabularyItem>> {
   late VocabularyRepository _repository;
   late ReviewRepository _reviewRepository;
@@ -191,10 +196,13 @@ class VocabularyViewModel extends AsyncNotifier<List<VocabularyItem>> {
   }
 
   Future<void> _createReviewCard(VocabularyItem item, String deckId) async {
+    // The recall side carries the word with its reading (`猫 (ねこ)`), so the
+    // learner sees the kanji and the hiragana together before revealing the
+    // meaning.
     final card = await _reviewRepository.createCard(
       cardType: CardType.vocabulary,
       sourceItemId: item.id,
-      promptText: item.word,
+      promptText: item.displayWithReading,
       answerText: VocabularyViewModel.answerFor(item),
       createdAt: item.createdAt,
     );

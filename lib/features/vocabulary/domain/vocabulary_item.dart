@@ -73,7 +73,14 @@ class VocabularyItem {
   bool get hasMeaning => meaning != null && meaning!.trim().isNotEmpty;
 
   /// Display form such as `猫 (ねこ)`, falling back to the word alone.
-  String get displayWithReading => hasReading ? '$word ($reading)' : word;
+  ///
+  /// Readings that repeat the word (plain kana words) are not doubled up.
+  String get displayWithReading {
+    if (!hasReading) return word;
+    final kana = reading!.trim();
+    if (kana.isEmpty || kana == word) return word;
+    return '$word ($kana)';
+  }
 
   VocabularyItem copyWith({
     String? id,
