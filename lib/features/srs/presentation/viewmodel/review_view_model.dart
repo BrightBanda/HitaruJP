@@ -179,10 +179,34 @@ class ReviewSessionState {
 final reviewViewModelProvider =
     NotifierProvider<ReviewViewModel, ReviewSessionState>(ReviewViewModel.new);
 
+/// What one answer changed, so [ReviewViewModel.undo] can put it back.
+class _AnsweredCard {
+  _AnsweredCard({
+    required this.before,
+    required this.at,
+    required this.requeued,
+  });
+
+  /// The card as it was before the answer.
+  final ReviewCard before;
+  final DateTime at;
+
+  /// The answer put the card back at the end of the queue (still learning).
+  final bool requeued;
+
+  /// Set once the review log entry is saved, so an undo can delete it.
+  String? eventId;
+}
+
 class ReviewViewModel extends Notifier<ReviewSessionState> {
   late ReviewRepository _repository;
   late Clock _clock;
   SrsScheduler _scheduler = const SrsScheduler();
+  final List<_AnsweredCard> _answered = [];
+
+  /// Saves queued behind each other, so an undo can never overtake the answer
+  /// it takes back. The screen moves on without waiting for any of them.
+  Future<void> _writes = Future.value();
 
   @override
   ReviewSessionState build() {
@@ -196,6 +220,10 @@ class ReviewViewModel extends Notifier<ReviewSessionState> {
   /// throw away a session in progress.
   Future<void> startSession({String? deckId}) async {
     state = ReviewSessionState(deckId: deckId, isLoading: true);
+    _answered.clear();
+    // Start the card read now; it runs alongside the settings read instead of
+    // after it, and the queue below shares it.
+    unawaited(_repository.listAllCards().then((_) {}, onError: (_) {}));
     final settings = await ref.read(srsSettingsProvider.future);
     final queue = await buildStudyQueue(ref, settings, deckId: deckId);
     _scheduler = SrsScheduler(settings);
@@ -210,44 +238,98 @@ class ReviewViewModel extends Notifier<ReviewSessionState> {
     state = state.copyWith(answerShown: true);
   }
 
-  Future<void> submitAnswer(Rating rating) async {
+  bool get canUndo => _answered.isNotEmpty;
+
+  /// Runs [write] after every earlier save, whatever became of those. The
+  /// returned future carries this write's own outcome.
+  Future<void> _enqueue(Future<void> Function() write) {
+    final run = _writes.then((_) => write());
+    _writes = run.then((_) {}, onError: (_) {});
+    return run;
+  }
+
+  /// Completes once everything saved so far has reached storage.
+  Future<void> get settled => _writes;
+
+  /// Moves to the next card straight away; the answer is saved in the
+  /// background. The returned future completes when it has been saved.
+  Future<void> submitAnswer(Rating rating) {
     final card = state.currentCard;
-    if (card == null) return;
+    if (card == null) return Future.value();
 
     final now = _clock.now;
     final updated = _scheduler.schedule(card, rating, now);
-    await _repository.saveCard(updated);
-    await _repository.recordReview(
-      cardId: updated.id,
-      cardType: updated.cardType,
-      rating: rating,
-      reviewedAt: now,
-      intervalDaysAfter: updated.intervalDays,
-    );
-    try {
-      await ref
-          .read(srsSettingsRepositoryProvider)
-          .recordStudied(
-            now,
-            card.deckId,
-            wasNew: card.state == CardState.newCard,
-            wasReview: card.state == CardState.review,
-          );
-    } catch (_) {
-      // Limits are a convenience; a failed count must not lose the answer.
-    }
 
     // Like Anki, a card still in its learning steps comes back in this
     // session once its few minutes are up, after the cards already waiting.
     final comesBack =
         updated.state.isLearning &&
         updated.dueAt.isBefore(now.add(StudyQueue.learnAhead));
+    final entry = _AnsweredCard(before: card, at: now, requeued: comesBack);
+    _answered.add(entry);
     state = state.copyWith(
       queue: comesBack ? [...state.queue, updated] : null,
       currentIndex: state.currentIndex + 1,
       answerShown: false,
       reviewedThisSession: state.reviewedThisSession + 1,
     );
+
+    return _enqueue(() async {
+      await _repository.saveCard(updated);
+      final event = await _repository.recordReview(
+        cardId: updated.id,
+        cardType: updated.cardType,
+        rating: rating,
+        reviewedAt: now,
+        intervalDaysAfter: updated.intervalDays,
+      );
+      entry.eventId = event.id;
+      try {
+        await ref
+            .read(srsSettingsRepositoryProvider)
+            .recordStudied(
+              now,
+              card.deckId,
+              wasNew: card.state == CardState.newCard,
+              wasReview: card.state == CardState.review,
+            );
+      } catch (_) {
+        // Limits are a convenience; a failed count must not lose the answer.
+      }
+    });
+  }
+
+  /// Goes back to the card answered last, as it was before, and takes that
+  /// answer out of the schedule, the review log and today's limits.
+  Future<void> undo() {
+    if (_answered.isEmpty || state.isLoading) return Future.value();
+    final entry = _answered.removeLast();
+    final queue = entry.requeued
+        ? state.queue.sublist(0, state.queue.length - 1)
+        : null;
+    state = state.copyWith(
+      queue: queue,
+      currentIndex: state.currentIndex - 1,
+      answerShown: false,
+      reviewedThisSession: state.reviewedThisSession - 1,
+    );
+
+    final card = entry.before;
+    return _enqueue(() async {
+      await _repository.saveCard(card);
+      final eventId = entry.eventId;
+      if (eventId != null) await _repository.deleteReviewEvent(eventId);
+      try {
+        await ref
+            .read(srsSettingsRepositoryProvider)
+            .unrecordStudied(
+              entry.at,
+              card.deckId,
+              wasNew: card.state == CardState.newCard,
+              wasReview: card.state == CardState.review,
+            );
+      } catch (_) {}
+    });
   }
 
   /// When the current card would come back for each answer, shown on the

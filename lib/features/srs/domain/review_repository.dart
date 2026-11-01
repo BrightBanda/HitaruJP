@@ -34,6 +34,9 @@ abstract interface class ReviewRepository {
 
   Future<List<ReviewEvent>> listReviewHistory({int limit});
 
+  /// Removes one logged review (undoing an answer).
+  Future<void> deleteReviewEvent(String eventId);
+
   Future<void> deleteCardsForSource(String sourceItemId);
 
   /// Deletes cards by id in bulk (deleting a whole deck).

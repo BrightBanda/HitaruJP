@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:ingrain/core/storage/document_store.dart';
 import 'package:ingrain/features/auth/domain/auth_repository.dart';
 import 'package:ingrain/features/srs/domain/srs_settings.dart';
@@ -45,6 +47,22 @@ class SrsSettingsRepository {
     String deckId, {
     required bool wasNew,
     required bool wasReview,
+  }) => _adjust(day, deckId, wasNew: wasNew, wasReview: wasReview, by: 1);
+
+  /// Takes back what [recordStudied] counted, when an answer is undone.
+  Future<void> unrecordStudied(
+    DateTime day,
+    String deckId, {
+    required bool wasNew,
+    required bool wasReview,
+  }) => _adjust(day, deckId, wasNew: wasNew, wasReview: wasReview, by: -1);
+
+  Future<void> _adjust(
+    DateTime day,
+    String deckId, {
+    required bool wasNew,
+    required bool wasReview,
+    required int by,
   }) async {
     if (!wasNew && !wasReview) return;
     final uid = await _auth.ensureUid();
@@ -52,8 +70,8 @@ class SrsSettingsRepository {
     final current = counts[deckId] ?? const DailyStudyCounts();
     await _store.setDoc(uid, dailyCollection, dayKey(day), {
       deckId: {
-        'new': current.newStudied + (wasNew ? 1 : 0),
-        'reviews': current.reviewsDone + (wasReview ? 1 : 0),
+        'new': max(0, current.newStudied + (wasNew ? by : 0)),
+        'reviews': max(0, current.reviewsDone + (wasReview ? by : 0)),
       },
     }, merge: true);
   }

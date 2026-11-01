@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ingrain/features/immersion/domain/immersion_session.dart';
@@ -33,6 +35,7 @@ class _FlashcardStudyViewState extends ConsumerState<FlashcardStudyView> {
   @override
   Widget build(BuildContext context) {
     final session = ref.watch(reviewViewModelProvider);
+    final notifier = ref.read(reviewViewModelProvider.notifier);
     final remaining = session.isLoading
         ? 0
         : session.total - session.currentIndex;
@@ -55,6 +58,11 @@ class _FlashcardStudyViewState extends ConsumerState<FlashcardStudyView> {
                   solid: true,
                 ),
               ),
+            IconButton(
+              icon: const Icon(Icons.undo),
+              tooltip: 'Undo last answer',
+              onPressed: !session.isLoading && notifier.canUndo ? _undo : null,
+            ),
             IconButton(
               icon: const Icon(Icons.refresh),
               tooltip: 'Refresh due cards',
@@ -115,8 +123,33 @@ class _FlashcardStudyViewState extends ConsumerState<FlashcardStudyView> {
     );
   }
 
-  Future<void> _submit(Rating rating) async {
-    await ref.read(reviewViewModelProvider.notifier).submitAnswer(rating);
+  /// The next card shows at once; saving happens behind it, and the counts
+  /// elsewhere refresh once it has landed.
+  void _submit(Rating rating) {
+    final notifier = ref.read(reviewViewModelProvider.notifier);
+    _background(notifier.submitAnswer(rating));
+  }
+
+  void _undo() {
+    final notifier = ref.read(reviewViewModelProvider.notifier);
+    _background(notifier.undo());
+  }
+
+  void _background(Future<void> save) {
+    save.then(
+      (_) => _refreshCounts(),
+      onError: (Object _) {
+        if (!mounted) return;
+        _refreshCounts();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not save that answer.')),
+        );
+      },
+    );
+  }
+
+  void _refreshCounts() {
+    if (!mounted) return;
     ref.invalidate(dueCountProvider);
     ref.invalidate(deckSummariesProvider);
     ref.invalidate(deckDetailProvider);

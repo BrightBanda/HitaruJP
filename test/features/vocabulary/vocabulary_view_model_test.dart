@@ -198,6 +198,9 @@ class FakeReviewRepository implements ReviewRepository {
       const [];
 
   @override
+  Future<void> deleteReviewEvent(String eventId) async {}
+
+  @override
   Future<void> deleteCardsForSource(String sourceItemId) async {
     cards.removeWhere((c) => c.sourceItemId == sourceItemId);
   }

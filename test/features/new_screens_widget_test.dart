@@ -199,6 +199,11 @@ class InMemoryReviewRepository implements ReviewRepository {
   }
 
   @override
+  Future<void> deleteReviewEvent(String eventId) async {
+    history.removeWhere((event) => event.id == eventId);
+  }
+
+  @override
   Future<void> deleteCardsForSource(String sourceItemId) async {
     cards.removeWhere((c) => c.sourceItemId == sourceItemId);
   }

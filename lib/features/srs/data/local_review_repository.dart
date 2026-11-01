@@ -20,6 +20,8 @@ class LocalReviewRepository implements ReviewRepository {
   /// quota. Keyed by user so a different sign-in never sees stale cards.
   List<ReviewCard>? _cache;
   String? _cacheUid;
+  Future<List<ReviewCard>>? _loading;
+  String? _loadingUid;
 
   /// Bulk saves go out in chunks this size, so progress can be reported.
   static const saveChunkSize = 500;
@@ -70,8 +72,10 @@ class LocalReviewRepository implements ReviewRepository {
   @override
   Future<void> saveCard(ReviewCard card) async {
     final uid = await _auth.ensureUid();
-    await _store.setDoc(uid, cardCollection, card.id, _toMap(card));
+    // Remembered before the write is acknowledged, so the next read (the
+    // study queue, the due badge) already sees it while the cloud catches up.
     _remember([card]);
+    await _store.setDoc(uid, cardCollection, card.id, _toMap(card));
   }
 
   @override
@@ -104,6 +108,21 @@ class LocalReviewRepository implements ReviewRepository {
     final uid = await _auth.ensureUid();
     final cached = _cache;
     if (cached != null && _cacheUid == uid) return List.of(cached);
+    // Callers that start a load early (to warm the cache) and callers that
+    // need the cards a moment later share one read.
+    final loading = _loading;
+    if (loading != null && _loadingUid == uid) return List.of(await loading);
+    final load = _load(uid);
+    _loading = load;
+    _loadingUid = uid;
+    try {
+      return List.of(await load);
+    } finally {
+      if (identical(_loading, load)) _loading = null;
+    }
+  }
+
+  Future<List<ReviewCard>> _load(String uid) async {
     final docs = await _store.listDocs(uid, cardCollection);
     final cards = docs
         .map(ReviewCardDto.fromMapSafe)
@@ -111,7 +130,7 @@ class LocalReviewRepository implements ReviewRepository {
         .toList();
     _cache = cards;
     _cacheUid = uid;
-    return List.of(cards);
+    return cards;
   }
 
   @override
@@ -156,6 +175,12 @@ class LocalReviewRepository implements ReviewRepository {
       return events.sublist(0, limit);
     }
     return events;
+  }
+
+  @override
+  Future<void> deleteReviewEvent(String eventId) async {
+    final uid = await _auth.ensureUid();
+    await _store.deleteDoc(uid, historyCollection, eventId);
   }
 
   @override

@@ -121,6 +121,11 @@ class FakeReviewRepository implements ReviewRepository {
   }
 
   @override
+  Future<void> deleteReviewEvent(String eventId) async {
+    history.removeWhere((event) => event.id == eventId);
+  }
+
+  @override
   Future<void> deleteCardsForSource(String sourceItemId) async {
     cards.removeWhere((c) => c.sourceItemId == sourceItemId);
   }
@@ -361,6 +366,62 @@ void main() {
 
       expect(repository.history, isEmpty);
       expect(state().reviewedThisSession, 0);
+    });
+
+    test('the next card shows before the answer is saved', () async {
+      await seedDueCards(2);
+      await vm().startSession();
+
+      final saved = vm().submitAnswer(Rating.easy);
+
+      expect(state().currentIndex, 1);
+      expect(repository.history, isEmpty);
+      await saved;
+      expect(repository.history.length, 1);
+    });
+
+    test('undo returns to the previous card and restores it', () async {
+      await seedDueCards(2);
+      await vm().startSession();
+      final before = repository.cards.first;
+      await vm().submitAnswer(Rating.easy);
+
+      await vm().undo();
+
+      expect(state().currentIndex, 0);
+      expect(state().currentCard!.id, before.id);
+      expect(state().reviewedThisSession, 0);
+      expect(state().answerShown, isFalse);
+      expect(repository.cards.first.state, CardState.newCard);
+      expect(repository.history, isEmpty);
+      expect(vm().canUndo, isFalse);
+    });
+
+    test('undo takes back a card that was put back in the queue', () async {
+      await seedDueCards(1);
+      await vm().startSession();
+      await vm().submitAnswer(Rating.again);
+      expect(state().total, 2);
+
+      await vm().undo();
+
+      expect(state().total, 1);
+      expect(state().currentIndex, 0);
+    });
+
+    test('undo steps back through several answers', () async {
+      await seedDueCards(3);
+      await vm().startSession();
+      await vm().submitAnswer(Rating.easy);
+      await vm().submitAnswer(Rating.easy);
+
+      await vm().undo();
+      await vm().undo();
+
+      expect(state().currentIndex, 0);
+      expect(vm().canUndo, isFalse);
+      await vm().undo();
+      expect(state().currentIndex, 0);
     });
 
     test('the due count follows today\'s queue', () async {
