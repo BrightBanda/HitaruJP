@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:ingrain/features/playlists/presentation/viewmodel/playlist_view_model.dart';
 import 'package:ingrain/app/theme/app_colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -426,6 +427,20 @@ class _ImmersionPlayerViewState extends ConsumerState<ImmersionPlayerView>
       appBar: AppBar(
         title: const Text('HitaruJP'),
         actions: [
+          Builder(
+            builder: (context) {
+              final favorite = ref.watch(isFavoriteProvider(widget.contentId));
+              return IconButton(
+                icon: Icon(favorite ? Icons.favorite : Icons.favorite_border),
+                tooltip: favorite
+                    ? 'Remove from favorites'
+                    : 'Add to favorites',
+                onPressed: () => ref
+                    .read(playlistsProvider.notifier)
+                    .toggleFavorite(widget.contentId),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.edit_note),
             tooltip: 'Edit transcript',

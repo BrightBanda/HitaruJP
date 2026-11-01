@@ -14,6 +14,7 @@ import 'package:ingrain/features/growth/presentation/companion_widgets.dart';
 import 'package:ingrain/features/kana/presentation/kana_view.dart';
 import 'package:ingrain/features/onboarding/presentation/view/first_lesson_view.dart';
 import 'package:ingrain/features/onboarding/presentation/viewmodel/first_run_view_model.dart';
+import 'package:ingrain/features/playlists/presentation/view/playlist_detail_view.dart';
 import 'package:ingrain/features/profile/presentation/edit_profile_view.dart';
 import 'package:ingrain/features/profile/presentation/profile_view.dart';
 import 'package:ingrain/features/search/presentation/view/search_view.dart';
@@ -115,6 +116,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => PageFrame(
           maxWidth: 980,
           child: DeckDetailView(deckId: state.pathParameters['id']!),
+        ),
+      ),
+      GoRoute(
+        path: '/playlists/:id',
+        builder: (context, state) => PageFrame(
+          child: PlaylistDetailView(playlistId: state.pathParameters['id']!),
         ),
       ),
       GoRoute(

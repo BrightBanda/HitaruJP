@@ -6,6 +6,8 @@ import 'package:ingrain/features/content/domain/content_item.dart';
 import 'package:ingrain/features/content/presentation/view/add_content_type.dart';
 import 'package:ingrain/features/content/presentation/viewmodel/content_view_model.dart';
 import 'package:ingrain/features/dialogue/data/user_dialogue_repository.dart';
+import 'package:ingrain/features/playlists/presentation/view/playlist_dialogs.dart';
+import 'package:ingrain/features/playlists/presentation/view/playlists_strip.dart';
 import 'package:ingrain/features/dialogue/domain/dialogue.dart';
 import 'package:ingrain/features/dialogue/presentation/view/library_content_filter.dart';
 import 'package:ingrain/features/dialogue/presentation/view/library_dialogue_list_view.dart';
@@ -114,6 +116,17 @@ class _ContentHistoryViewState extends ConsumerState<ContentHistoryView> {
             }
           }),
         ),
+        if (!_isDialogues)
+          IconButton(
+            icon: const Icon(Icons.playlist_add),
+            tooltip: 'Add to playlist',
+            onPressed: selected.isEmpty
+                ? null
+                : () async {
+                    await addToPlaylist(context, ref, selected.toList());
+                    if (mounted) _stopEditing();
+                  },
+          ),
         IconButton(
           icon: const Icon(Icons.edit_outlined),
           tooltip: 'Rename',
@@ -239,6 +252,7 @@ class _ContentHistoryViewState extends ConsumerState<ContentHistoryView> {
               books: true,
             ),
             LibraryContentFilter.videos => uiState.when(
+              // Playlists hold library videos, so an empty library has none.
               data: (items) => items.isEmpty
                   ? _buildEmpty(context)
                   : _buildList(context, ref, items),
@@ -276,97 +290,106 @@ class _ContentHistoryViewState extends ConsumerState<ContentHistoryView> {
     final theme = Theme.of(context);
 
     return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-      itemCount: items.length,
+      padding: const EdgeInsets.only(bottom: 32),
+      itemCount: items.length + 1,
       separatorBuilder: (_, _) => const SizedBox(height: 10),
       itemBuilder: (context, index) {
-        final item = items[index];
+        // The playlists row scrolls away with the list.
+        if (index == 0) {
+          return const PlaylistsStrip();
+        }
+        final item = items[index - 1];
         final minutes = item.totalImmersionSeconds ~/ 60;
         final selected = _selected?.contains(item.id) ?? false;
 
-        return Card(
-          color: selected
-              ? AppColors.primaryMain.withValues(alpha: 0.12)
-              : null,
-          shape: selected
-              ? RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(18),
-                  side: const BorderSide(
-                    color: AppColors.primaryMain,
-                    width: 1.5,
-                  ),
-                )
-              : null,
-          child: InkWell(
-            onTap: _editing
-                ? () => _toggle(item.id)
-                : () => context.push('/content/${item.id}'),
-            onLongPress: _editing ? null : () => _startEditing(item.id),
-            child: Padding(
-              padding: const EdgeInsets.all(14),
-              child: Row(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: SizedBox(
-                      width: 96,
-                      height: 54,
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          VideoThumbnail(item: item, iconSize: 28),
-                          if (_editing)
-                            ColoredBox(
-                              color: selected
-                                  ? AppColors.primaryMain.withValues(alpha: 0.7)
-                                  : Colors.black38,
-                              child: Icon(
-                                selected
-                                    ? Icons.check
-                                    : Icons.radio_button_unchecked,
-                                color: Colors.white,
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Card(
+            color: selected
+                ? AppColors.primaryMain.withValues(alpha: 0.12)
+                : null,
+            shape: selected
+                ? RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                    side: const BorderSide(
+                      color: AppColors.primaryMain,
+                      width: 1.5,
+                    ),
+                  )
+                : null,
+            child: InkWell(
+              onTap: _editing
+                  ? () => _toggle(item.id)
+                  : () => context.push('/content/${item.id}'),
+              onLongPress: _editing ? null : () => _startEditing(item.id),
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Row(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: SizedBox(
+                        width: 96,
+                        height: 54,
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            VideoThumbnail(item: item, iconSize: 28),
+                            if (_editing)
+                              ColoredBox(
+                                color: selected
+                                    ? AppColors.primaryMain.withValues(
+                                        alpha: 0.7,
+                                      )
+                                    : Colors.black38,
+                                child: Icon(
+                                  selected
+                                      ? Icons.check
+                                      : Icons.radio_button_unchecked,
+                                  color: Colors.white,
+                                ),
                               ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            item.title,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontSize: 15,
                             ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            item.channelTitle ?? item.sourceType.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodySmall,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            minutes > 0 ? '${minutes}m immersed' : 'New',
+                            style: theme.textTheme.labelLarge?.copyWith(
+                              fontSize: 11,
+                              color: minutes > 0
+                                  ? AppColors.primaryMain
+                                  : theme.colorScheme.onSurface.withValues(
+                                      alpha: 0.6,
+                                    ),
+                            ),
+                          ),
                         ],
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          item.title,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontSize: 15,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          item.channelTitle ?? item.sourceType.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodySmall,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          minutes > 0 ? '${minutes}m immersed' : 'New',
-                          style: theme.textTheme.labelLarge?.copyWith(
-                            fontSize: 11,
-                            color: minutes > 0
-                                ? AppColors.primaryMain
-                                : theme.colorScheme.onSurface.withValues(
-                                    alpha: 0.6,
-                                  ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
