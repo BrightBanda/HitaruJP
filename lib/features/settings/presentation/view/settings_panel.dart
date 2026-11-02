@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ingrain/app/theme/app_colors.dart';
+import 'package:ingrain/features/notifications/presentation/viewmodel/notification_view_model.dart';
 import 'package:ingrain/features/settings/domain/app_settings.dart';
 import 'package:ingrain/features/settings/presentation/viewmodel/settings_view_model.dart';
 import 'package:ingrain/shared/widgets/colorful.dart';
@@ -174,6 +175,24 @@ class SettingsPanel extends ConsumerWidget {
             ),
           ],
         ),
+        if (ref.watch(pushGatewayProvider).isSupported)
+          _Section(
+            title: 'Reminders',
+            color: about,
+            children: [
+              ListTile(
+                leading: const IconBadge(
+                  color: about,
+                  icon: Icons.notifications_outlined,
+                  size: 38,
+                ),
+                title: const Text('Notifications'),
+                subtitle: const Text('Streak warnings and study reminders'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push('/profile/notifications'),
+              ),
+            ],
+          ),
         _Section(
           title: 'About',
           color: about,

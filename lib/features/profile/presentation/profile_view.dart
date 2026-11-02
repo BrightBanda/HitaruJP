@@ -14,6 +14,7 @@ import 'package:ingrain/features/profile/presentation/widgets/learner_preference
 import 'package:ingrain/features/profile/presentation/widgets/preference_pickers.dart';
 import 'package:ingrain/features/progress/presentation/view/progress_dashboard.dart';
 import 'package:ingrain/features/progress/presentation/viewmodel/progress_view_model.dart';
+import 'package:ingrain/features/notifications/presentation/viewmodel/notification_view_model.dart';
 import 'package:ingrain/features/settings/presentation/view/settings_panel.dart';
 import 'package:ingrain/shared/widgets/colorful.dart';
 
@@ -123,6 +124,8 @@ class ProfileView extends ConsumerWidget {
       ),
     );
     if (confirmed == true) {
+      // While still signed in, so the server stops pushing to this phone.
+      await ref.read(notificationViewModelProvider.notifier).unregister();
       await ref.read(authViewModelProvider.notifier).signOut();
     }
   }

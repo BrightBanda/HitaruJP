@@ -5,6 +5,7 @@ import 'package:ingrain/app/router.dart';
 import 'package:ingrain/app/theme/app_theme.dart';
 import 'package:ingrain/app/theme/theme_controller.dart';
 import 'package:ingrain/core/lifecycle.dart';
+import 'package:ingrain/features/notifications/presentation/viewmodel/notification_view_model.dart';
 import 'package:ingrain/features/profile/presentation/viewmodel/profile_sync_providers.dart';
 
 class IngrApp extends ConsumerWidget {
@@ -17,6 +18,8 @@ class IngrApp extends ConsumerWidget {
     ref.watch(appLifecycleObserverProvider);
     // Keeps the server's copy of the profile current and counts visits.
     ref.watch(activityTrackerProvider);
+    // Push notifications, once the first lesson is behind the learner.
+    ref.watch(notificationBootstrapProvider);
 
     return MaterialApp.router(
       title: 'HitaruJP',

@@ -4,6 +4,8 @@
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <!-- Push notifications (a runtime permission from Android 13). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <application
         android:label="HitaruJP"
         android:name="${applicationName}"
@@ -36,6 +38,10 @@
             android:name=".VideoOverlayService"
             android:exported="false"
             android:foregroundServiceType="mediaPlayback" />
+        <!-- Where FCM notifications go when the message does not name a channel. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="reminders" />
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

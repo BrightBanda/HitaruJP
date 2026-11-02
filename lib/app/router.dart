@@ -12,6 +12,7 @@ import 'package:ingrain/features/dialogue/presentation/view/dialogue_reader_view
 import 'package:ingrain/features/immersion/presentation/view/immersion_home_view.dart';
 import 'package:ingrain/features/growth/presentation/companion_widgets.dart';
 import 'package:ingrain/features/kana/presentation/kana_view.dart';
+import 'package:ingrain/features/notifications/presentation/view/notification_settings_view.dart';
 import 'package:ingrain/features/onboarding/presentation/view/first_lesson_view.dart';
 import 'package:ingrain/features/onboarding/presentation/viewmodel/first_run_view_model.dart';
 import 'package:ingrain/features/playlists/presentation/view/playlist_detail_view.dart';
@@ -141,6 +142,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/search',
         builder: (context, state) => const PageFrame(child: SearchView()),
+      ),
+      GoRoute(
+        path: '/profile/notifications',
+        builder: (context, state) =>
+            const PageFrame(child: NotificationSettingsView()),
       ),
       GoRoute(
         path: '/profile/edit',
