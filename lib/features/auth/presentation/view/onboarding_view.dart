@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ingrain/app/theme/app_colors.dart';
+import 'package:ingrain/features/auth/presentation/view/verify_email_view.dart';
 import 'package:ingrain/features/auth/presentation/viewmodel/auth_view_model.dart';
 import 'package:ingrain/features/onboarding/presentation/view/onboarding_flow_view.dart';
 import 'package:ingrain/features/onboarding/presentation/view/welcome_view.dart';
@@ -25,14 +26,22 @@ class _OnboardingViewState extends ConsumerState<OnboardingView> {
   final _signInFormKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmController = TextEditingController();
 
   bool _isCreateMode = false;
-  bool _busy = false;
+  bool _showPassword = false;
+  bool _showConfirm = false;
+
+  /// Which button started the current request, so only it shows a spinner.
+  /// Null while idle.
+  _Action? _busyAction;
+  bool get _busy => _busyAction != null;
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmController.dispose();
     super.dispose();
   }
 
@@ -41,20 +50,28 @@ class _OnboardingViewState extends ConsumerState<OnboardingView> {
     ref.read(firstRunProvider.notifier).markWelcomeSeen();
   }
 
-  Future<T?> _run<T>(Future<T> Function() action) async {
+  Future<T?> _run<T>(_Action which, Future<T> Function() action) async {
     if (_busy) return null;
-    setState(() => _busy = true);
+    setState(() => _busyAction = which);
     try {
       return await action();
     } finally {
-      if (mounted) setState(() => _busy = false);
+      if (mounted) setState(() => _busyAction = null);
     }
+  }
+
+  void _toggleMode() {
+    setState(() {
+      _isCreateMode = !_isCreateMode;
+      _confirmController.clear();
+    });
   }
 
   Future<void> _submitCredentials() async {
     if (!_signInFormKey.currentState!.validate()) return;
     final authVm = ref.read(authViewModelProvider.notifier);
     await _run(
+      _Action.email,
       () => _isCreateMode
           ? authVm.createAccount(
               _emailController.text,
@@ -67,12 +84,42 @@ class _OnboardingViewState extends ConsumerState<OnboardingView> {
     );
   }
 
+  Future<void> _forgotPassword() async {
+    final email = _emailController.text.trim();
+    final messenger = ScaffoldMessenger.of(context);
+    if (email.isEmpty) {
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Enter your email first, then tap again.'),
+        ),
+      );
+      return;
+    }
+    final error = await _run(
+      _Action.reset,
+      () => ref.read(authViewModelProvider.notifier).sendPasswordReset(email),
+    );
+    if (!mounted) return;
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          error ??
+              'If an account exists for $email, a reset link is on its way. '
+                  'Check your spam folder too.',
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authViewModelProvider);
     final theme = Theme.of(context);
 
     if (authState.isLoading) return const _StartupSplash();
+    if (authState.isSignedIn && authState.needsEmailVerification) {
+      return const VerifyEmailView();
+    }
     if (authState.isSignedIn) return const OnboardingFlowView();
     // A new install sees what the app is about before being asked to sign in.
     if (!ref.watch(firstRunProvider.select((s) => s.welcomeSeen))) {
@@ -143,8 +190,12 @@ class _OnboardingViewState extends ConsumerState<OnboardingView> {
           ),
           const SizedBox(height: 24),
           FilledButton.icon(
-            onPressed: _busy ? null : () => _run(authVm.signInWithGoogle),
-            icon: const Icon(Icons.login),
+            onPressed: _busy
+                ? null
+                : () => _run(_Action.google, authVm.signInWithGoogle),
+            icon: _busyAction == _Action.google
+                ? const _ButtonSpinner()
+                : const Icon(Icons.login),
             label: const Text('Continue with Google'),
             style: FilledButton.styleFrom(
               minimumSize: const Size.fromHeight(48),
@@ -177,11 +228,20 @@ class _OnboardingViewState extends ConsumerState<OnboardingView> {
           const SizedBox(height: 16),
           TextFormField(
             controller: _passwordController,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'Password',
-              prefixIcon: Icon(Icons.lock_outline),
+              prefixIcon: const Icon(Icons.lock_outline),
+              suffixIcon: _VisibilityToggle(
+                visible: _showPassword,
+                onPressed: () => setState(() => _showPassword = !_showPassword),
+              ),
             ),
-            obscureText: true,
+            obscureText: !_showPassword,
+            autofillHints: [
+              _isCreateMode
+                  ? AutofillHints.newPassword
+                  : AutofillHints.password,
+            ],
             validator: (v) {
               if (_isCreateMode && (v == null || v.length < 6)) {
                 return 'Use at least 6 characters';
@@ -189,6 +249,35 @@ class _OnboardingViewState extends ConsumerState<OnboardingView> {
               return (v == null || v.isEmpty) ? 'Enter a password' : null;
             },
           ),
+          if (_isCreateMode) ...[
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _confirmController,
+              decoration: InputDecoration(
+                labelText: 'Confirm password',
+                prefixIcon: const Icon(Icons.lock_outline),
+                suffixIcon: _VisibilityToggle(
+                  visible: _showConfirm,
+                  onPressed: () => setState(() => _showConfirm = !_showConfirm),
+                ),
+              ),
+              obscureText: !_showConfirm,
+              autofillHints: const [AutofillHints.newPassword],
+              validator: (v) => v != _passwordController.text
+                  ? "Passwords don't match"
+                  : null,
+            ),
+          ],
+          if (!_isCreateMode)
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: _busy ? null : _forgotPassword,
+                child: _busyAction == _Action.reset
+                    ? const _ButtonSpinner()
+                    : const Text('Forgot password?'),
+              ),
+            ),
           if (error != null) ...[
             const SizedBox(height: 12),
             Text(
@@ -203,13 +292,13 @@ class _OnboardingViewState extends ConsumerState<OnboardingView> {
             style: FilledButton.styleFrom(
               minimumSize: const Size.fromHeight(48),
             ),
-            child: Text(_isCreateMode ? 'Create account' : 'Sign in'),
+            child: _busyAction == _Action.email
+                ? const _ButtonSpinner()
+                : Text(_isCreateMode ? 'Create account' : 'Sign in'),
           ),
           const SizedBox(height: 8),
           TextButton(
-            onPressed: _busy
-                ? null
-                : () => setState(() => _isCreateMode = !_isCreateMode),
+            onPressed: _busy ? null : _toggleMode,
             child: Text(
               _isCreateMode
                   ? 'Already have an account? Sign in'
@@ -220,6 +309,33 @@ class _OnboardingViewState extends ConsumerState<OnboardingView> {
       ),
     );
   }
+}
+
+enum _Action { google, email, reset }
+
+class _ButtonSpinner extends StatelessWidget {
+  const _ButtonSpinner();
+
+  @override
+  Widget build(BuildContext context) => const SizedBox.square(
+    dimension: 20,
+    child: CircularProgressIndicator(strokeWidth: 2.5),
+  );
+}
+
+/// The eye icon that shows or hides a password field's text.
+class _VisibilityToggle extends StatelessWidget {
+  const _VisibilityToggle({required this.visible, required this.onPressed});
+
+  final bool visible;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) => IconButton(
+    icon: Icon(visible ? Icons.visibility_off : Icons.visibility),
+    tooltip: visible ? 'Hide password' : 'Show password',
+    onPressed: onPressed,
+  );
 }
 
 /// What shows while the session is restored on a first launch (returning

@@ -118,6 +118,31 @@ class FakeAuthSession implements AuthSession {
     emit('new-uid');
   }
 
+  final List<String> passwordResetCalls = [];
+
+  /// Set to model an email account that has not been verified yet.
+  bool unverified = false;
+  int verificationEmailsSent = 0;
+
+  @override
+  bool get needsEmailVerification => unverified && uid.isNotEmpty;
+
+  @override
+  String? get email => uid.isEmpty ? null : 'tester@example.com';
+
+  @override
+  Future<void> sendEmailVerification() async => verificationEmailsSent++;
+
+  @override
+  Future<bool> reloadNeedsEmailVerification() async => needsEmailVerification;
+
+  @override
+  Future<void> sendPasswordReset(String email) async {
+    final error = signInError;
+    if (error != null) throw error;
+    passwordResetCalls.add(email);
+  }
+
   @override
   Future<void> signOut() async {
     signOutCalls++;

@@ -61,7 +61,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyA6oE5E6lFk9NBIygQBlHr-04fkcEXc83U',
-    appId: '1:29208930706:android:4f07345dc853726fa6394b',
+    appId: '1:29208930706:android:424850e50420bb4ca6394b',
     messagingSenderId: '29208930706',
     projectId: 'ingrain-58270',
     storageBucket: 'ingrain-58270.firebasestorage.app',

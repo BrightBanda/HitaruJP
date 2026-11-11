@@ -12,12 +12,17 @@ class AuthState {
   /// Set when the last sign-in attempt failed; cleared on the next attempt.
   final String? error;
 
+  /// Signed in with an email/password account whose address is unverified.
+  /// Such a session is held at the verification screen.
+  final bool needsEmailVerification;
+
   const AuthState._({
     required this.isLoading,
     required this.uid,
     this.displayName,
     this.profile,
     this.error,
+    this.needsEmailVerification = false,
   });
 
   const AuthState.loading() : this._(isLoading: true, uid: '');
@@ -30,12 +35,14 @@ class AuthState {
     String? displayName,
     UserProfile? profile,
     String? error,
+    bool needsEmailVerification = false,
   }) : this._(
          isLoading: false,
          uid: uid,
          displayName: displayName,
          profile: profile,
          error: error,
+         needsEmailVerification: needsEmailVerification,
        );
 
   bool get isSignedIn => !isLoading && uid.isNotEmpty;
@@ -44,7 +51,7 @@ class AuthState {
   /// full flow (see [UserProfile.isOnboarded]); without one, having chosen a name.
   /// The trim guards against a name that is only whitespace.
   bool get isOnboarded {
-    if (!isSignedIn) return false;
+    if (!isSignedIn || needsEmailVerification) return false;
     final profile = this.profile;
     if (profile != null) return profile.isOnboarded;
     return displayName?.trim().isNotEmpty ?? false;

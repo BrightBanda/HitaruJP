@@ -1,4 +1,4 @@
-package com.hitarujp.app
+package com.hautek.hitarujp
 
 import android.annotation.SuppressLint
 import android.app.Notification
@@ -51,11 +51,11 @@ import kotlin.math.roundToInt
 /// background; the notification also brings the video back into the app.
 class VideoOverlayService : Service() {
     companion object {
-        const val ACTION_SHOW = "com.hitarujp.app.overlay.SHOW"
-        const val ACTION_CLOSE = "com.hitarujp.app.overlay.CLOSE"
+        const val ACTION_SHOW = "com.hautek.hitarujp.overlay.SHOW"
+        const val ACTION_CLOSE = "com.hautek.hitarujp.overlay.CLOSE"
 
         /// On an intent to MainActivity: return the floating video to the app.
-        const val EXTRA_EXPAND = "com.hitarujp.app.overlay.EXPAND"
+        const val EXTRA_EXPAND = "com.hautek.hitarujp.overlay.EXPAND"
 
         private const val EXTRA_VIDEO_ID = "videoId"
         private const val EXTRA_POSITION = "position"

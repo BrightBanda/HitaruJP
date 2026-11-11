@@ -34,11 +34,11 @@ In Render choose **New → Blueprint** and pick this repository.
 
 ## Android release setup
 
-The Android application ID is `com.hitarujp.app`, set in `android/app/build.gradle.kts`.
+The Android application ID is `com.hautek.hitarujp`, set in `android/app/build.gradle.kts`.
 It is permanent once the app is published.
 
 1. **Register the app in Firebase.** In project `ingrain-58270`, add an Android app
-   with package name `com.hitarujp.app`.
+   with package name `com.hautek.hitarujp`.
 2. **Add signing fingerprints.** Add the SHA-1 and SHA-256 of every key that signs the
    app to that Firebase Android app: debug, upload, and Google Play's app signing key.
    Google sign-in fails for any build whose key is missing. To print them:

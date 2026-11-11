@@ -1,4 +1,4 @@
-package com.hitarujp.app
+package com.hautek.hitarujp
 
 import android.app.PictureInPictureParams
 import android.content.Intent

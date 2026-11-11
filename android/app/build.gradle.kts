@@ -18,7 +18,7 @@ val keystoreProperties = Properties().apply {
 }
 
 android {
-    namespace = "com.hitarujp.app"
+    namespace = "com.hautek.hitarujp"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -32,7 +32,7 @@ android {
     defaultConfig {
         // Permanent once published to the Play Store: it identifies the app.
         // It must also match the Android app registered in Firebase.
-        applicationId = "com.hitarujp.app"
+        applicationId = "com.hautek.hitarujp"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

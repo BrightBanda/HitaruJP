@@ -72,7 +72,13 @@ class FirebaseAuthRepository implements AuthSession {
   Future<String?> get displayName async {
     final user = _auth.currentUser;
     if (user == null) return null;
-    return await profileDisplayName() ?? _fallbackName(user);
+    try {
+      return await profileDisplayName() ?? _fallbackName(user);
+    } on FirebaseException {
+      // Offline or Firestore not connected yet: a best-effort name is still
+      // better than an error, since every caller only uses this to prefill.
+      return _fallbackName(user);
+    }
   }
 
   /// Only the name the user actually chose and stored.
@@ -196,10 +202,46 @@ class FirebaseAuthRepository implements AuthSession {
 
   @override
   Future<void> createAccount(String email, String password) async {
-    await _auth.createUserWithEmailAndPassword(
+    final credential = await _auth.createUserWithEmailAndPassword(
       email: email.trim(),
       password: password,
     );
+    // Best effort: the account exists either way, and a failed send should not
+    // read as a failed sign-up.
+    try {
+      await credential.user?.sendEmailVerification();
+    } on FirebaseAuthException {
+      // Ignored; the learner can still use the app.
+    }
+  }
+
+  @override
+  Future<void> sendPasswordReset(String email) =>
+      _auth.sendPasswordResetEmail(email: email.trim());
+
+  @override
+  bool get needsEmailVerification => _needsVerification(_auth.currentUser);
+
+  @override
+  String? get email => _auth.currentUser?.email;
+
+  @override
+  Future<void> sendEmailVerification() async {
+    await _auth.currentUser?.sendEmailVerification();
+  }
+
+  @override
+  Future<bool> reloadNeedsEmailVerification() async {
+    await _auth.currentUser?.reload();
+    return _needsVerification(_auth.currentUser);
+  }
+
+  static bool _needsVerification(User? user) {
+    if (user == null || user.emailVerified) return false;
+    // Only password accounts. A Google account linked to the same email is
+    // already proven to own it.
+    final providers = user.providerData.map((p) => p.providerId).toSet();
+    return providers.contains('password') && !providers.contains('google.com');
   }
 
   /// A plain sign-out. The user's data in Firestore is left alone.

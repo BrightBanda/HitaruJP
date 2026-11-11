@@ -7,54 +7,25 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:29208930706:android:d135362fd098a173a6394b",
+        "mobilesdk_app_id": "1:29208930706:android:424850e50420bb4ca6394b",
         "android_client_info": {
-          "package_name": "com.example.ingrain"
+          "package_name": "com.hautek.hitarujp"
         }
       },
       "oauth_client": [
         {
-          "client_id": "29208930706-2bapiv96d11p867ja53bjmvsto9kbkd6.apps.googleusercontent.com",
+          "client_id": "29208930706-65jgkjce0e0smrjnnk6qg8rkrl5rrlb6.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.example.ingrain",
-            "certificate_hash": "2dee82ea8cf028224b7a7b94d9d1b538d09cf7db"
+            "package_name": "com.hautek.hitarujp",
+            "certificate_hash": "58e5d10fe009955258c007dd305ee667db33aa04"
           }
         },
         {
-          "client_id": "29208930706-nkogoq06bag5lgahjblnbb201f9a08eg.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
-      "api_key": [
-        {
-          "current_key": "AIzaSyA6oE5E6lFk9NBIygQBlHr-04fkcEXc83U"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "29208930706-nkogoq06bag5lgahjblnbb201f9a08eg.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:29208930706:android:4f07345dc853726fa6394b",
-        "android_client_info": {
-          "package_name": "com.hitarujp.app"
-        }
-      },
-      "oauth_client": [
-        {
-          "client_id": "29208930706-rmd06saigdvbc1b91h5g68embaii5ntu.apps.googleusercontent.com",
+          "client_id": "29208930706-ebtk26ga60rrvv8utg6spu776g8ppe4k.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.hitarujp.app",
+            "package_name": "com.hautek.hitarujp",
             "certificate_hash": "2dee82ea8cf028224b7a7b94d9d1b538d09cf7db"
           }
         },

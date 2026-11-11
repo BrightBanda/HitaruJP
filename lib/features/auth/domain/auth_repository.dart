@@ -51,7 +51,26 @@ abstract interface class AuthSession implements AuthRepository {
 
   Future<void> signInWithEmail(String email, String password);
 
+  /// Creates the account and sends it a verification email.
   Future<void> createAccount(String email, String password);
+
+  /// Emails a password-reset link. Succeeds silently for unknown addresses, since
+  /// Firebase's email enumeration protection hides whether an account exists.
+  Future<void> sendPasswordReset(String email);
+
+  /// True for an email/password account whose address is not verified yet.
+  /// Google accounts are verified by Google and never need this.
+  bool get needsEmailVerification;
+
+  /// Sends (or re-sends) the verification email to the signed-in user.
+  Future<void> sendEmailVerification();
+
+  /// Re-fetches the user from Firebase and returns [needsEmailVerification].
+  /// Verifying happens in a browser, so the app only learns of it by asking.
+  Future<bool> reloadNeedsEmailVerification();
+
+  /// The signed-in user's email, if any.
+  String? get email;
 
   /// A plain sign-out. User data is left intact.
   Future<void> signOut();

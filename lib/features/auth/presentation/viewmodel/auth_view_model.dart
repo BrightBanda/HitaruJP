@@ -46,7 +46,13 @@ class AuthViewModel extends Notifier<AuthState> {
     // Firestore. _bootstrap refreshes it from the server right after.
     final uid = _auth.currentUid;
     final cached = uid == null ? null : _cachedProfile(uid);
-    if (uid != null && cached != null) return _readyFrom(uid, cached);
+    if (uid != null && cached != null) {
+      return _readyFrom(
+        uid,
+        cached,
+        needsEmailVerification: _auth.needsEmailVerification,
+      );
+    }
     return const AuthState.loading();
   }
 
@@ -62,14 +68,34 @@ class AuthViewModel extends Notifier<AuthState> {
     );
   }
 
-  static AuthState _readyFrom(String uid, Map<String, dynamic> document) {
+  static AuthState _readyFrom(
+    String uid,
+    Map<String, dynamic> document, {
+    bool needsEmailVerification = false,
+  }) {
     final profile = UserProfileDto.fromMapSafe(document);
     final name = profile?.displayName;
     return AuthState.ready(
       uid: uid,
       displayName: name != null && name.trim().isNotEmpty ? name : null,
       profile: profile,
+      needsEmailVerification: needsEmailVerification,
     );
+  }
+
+  /// Firestore reports `unavailable` while its connection is still coming up,
+  /// which is common in the first seconds after a sign-in or a hot restart.
+  /// A short retry rides that out instead of treating it as a failure.
+  static Future<T> _retryWhileUnavailable<T>(Future<T> Function() read) async {
+    const delays = [Duration(seconds: 1), Duration(seconds: 2)];
+    for (var attempt = 0; ; attempt++) {
+      try {
+        return await read();
+      } on FirebaseException catch (error) {
+        if (error.code != 'unavailable' || attempt >= delays.length) rethrow;
+        await Future<void>.delayed(delays[attempt]);
+      }
+    }
   }
 
   /// Follows the Firebase session rather than probing it once. This is the single
@@ -98,15 +124,19 @@ class AuthViewModel extends Notifier<AuthState> {
     try {
       // One read for a returning learner; only a first sign-in, with no
       // profile yet, pays for the seed write and a second read.
-      var document = await _auth.profileDocument();
+      var document = await _retryWhileUnavailable(_auth.profileDocument);
       if (document.isEmpty) {
-        await _auth.ensureProfile();
-        document = await _auth.profileDocument();
+        await _retryWhileUnavailable(_auth.ensureProfile);
+        document = await _retryWhileUnavailable(_auth.profileDocument);
       }
       // The stream outlives any single listener: a sign-out or a provider rebuild
       // can dispose this notifier while the profile read is still in flight.
       if (!ref.mounted) return;
-      state = _readyFrom(uid, document);
+      state = _readyFrom(
+        uid,
+        document,
+        needsEmailVerification: _auth.needsEmailVerification,
+      );
       if (document.isNotEmpty) _cacheProfile(uid, document);
       // Best effort: "last active" is a statistic, not worth failing over.
       unawaited(
@@ -123,6 +153,7 @@ class AuthViewModel extends Notifier<AuthState> {
       state = AuthState.ready(
         uid: uid,
         error: 'Could not load your profile: $error',
+        needsEmailVerification: _auth.needsEmailVerification,
       );
     }
   }
@@ -145,6 +176,53 @@ class AuthViewModel extends Notifier<AuthState> {
         return true;
       });
 
+  /// Sends a password-reset email. Returns null on success, or a message to show.
+  Future<String?> sendPasswordReset(String email) async {
+    try {
+      await _auth.sendPasswordReset(email);
+      return null;
+    } on FirebaseAuthException catch (error) {
+      return authErrorMessage(error);
+    } catch (error) {
+      return '$error';
+    }
+  }
+
+  /// The address the verification email went to.
+  String? get email => _auth.email;
+
+  /// Re-sends the verification email. Returns null on success, or a message.
+  Future<String?> resendVerificationEmail() async {
+    try {
+      await _auth.sendEmailVerification();
+      return null;
+    } on FirebaseAuthException catch (error) {
+      return authErrorMessage(error);
+    } catch (error) {
+      return '$error';
+    }
+  }
+
+  /// Asks Firebase whether the address has been verified since, and lets the
+  /// learner through if so. Returns whether they are now verified.
+  Future<bool> checkEmailVerified() async {
+    final bool stillNeeds;
+    try {
+      stillNeeds = await _auth.reloadNeedsEmailVerification();
+    } catch (_) {
+      return false; // Offline: try again on the next check.
+    }
+    if (!ref.mounted) return !stillNeeds;
+    if (!stillNeeds && state.needsEmailVerification) {
+      state = AuthState.ready(
+        uid: state.uid,
+        displayName: state.displayName,
+        profile: state.profile,
+      );
+    }
+    return !stillNeeds;
+  }
+
   /// Surfaces failures in [AuthState.error] instead of throwing at the UI layer.
   /// Returns whether a session is now active — a dismissed account chooser reports
   /// false without setting an error.
@@ -157,10 +235,7 @@ class AuthViewModel extends Notifier<AuthState> {
     try {
       return await action();
     } on FirebaseAuthException catch (error) {
-      state = AuthState.ready(
-        uid: '',
-        error: error.message ?? 'Sign-in failed (${error.code}).',
-      );
+      state = AuthState.ready(uid: '', error: authErrorMessage(error));
       return false;
     } on GoogleSignInException catch (error) {
       state = AuthState.ready(
@@ -246,6 +321,7 @@ class AuthViewModel extends Notifier<AuthState> {
       displayName: state.displayName,
       profile: profile.copyWith(subscriptionTier: tier),
       error: state.error,
+      needsEmailVerification: state.needsEmailVerification,
     );
   }
 
@@ -261,6 +337,7 @@ class AuthViewModel extends Notifier<AuthState> {
       uid: uid,
       displayName: await _auth.displayName,
       profile: UserProfileDto.fromMapSafe(await _auth.profileDocument()),
+      needsEmailVerification: _auth.needsEmailVerification,
     );
   }
 
@@ -268,5 +345,34 @@ class AuthViewModel extends Notifier<AuthState> {
   Future<void> signOut() async {
     await _auth.signOut();
     state = const AuthState.signedOut();
+  }
+}
+
+/// A message a learner can act on, instead of Firebase's technical wording.
+String authErrorMessage(FirebaseAuthException error) {
+  switch (error.code) {
+    // With email enumeration protection on, a wrong password and an unknown
+    // email both arrive as `invalid-credential`.
+    case 'invalid-credential':
+    case 'wrong-password':
+    case 'user-not-found':
+      return 'That email and password don\'t match. Check them, or reset your '
+          'password.';
+    case 'invalid-email':
+      return 'That doesn\'t look like a valid email address.';
+    case 'email-already-in-use':
+      return 'An account already uses this email. Sign in instead.';
+    case 'weak-password':
+      return 'Choose a stronger password (at least 6 characters).';
+    case 'user-disabled':
+      return 'This account has been disabled.';
+    case 'too-many-requests':
+      return 'Too many attempts. Wait a few minutes and try again.';
+    case 'network-request-failed':
+      return 'No connection. Check your internet and try again.';
+    case 'operation-not-allowed':
+      return 'Email sign-in isn\'t enabled yet.';
+    default:
+      return error.message ?? 'Sign-in failed (${error.code}).';
   }
 }

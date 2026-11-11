@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ingrain/core/providers.dart';
@@ -21,6 +22,22 @@ class DelayedSetDisplayNameSession extends FakeAuthSession {
     setDisplayNameCalls.add(value);
     await gate.future;
     name = value;
+  }
+}
+
+/// Fails its first profile read the way Firestore does before it has connected.
+class FlakyProfileSession extends FakeAuthSession {
+  FlakyProfileSession() : super(uid: '');
+
+  int failuresLeft = 1;
+
+  @override
+  Future<Map<String, dynamic>> profileDocument() async {
+    if (failuresLeft > 0) {
+      failuresLeft--;
+      throw FirebaseException(plugin: 'cloud_firestore', code: 'unavailable');
+    }
+    return super.profileDocument();
   }
 }
 
@@ -186,6 +203,39 @@ void main() {
         container.dispose();
         await session.dispose();
       });
+    });
+
+    test('an unverified email account is held back from onboarding', () async {
+      session.unverified = true;
+      session.emit('email-uid');
+      await pump();
+
+      final state = container.read(authViewModelProvider);
+      expect(state.isSignedIn, isTrue);
+      expect(state.needsEmailVerification, isTrue);
+      expect(state.isOnboarded, isFalse);
+
+      // Still unverified: checking changes nothing.
+      expect(await build().checkEmailVerified(), isFalse);
+      expect(
+        container.read(authViewModelProvider).needsEmailVerification,
+        isTrue,
+      );
+
+      session.unverified = false;
+      expect(await build().checkEmailVerified(), isTrue);
+      final after = container.read(authViewModelProvider);
+      expect(after.needsEmailVerification, isFalse);
+      expect(after.isOnboarded, isTrue);
+    });
+
+    test('resending the verification email reaches the session', () async {
+      session.unverified = true;
+      session.emit('email-uid');
+      await pump();
+
+      expect(await build().resendVerificationEmail(), isNull);
+      expect(session.verificationEmailsSent, 1);
     });
 
     test('settles on signed out without waiting for the stream', () async {
@@ -381,4 +431,32 @@ void main() {
       expect(await build().profile(), isNull);
     });
   });
+
+  test(
+    'a profile read that fails while Firestore connects is retried',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      final session = FlakyProfileSession();
+      final container = ProviderContainer(
+        overrides: [
+          authRepositoryProvider.overrideWithValue(session),
+          sharedPreferencesProvider.overrideWithValue(prefs),
+        ],
+      );
+      addTearDown(() async {
+        container.dispose();
+        await session.dispose();
+      });
+      container.read(authViewModelProvider);
+
+      session.emit('test-uid');
+      // The first retry waits one second.
+      await Future<void>.delayed(const Duration(milliseconds: 1200));
+
+      final state = container.read(authViewModelProvider);
+      expect(state.error, isNull);
+      expect(state.isOnboarded, isTrue);
+    },
+  );
 }
