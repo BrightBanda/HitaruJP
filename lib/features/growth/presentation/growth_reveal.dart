@@ -117,11 +117,7 @@ class _GrowthRevealState extends State<GrowthReveal>
                   angle: t * math.pi,
                   child: CustomPaint(
                     size: Size.square(widget.size * 1.3),
-                    painter: _RaysPainter(
-                      color: widget.character == AvatarCharacter.kitsune
-                          ? const Color(0xFFFFC857)
-                          : Colors.white,
-                    ),
+                    painter: _RaysPainter(color: const Color(0xFFFFC857)),
                   ),
                 ),
               ),

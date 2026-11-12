@@ -95,6 +95,9 @@ class _HomeTourLauncherState extends ConsumerState<HomeTourLauncher> {
   void _finish() {
     _entry?.remove();
     _entry = null;
+    // The tour can outlive this widget by a frame (a route change while it is
+    // open), and `ref` is unusable after dispose.
+    if (!mounted) return;
     final uid = ref.read(authViewModelProvider).uid;
     if (uid.isNotEmpty) ref.read(firstRunProvider.notifier).finishHomeTips(uid);
   }
@@ -120,9 +123,14 @@ class _HomeTour extends StatefulWidget {
   State<_HomeTour> createState() => _HomeTourState();
 }
 
-class _HomeTourState extends State<_HomeTour> {
+class _HomeTourState extends State<_HomeTour> with WidgetsBindingObserver {
   int _index = 0;
   Rect? _hole;
+
+  /// Bumped on every step change, so a measurement that finishes after the
+  /// learner has already tapped on is thrown away instead of applied.
+  int _generation = 0;
+  bool _done = false;
 
   _TourStep get _step => widget.steps[_index];
   bool get _isLast => _index == widget.steps.length - 1;
@@ -130,26 +138,52 @@ class _HomeTourState extends State<_HomeTour> {
   @override
   void initState() {
     super.initState();
-    _locate();
+    WidgetsBinding.instance.addObserver(this);
+    // Not straight from initState: skipping a missing first target would call
+    // setState (or remove this overlay) in the middle of a build.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _locate());
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  /// Rotation or a window resize moves the targets: measure again.
+  @override
+  void didChangeMetrics() {
+    WidgetsBinding.instance.addPostFrameCallback((_) => _locate(scroll: false));
   }
 
   /// Scrolls the target into view if needed, then measures it.
-  Future<void> _locate() async {
+  Future<void> _locate({bool scroll = true}) async {
+    if (!mounted || _done) return;
+    final generation = _generation;
+    bool stale() => !mounted || _done || generation != _generation;
+
     final target = _step.target.currentContext;
     if (target == null) return _next();
-    final scrollable = Scrollable.maybeOf(target);
-    if (scrollable != null) {
-      await Scrollable.ensureVisible(
-        target,
-        alignment: 0.3,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOutCubic,
-      );
+    if (scroll && Scrollable.maybeOf(target) != null) {
+      try {
+        await Scrollable.ensureVisible(
+          target,
+          alignment: 0.3,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutCubic,
+        );
+      } catch (_) {
+        // The list was rebuilt or disposed mid-scroll; measure where it is.
+      }
     }
-    if (!mounted) return;
+    if (!mounted || stale()) return;
     final box = _step.target.currentContext?.findRenderObject();
     final overlay = context.findRenderObject();
-    if (box is! RenderBox || overlay is! RenderBox || !box.hasSize) {
+    if (box is! RenderBox ||
+        overlay is! RenderBox ||
+        !box.attached ||
+        !box.hasSize ||
+        !overlay.hasSize) {
       return _next();
     }
     setState(() {
@@ -159,9 +193,17 @@ class _HomeTourState extends State<_HomeTour> {
   }
 
   void _next() {
-    if (_isLast) return widget.onDone();
+    if (!mounted || _done) return;
+    if (_isLast) return _finish();
+    _generation++;
     setState(() => _index++);
     _locate();
+  }
+
+  void _finish() {
+    if (_done) return;
+    _done = true;
+    widget.onDone();
   }
 
   @override
@@ -200,7 +242,8 @@ class _HomeTourState extends State<_HomeTour> {
                 builder: (context, rect, _) => CustomPaint(
                   painter: _ScrimPainter(
                     hole: rect ?? Rect.zero,
-                    color: Colors.black.withValues(alpha: 0.68),
+                    color: Colors.black.withValues(alpha: 0.82),
+                    outline: theme.colorScheme.primary,
                   ),
                 ),
               ),
@@ -224,7 +267,7 @@ class _HomeTourState extends State<_HomeTour> {
                       count: widget.steps.length,
                       isLast: _isLast,
                       onNext: _next,
-                      onSkip: widget.onDone,
+                      onSkip: _finish,
                       theme: theme,
                     ),
                   ),
@@ -306,25 +349,50 @@ class _TipCard extends StatelessWidget {
   }
 }
 
-/// Dims everything except a rounded cut-out at [hole].
+/// Dims everything except a rounded cut-out at [hole], and rings the
+/// cut-out in [outline] so the eye goes straight to it.
 class _ScrimPainter extends CustomPainter {
   final Rect hole;
   final Color color;
+  final Color outline;
 
-  const _ScrimPainter({required this.hole, required this.color});
+  const _ScrimPainter({
+    required this.hole,
+    required this.color,
+    required this.outline,
+  });
+
+  static const _radius = Radius.circular(18);
 
   @override
   void paint(Canvas canvas, Size size) {
     final path = Path()
       ..fillType = PathFillType.evenOdd
       ..addRect(Offset.zero & size);
-    if (!hole.isEmpty) {
-      path.addRRect(RRect.fromRectAndRadius(hole, const Radius.circular(18)));
-    }
+    final rrect = RRect.fromRectAndRadius(hole, _radius);
+    if (!hole.isEmpty) path.addRRect(rrect);
     canvas.drawPath(path, Paint()..color = color);
+    if (hole.isEmpty) return;
+
+    // A soft glow first, then the crisp ring on top.
+    canvas.drawRRect(
+      rrect,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 6
+        ..color = outline.withValues(alpha: 0.45)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
+    );
+    canvas.drawRRect(
+      rrect,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.5
+        ..color = outline,
+    );
   }
 
   @override
   bool shouldRepaint(_ScrimPainter old) =>
-      old.hole != hole || old.color != color;
+      old.hole != hole || old.color != color || old.outline != outline;
 }

@@ -255,6 +255,35 @@ void main() {
       expect(container.read(firstRunProvider).homeTipsPending, isFalse);
     });
 
+    testWidgets('the home tour survives rapid taps and a resize', (
+      tester,
+    ) async {
+      final container = await pumpApp(
+        tester,
+        storedPrefs: {FirstRunViewModel.tipsKey('uid-1'): true},
+      );
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pumpAndSettle();
+      expect(find.text('Your daily goal'), findsOneWidget);
+
+      // Tapping on while the page is still scrolling to the next target used to
+      // race the measurement of the step before it.
+      await tester.tapAt(const Offset(5, 5));
+      await tester.pump(const Duration(milliseconds: 50));
+      addTearDown(tester.view.resetPhysicalSize);
+      tester.view.physicalSize = tester.view.physicalSize.flipped;
+      await tester.pump(const Duration(milliseconds: 50));
+      for (var i = 0; i < 6; i++) {
+        await tester.tapAt(const Offset(5, 5));
+        await tester.pump(const Duration(milliseconds: 30));
+      }
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Got it!'), findsNothing);
+      expect(container.read(firstRunProvider).homeTipsPending, isFalse);
+    });
+
     testWidgets('no tour for a learner who has not just onboarded', (
       tester,
     ) async {
