@@ -9,7 +9,22 @@ import 'package:ingrain/core/error/app_error.dart';
 class ApiException implements Exception {
   final AppError error;
 
-  const ApiException(this.error);
+  /// The HTTP status, when the server answered.
+  final int? status;
+
+  /// The server's machine-readable reason (`username_taken`, `ping_limit`),
+  /// when its error detail carried one.
+  final String? code;
+
+  /// The rest of that detail, e.g. the limit that was reached.
+  final Map<String, dynamic> detail;
+
+  const ApiException(
+    this.error, {
+    this.status,
+    this.code,
+    this.detail = const {},
+  });
 
   @override
   String toString() => 'ApiException(${error.type}: ${error.message})';
@@ -90,7 +105,13 @@ class ApiClient {
     }
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw ApiException(_errorFor(response.statusCode));
+      final detail = _detailOf(response);
+      throw ApiException(
+        _errorFor(response.statusCode),
+        status: response.statusCode,
+        code: detail['code'] as String?,
+        detail: detail,
+      );
     }
     if (response.bodyBytes.isEmpty) return null;
     try {
@@ -102,6 +123,17 @@ class ApiClient {
           message: 'The server sent an unreadable answer.',
         ),
       );
+    }
+  }
+
+  /// The `detail` object of a FastAPI error body, or empty.
+  static Map<String, dynamic> _detailOf(http.Response response) {
+    try {
+      final body = jsonDecode(utf8.decode(response.bodyBytes));
+      final detail = body is Map ? body['detail'] : null;
+      return detail is Map ? Map<String, dynamic>.from(detail) : const {};
+    } catch (_) {
+      return const {};
     }
   }
 

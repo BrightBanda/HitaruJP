@@ -209,12 +209,12 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  Finder learnMenuItem(String label) =>
-      find.widgetWithText(PopupMenuItem<LearnDestination>, label);
+  Finder moreMenuItem(String label) =>
+      find.widgetWithText(PopupMenuItem<MoreDestination>, label);
 
-  Future<void> openLearn(WidgetTester tester, String destination) async {
-    await tapTab(tester, 'Learn');
-    await tester.tap(learnMenuItem(destination));
+  Future<void> openMore(WidgetTester tester, String destination) async {
+    await tapTab(tester, 'More');
+    await tester.tap(moreMenuItem(destination));
     await tester.pumpAndSettle();
   }
 
@@ -306,6 +306,8 @@ void main() {
       expect(find.byType(BackButton), findsNothing);
 
       // Today's picks come from the (fake) catalogue, not the user's library.
+      // They sit below the daily quiz card, so scroll down to them.
+      await tester.scrollUntilVisible(find.text("Today's picks"), 200);
       expect(find.text("Today's picks"), findsOneWidget);
       expect(find.text('Nihongo con Teppei #1'), findsOneWidget);
       expect(find.text('For your interests'), findsOneWidget);
@@ -322,6 +324,10 @@ void main() {
       final offline = FakeCatalogRepository()..error = StateError('offline');
       await pumpApp(tester, catalog: offline);
 
+      await tester.scrollUntilVisible(
+        find.text('Add your first YouTube video'),
+        200,
+      );
       expect(find.text("Today's picks"), findsOneWidget);
       expect(find.text('Add your first YouTube video'), findsOneWidget);
     });
@@ -353,19 +359,44 @@ void main() {
   });
 
   group('bottom navigation', () {
-    testWidgets('Learn opens a menu above the bar with Vocab and Kana', (
+    testWidgets('the bar is Immerse, Library, Leaderboard, Flashcards, More', (
+      tester,
+    ) async {
+      await pumpApp(tester);
+      final bar = find.byType(NavigationBar);
+      for (final label in [
+        'Immerse',
+        'Library',
+        'Leaderboard',
+        'Flashcards',
+        'More',
+      ]) {
+        expect(
+          find.descendant(of: bar, matching: find.text(label)),
+          findsOneWidget,
+          reason: label,
+        );
+      }
+
+      await tapTab(tester, 'Leaderboard');
+      expect(find.widgetWithText(AppBar, 'Leaderboard'), findsOneWidget);
+      expect(find.text("Start today's quiz"), findsOneWidget);
+    });
+
+    testWidgets('More opens a menu above the bar: Kana, Vocab, Profile', (
       tester,
     ) async {
       await pumpApp(tester);
 
-      await tapTab(tester, 'Learn');
-      expect(learnMenuItem('Vocab'), findsOneWidget);
-      expect(learnMenuItem('Kana'), findsOneWidget);
-      final menuBottom = tester.getBottomLeft(learnMenuItem('Kana')).dy;
+      await tapTab(tester, 'More');
+      expect(moreMenuItem('Kana'), findsOneWidget);
+      expect(moreMenuItem('Vocab'), findsOneWidget);
+      expect(moreMenuItem('Profile'), findsOneWidget);
+      final menuBottom = tester.getBottomLeft(moreMenuItem('Profile')).dy;
       final barTop = tester.getTopLeft(find.byType(NavigationBar)).dy;
       expect(menuBottom, lessThan(barTop));
 
-      await tester.tap(learnMenuItem('Kana'));
+      await tester.tap(moreMenuItem('Kana'));
       await tester.pumpAndSettle();
       expect(find.widgetWithText(AppBar, 'Kana'), findsOneWidget);
       expect(find.text('あ'), findsOneWidget);
@@ -375,15 +406,17 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('ア'), findsOneWidget);
 
-      await openLearn(tester, 'Vocab');
+      await openMore(tester, 'Vocab');
       expect(find.widgetWithText(AppBar, 'Vocabulary'), findsOneWidget);
       expect(find.byType(BackButton), findsNothing);
     });
 
-    testWidgets('Profile shows progress and settings tabs', (tester) async {
+    testWidgets('Profile has progress and friends; settings sign out', (
+      tester,
+    ) async {
       await pumpApp(tester);
 
-      await tapTab(tester, 'Profile');
+      await openMore(tester, 'Profile');
       expect(find.text('Tester'), findsOneWidget);
       // The character hero sits above the tabs; the dashboard is below it.
       await tester.scrollUntilVisible(
@@ -393,15 +426,22 @@ void main() {
       );
       expect(find.text('Today'), findsOneWidget);
 
-      await tester.tap(find.widgetWithText(Tab, 'Settings'));
+      expect(find.widgetWithText(Tab, 'Friends'), findsOneWidget);
+      expect(find.widgetWithText(Tab, 'Settings'), findsNothing);
+      expect(find.byTooltip('Sign out'), findsNothing);
+
+      // Settings live behind the gear, with signing out at the very bottom.
+      await tester.tap(find.byTooltip('Settings'));
       await tester.pumpAndSettle();
+      expect(find.widgetWithText(AppBar, 'Settings'), findsOneWidget);
       expect(find.text('Theme'), findsOneWidget);
-      await tester.scrollUntilVisible(
-        find.text('Daily goal'),
-        200,
-        scrollable: find.byType(Scrollable).last,
+      await tester.scrollUntilVisible(find.text('Sign out'), 300);
+      expect(find.text('Sign out'), findsOneWidget);
+      expect(
+        tester.getTopLeft(find.text('Sign out')).dy,
+        greaterThan(tester.getTopLeft(find.text('Version')).dy),
+        reason: 'after every setting',
       );
-      expect(find.text('Daily goal'), findsOneWidget);
     });
 
     testWidgets('Flashcards: built-in deck, new deck, add a card, study it', (
@@ -463,13 +503,13 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
 
     await pumpApp(tester);
-    for (final tab in ['Library', 'Flashcards', 'Profile']) {
+    for (final tab in ['Library', 'Leaderboard', 'Flashcards']) {
       await tapTab(tester, tab);
       expect(tester.takeException(), isNull, reason: tab);
     }
 
-    for (final destination in LearnDestination.values) {
-      await openLearn(tester, destination.label);
+    for (final destination in MoreDestination.values) {
+      await openMore(tester, destination.label);
       expect(tester.takeException(), isNull, reason: destination.label);
     }
 

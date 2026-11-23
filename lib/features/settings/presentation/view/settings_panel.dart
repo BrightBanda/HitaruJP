@@ -9,7 +9,10 @@ import 'package:ingrain/shared/widgets/colorful.dart';
 
 /// App settings, shown on the Profile tab.
 class SettingsPanel extends ConsumerWidget {
-  const SettingsPanel({super.key});
+  /// Shown after every setting, e.g. the Settings page's sign-out button.
+  final Widget? footer;
+
+  const SettingsPanel({super.key, this.footer});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -236,6 +239,7 @@ class SettingsPanel extends ConsumerWidget {
             ),
           ],
         ),
+        ?footer,
       ],
     );
   }

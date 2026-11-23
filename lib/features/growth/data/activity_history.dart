@@ -7,6 +7,20 @@ import 'package:ingrain/features/vocabulary/domain/vocabulary_item.dart';
 /// The guided first lesson's session id (see `FirstLessonView`).
 const firstLessonSourceId = 'dialogue:first-lesson';
 
+/// A finished daily quiz, as the history knows it.
+class QuizDay {
+  /// The learner's calendar day the quiz was for.
+  final DateTime day;
+  final int correct;
+  final int total;
+
+  const QuizDay({
+    required this.day,
+    required this.correct,
+    required this.total,
+  });
+}
+
 /// A reading session at least this long counts as a dialogue read.
 const _dialogueReadSeconds = 60;
 
@@ -21,6 +35,7 @@ List<DayActivity> dayActivitiesFrom({
   required List<SentenceItem> sentences,
   required List<VocabularyItem> vocabulary,
   required List<ReviewEvent> reviewEvents,
+  List<QuizDay> quizzes = const [],
 }) {
   final days = <DateTime, _Day>{};
   _Day on(DateTime time) =>
@@ -61,6 +76,11 @@ List<DayActivity> dayActivitiesFrom({
   for (final review in reviewEvents) {
     on(review.reviewedAt).reviews++;
   }
+  for (final quiz in quizzes) {
+    final day = on(quiz.day);
+    day.quizCorrect += quiz.correct;
+    day.quizTotal += quiz.total;
+  }
 
   return [
     for (final MapEntry(key: day, value: d) in days.entries)
@@ -74,6 +94,8 @@ List<DayActivity> dayActivitiesFrom({
         wordsSaved: d.words,
         reviews: d.reviews,
         firstLesson: d.firstLesson,
+        quizCorrect: d.quizCorrect,
+        quizTotal: d.quizTotal,
       ),
   ];
 }
@@ -87,4 +109,6 @@ class _Day {
   int words = 0;
   int reviews = 0;
   bool firstLesson = false;
+  int quizCorrect = 0;
+  int quizTotal = 0;
 }

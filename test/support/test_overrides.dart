@@ -2,6 +2,7 @@ import 'package:ingrain/core/providers.dart';
 import 'package:ingrain/core/storage/local_document_store.dart';
 import 'package:ingrain/features/auth/presentation/viewmodel/auth_view_model.dart';
 import 'package:ingrain/features/catalog/presentation/viewmodel/catalog_providers.dart';
+import 'package:ingrain/features/social/presentation/viewmodel/social_providers.dart';
 import 'package:ingrain/features/notifications/presentation/viewmodel/notification_view_model.dart';
 import 'package:ingrain/features/profile/presentation/viewmodel/profile_sync_providers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -9,12 +10,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'fake_api_repositories.dart';
 import 'fake_auth_session.dart';
 import 'fake_push_gateway.dart';
+import 'fake_social_repository.dart';
 import 'fake_terms_repository.dart';
 
 export 'fake_api_repositories.dart';
 export 'fake_auth_repository.dart';
 export 'fake_auth_session.dart';
 export 'fake_push_gateway.dart';
+export 'fake_social_repository.dart';
 export 'fake_terms_repository.dart';
 
 /// The overrides every test needs now that user data lives in Firestore.
@@ -35,11 +38,13 @@ appTestOverrides(
   FakeCatalogRepository? catalog,
   FakePushGateway? pushGateway,
   FakeTermsRepository? terms,
+  FakeSocialRepository? social,
 }) => [
   sharedPreferencesProvider.overrideWithValue(prefs),
   documentStoreProvider.overrideWithValue(LocalDocumentStore(prefs)),
   authRepositoryProvider.overrideWithValue(session ?? FakeAuthSession()),
   termsRepositoryProvider.overrideWithValue(terms ?? FakeTermsRepository()),
+  socialRepositoryProvider.overrideWithValue(social ?? FakeSocialRepository()),
   profileSyncRepositoryProvider.overrideWithValue(
     profileSync ?? FakeProfileSyncRepository(),
   ),

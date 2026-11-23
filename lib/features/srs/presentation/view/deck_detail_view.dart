@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ingrain/features/sentence_mining/presentation/viewmodel/sentence_mining_view_model.dart';
+import 'package:ingrain/features/social/domain/social.dart';
+import 'package:ingrain/features/social/presentation/share_collection.dart';
 import 'package:ingrain/features/srs/domain/deck.dart';
 import 'package:ingrain/features/srs/domain/review_card.dart';
 import 'package:ingrain/features/srs/presentation/viewmodel/review_view_model.dart';
@@ -23,6 +25,21 @@ class DeckDetailView extends ConsumerWidget {
       appBar: AppBar(
         title: Text(summary?.deck.name ?? 'Deck'),
         actions: [
+          if (summary != null && (detail.value?.$2.isNotEmpty ?? false))
+            IconButton(
+              icon: const Icon(Icons.ios_share),
+              tooltip: 'Share with a friend',
+              onPressed: () => shareCollection(
+                context,
+                ref,
+                kind: ShareKind.deck,
+                title: summary.deck.name,
+                cards: [
+                  for (final card in detail.value!.$2)
+                    SharedCard(front: card.promptText, back: card.answerText),
+                ],
+              ),
+            ),
           if (summary != null && !summary.deck.isBuiltIn)
             PopupMenuButton<String>(
               onSelected: (action) => action == 'rename'

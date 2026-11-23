@@ -467,6 +467,7 @@ class CompanionView extends ConsumerWidget {
     XpSource.dailyGoal => 'Daily goal reached',
     XpSource.streak => 'Streak bonus',
     XpSource.firstLesson => 'First lesson',
+    XpSource.quiz => 'Daily quiz',
   };
 
   static List<(String, String)> _howToEarn(GrowthRules r) => [

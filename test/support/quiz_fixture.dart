@@ -1,0 +1,55 @@
+import 'package:ingrain/features/vocabulary/domain/dictionary_index.dart';
+
+/// Enough common words for a quiz and its wrong answers.
+const quizWords = [
+  ('猫', 'ねこ', 'cat'),
+  ('犬', 'いぬ', 'dog'),
+  ('水', 'みず', 'water'),
+  ('火', 'ひ', 'fire'),
+  ('山', 'やま', 'mountain'),
+  ('川', 'かわ', 'river'),
+  ('空', 'そら', 'sky'),
+  ('海', 'うみ', 'sea'),
+  ('花', 'はな', 'flower'),
+  ('木', 'き', 'tree'),
+  ('雨', 'あめ', 'rain'),
+  ('雪', 'ゆき', 'snow'),
+  ('風', 'かぜ', 'wind'),
+  ('月', 'つき', 'moon'),
+  ('星', 'ほし', 'star'),
+  ('本', 'ほん', 'book'),
+  ('車', 'くるま', 'car'),
+  ('駅', 'えき', 'station'),
+  ('町', 'まち', 'town'),
+  ('道', 'みち', 'road'),
+  ('家', 'いえ', 'house'),
+  ('友達', 'ともだち', 'friend'),
+  ('先生', 'せんせい', 'teacher'),
+  ('学校', 'がっこう', 'school'),
+  ('写真', 'しゃしん', 'photo'),
+  ('電車', 'でんしゃ', 'train'),
+  ('料理', 'りょうり', 'cooking'),
+  ('天気', 'てんき', 'weather'),
+  ('時間', 'じかん', 'time'),
+  ('仕事', 'しごと', 'work'),
+  ('音楽', 'おんがく', 'music'),
+  ('映画', 'えいが', 'movie'),
+  ('買い物', 'かいもの', 'shopping'),
+  ('朝', 'あさ', 'morning'),
+  ('夜', 'よる', 'night'),
+  ('ラーメン', 'らーめん', 'ramen'),
+  ('コーヒー', 'こーひー', 'coffee'),
+  ('パン', 'ぱん', 'bread'),
+  ('ペン', 'ぺん', 'pen'),
+  ('テレビ', 'てれび', 'TV'),
+];
+
+final quizDictionary = [
+  for (final (surface, reading, meaning) in quizWords)
+    DictionaryEntry(
+      surface: surface,
+      reading: reading,
+      meanings: [meaning],
+      pos: 'noun',
+    ),
+];

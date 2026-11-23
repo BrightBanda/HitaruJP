@@ -211,6 +211,11 @@ class _ContentHistoryViewState extends ConsumerState<ContentHistoryView> {
       title: const Text('Library'),
       actions: [
         IconButton(
+          icon: const Icon(Icons.download_outlined),
+          tooltip: 'Import a shared code',
+          onPressed: () => context.push('/import'),
+        ),
+        IconButton(
           icon: const Icon(Icons.search),
           tooltip: 'Search',
           onPressed: () => context.push('/search'),

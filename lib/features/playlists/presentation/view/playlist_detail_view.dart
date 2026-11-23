@@ -5,6 +5,8 @@ import 'package:ingrain/features/content/domain/content_item.dart';
 import 'package:ingrain/features/content/presentation/viewmodel/content_view_model.dart';
 import 'package:ingrain/features/playlists/presentation/view/playlist_dialogs.dart';
 import 'package:ingrain/features/playlists/presentation/viewmodel/playlist_view_model.dart';
+import 'package:ingrain/features/social/domain/social.dart';
+import 'package:ingrain/features/social/presentation/share_collection.dart';
 import 'package:ingrain/shared/widgets/colorful.dart';
 import 'package:ingrain/shared/widgets/video_thumbnail.dart';
 
@@ -50,6 +52,26 @@ class PlaylistDetailView extends ConsumerWidget {
       appBar: AppBar(
         title: Text(playlist.name),
         actions: [
+          if (videos.isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.ios_share),
+              tooltip: 'Share with a friend',
+              onPressed: () => shareCollection(
+                context,
+                ref,
+                kind: ShareKind.playlist,
+                title: playlist.name,
+                videos: [
+                  for (final video in videos)
+                    SharedVideo(
+                      videoId: video.id,
+                      title: video.title,
+                      channelTitle: video.channelTitle,
+                      thumbnailUrl: video.thumbnailUrl,
+                    ),
+                ],
+              ),
+            ),
           if (playlist.isEditable)
             IconButton(
               icon: const Icon(Icons.playlist_add),

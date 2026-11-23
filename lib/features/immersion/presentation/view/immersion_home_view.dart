@@ -14,6 +14,8 @@ import 'package:ingrain/features/growth/presentation/companion_widgets.dart';
 import 'package:ingrain/features/onboarding/presentation/widgets/home_tour.dart';
 import 'package:ingrain/features/progress/domain/progress_summary.dart';
 import 'package:ingrain/features/progress/presentation/viewmodel/progress_view_model.dart';
+import 'package:ingrain/features/quiz/presentation/view/daily_quiz_card.dart';
+import 'package:ingrain/features/social/presentation/widgets/friends_button.dart';
 import 'package:ingrain/shared/layout/window_size.dart';
 import 'package:ingrain/shared/widgets/colorful.dart';
 import 'package:ingrain/shared/widgets/skeleton.dart';
@@ -34,6 +36,7 @@ class ImmersionHomeView extends ConsumerWidget {
         automaticallyImplyLeading: false,
         title: const Text('HitaruJP'),
         actions: [
+          const FriendsButton(),
           IconButton(
             icon: const Icon(Icons.search),
             tooltip: 'Search',
@@ -195,6 +198,7 @@ class ImmersionHomeView extends ConsumerWidget {
               hero,
               const SizedBox(height: 12),
               shortcuts,
+              const DailyQuizCard(),
               picks,
               const LevelShelf(),
               ...dialogueSection,
@@ -231,6 +235,7 @@ class ImmersionHomeView extends ConsumerWidget {
                       const CompanionCard(),
                       const SizedBox(height: 4),
                       shortcuts,
+                      const DailyQuizCard(),
                       ...dialogueSection,
                     ],
                   ),

@@ -21,6 +21,7 @@ enum XpSource {
   dailyGoal,
   streak,
   firstLesson,
+  quiz,
 }
 
 /// Everything a learner did on one calendar day: the only input XP needs.
@@ -47,6 +48,11 @@ class DayActivity {
   /// The guided first lesson was finished this day.
   final bool firstLesson;
 
+  /// The daily quiz: answers right, out of how many. Zero total when it was
+  /// not taken.
+  final int quizCorrect;
+  final int quizTotal;
+
   const DayActivity({
     required this.day,
     this.watchSeconds = 0,
@@ -57,9 +63,11 @@ class DayActivity {
     this.wordsSaved = 0,
     this.reviews = 0,
     this.firstLesson = false,
+    this.quizCorrect = 0,
+    this.quizTotal = 0,
   }) : totalSeconds = totalSeconds ?? watchSeconds + readSeconds;
 
-  bool get isActive => totalSeconds > 0 || reviews > 0;
+  bool get isActive => totalSeconds > 0 || reviews > 0 || quizTotal > 0;
 }
 
 /// The numbers behind XP and levels. Tuned in the admin dashboard's growth
@@ -90,6 +98,12 @@ class GrowthRules {
   /// Enough to hatch the egg straight away.
   final int firstLessonXp;
 
+  /// The daily quiz: XP for each right answer, and a bonus for all of them.
+  /// The server works out the leaderboard with the same numbers
+  /// (Ingrained_backend: app/routers/social.py).
+  final int xpPerQuizAnswer;
+  final int quizPerfectBonus;
+
   /// Total XP to reach level `n` is `levelBase × (n − 1)^levelExponent`.
   final double levelBase;
   final double levelExponent;
@@ -115,6 +129,8 @@ class GrowthRules {
     this.streakBonusPercent = 10,
     this.streakBonusFromDays = 3,
     this.firstLessonXp = 50,
+    this.xpPerQuizAnswer = 5,
+    this.quizPerfectBonus = 10,
     this.levelBase = 25,
     this.levelExponent = 1.7,
     this.stageLevels = const [1, 2, 5, 10, 20, 35, 50],
@@ -181,8 +197,16 @@ class GrowthRules {
         ? (earned * streakBonusPercent / 100).round()
         : 0;
     xp[XpSource.firstLesson] = day.firstLesson ? firstLessonXp : 0;
+    xp[XpSource.quiz] = quizXp(day.quizCorrect, day.quizTotal);
     xp.removeWhere((_, value) => value == 0);
     return xp;
+  }
+
+  /// What a quiz with [correct] of [total] right earns.
+  int quizXp(int correct, int total) {
+    if (total <= 0) return 0;
+    return correct * xpPerQuizAnswer +
+        (correct == total ? quizPerfectBonus : 0);
   }
 
   GrowthRules copyWith({
@@ -202,6 +226,8 @@ class GrowthRules {
     int? streakBonusPercent,
     int? streakBonusFromDays,
     int? firstLessonXp,
+    int? xpPerQuizAnswer,
+    int? quizPerfectBonus,
     double? levelBase,
     double? levelExponent,
     List<int>? stageLevels,
@@ -222,6 +248,8 @@ class GrowthRules {
     streakBonusPercent: streakBonusPercent ?? this.streakBonusPercent,
     streakBonusFromDays: streakBonusFromDays ?? this.streakBonusFromDays,
     firstLessonXp: firstLessonXp ?? this.firstLessonXp,
+    xpPerQuizAnswer: xpPerQuizAnswer ?? this.xpPerQuizAnswer,
+    quizPerfectBonus: quizPerfectBonus ?? this.quizPerfectBonus,
     levelBase: levelBase ?? this.levelBase,
     levelExponent: levelExponent ?? this.levelExponent,
     stageLevels: stageLevels ?? this.stageLevels,
@@ -247,6 +275,8 @@ const GrowthRules(
   streakBonusPercent: $streakBonusPercent,
   streakBonusFromDays: $streakBonusFromDays,
   firstLessonXp: $firstLessonXp,
+  xpPerQuizAnswer: $xpPerQuizAnswer,
+  quizPerfectBonus: $quizPerfectBonus,
   levelBase: $levelBase,
   levelExponent: $levelExponent,
   stageLevels: $stageLevels,
@@ -417,6 +447,8 @@ class GrowthCalculator {
       wordsSaved: a.wordsSaved + b.wordsSaved,
       reviews: a.reviews + b.reviews,
       firstLesson: a.firstLesson || b.firstLesson,
+      quizCorrect: a.quizCorrect + b.quizCorrect,
+      quizTotal: a.quizTotal + b.quizTotal,
     );
   }
 }

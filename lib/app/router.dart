@@ -23,12 +23,17 @@ import 'package:ingrain/features/srs/presentation/view/deck_detail_view.dart';
 import 'package:ingrain/features/srs/presentation/view/flashcard_study_view.dart';
 import 'package:ingrain/features/srs/presentation/view/flashcards_view.dart';
 import 'package:ingrain/features/content/presentation/player_host/player_host.dart';
+import 'package:ingrain/features/quiz/presentation/view/quiz_view.dart';
+import 'package:ingrain/features/social/presentation/view/leaderboard_view.dart';
+import 'package:ingrain/features/settings/presentation/view/settings_view.dart';
+import 'package:ingrain/features/social/presentation/view/import_share_view.dart';
+import 'package:ingrain/features/social/presentation/view/search_people_view.dart';
 import 'package:ingrain/features/srs/presentation/view/srs_settings_view.dart';
 import 'package:ingrain/features/vocabulary/presentation/view/vocabulary_view.dart';
 import 'package:ingrain/shared/layout/window_size.dart';
 
 export 'package:ingrain/app/main_shell.dart'
-    show LearnDestination, MainShellView;
+    show MoreDestination, MainShellView;
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   // Only what the redirect needs: a new router is built whenever this changes,
@@ -70,24 +75,30 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 const NoTransitionPage(child: ContentHistoryView()),
           ),
           GoRoute(
+            path: '/leaderboard',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: LeaderboardView()),
+          ),
+          GoRoute(
             path: '/flashcards',
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: FlashcardsView()),
           ),
           GoRoute(
-            path: LearnDestination.vocab.path,
+            path: MoreDestination.vocab.path,
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: VocabularyView()),
           ),
           GoRoute(
-            path: LearnDestination.kana.path,
+            path: MoreDestination.kana.path,
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: KanaView()),
           ),
           GoRoute(
             path: '/profile',
-            pageBuilder: (context, state) =>
-                const NoTransitionPage(child: ProfileView()),
+            pageBuilder: (context, state) => NoTransitionPage(
+              child: ProfileView(initialTab: state.uri.queryParameters['tab']),
+            ),
           ),
         ],
       ),
@@ -138,6 +149,35 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/companion',
         builder: (context, state) => const PageFrame(child: CompanionView()),
+      ),
+      // Friends now live on Profile and the board has its own tab; old
+      // links (notifications, shares) still land in the right place.
+      GoRoute(
+        path: '/friends',
+        redirect: (context, state) =>
+            state.uri.queryParameters['tab'] == 'leaderboard'
+            ? '/leaderboard'
+            : '/profile?tab=friends',
+      ),
+      GoRoute(
+        path: '/settings',
+        builder: (context, state) => const PageFrame(child: SettingsView()),
+      ),
+      GoRoute(
+        path: '/friends/search',
+        builder: (context, state) => const PageFrame(child: SearchPeopleView()),
+      ),
+      GoRoute(
+        path: '/quiz',
+        builder: (context, state) => const PageFrame(child: QuizView()),
+      ),
+      GoRoute(
+        path: '/import',
+        builder: (context, state) => PageFrame(
+          child: ImportShareView(
+            initialCode: state.uri.queryParameters['code'],
+          ),
+        ),
       ),
       GoRoute(
         path: '/search',

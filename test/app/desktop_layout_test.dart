@@ -109,6 +109,7 @@ void main() {
       for (final path in [
         '/immerse',
         '/library',
+        '/leaderboard',
         '/flashcards',
         '/learn/vocab',
         '/learn/kana',

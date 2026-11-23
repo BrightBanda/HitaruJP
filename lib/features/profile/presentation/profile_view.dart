@@ -14,19 +14,22 @@ import 'package:ingrain/features/profile/presentation/widgets/learner_preference
 import 'package:ingrain/features/profile/presentation/widgets/preference_pickers.dart';
 import 'package:ingrain/features/progress/presentation/view/progress_dashboard.dart';
 import 'package:ingrain/features/progress/presentation/viewmodel/progress_view_model.dart';
-import 'package:ingrain/features/notifications/presentation/viewmodel/notification_view_model.dart';
-import 'package:ingrain/features/settings/presentation/view/settings_panel.dart';
+import 'package:ingrain/features/social/presentation/view/friends_panel.dart';
 import 'package:ingrain/shared/widgets/colorful.dart';
 
-/// The Profile tab: the learner's character and identity up top, then their
-/// progress and settings.
+/// Profile, from the More menu: the learner's character and identity up
+/// top, then their progress and their friends. Settings sit behind the gear.
 class ProfileView extends ConsumerWidget {
-  const ProfileView({super.key});
+  /// `friends` to open on the Friends tab.
+  final String? initialTab;
+
+  const ProfileView({super.key, this.initialTab});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return DefaultTabController(
       length: 2,
+      initialIndex: initialTab == 'friends' ? 1 : 0,
       child: Scaffold(
         appBar: AppBar(
           automaticallyImplyLeading: false,
@@ -38,9 +41,9 @@ class ProfileView extends ConsumerWidget {
               onPressed: () => context.push('/profile/edit'),
             ),
             IconButton(
-              tooltip: 'Sign out',
-              icon: const Icon(Icons.logout),
-              onPressed: () => _signOut(context, ref),
+              tooltip: 'Settings',
+              icon: const Icon(Icons.settings_outlined),
+              onPressed: () => context.push('/settings'),
             ),
             const SizedBox(width: 4),
           ],
@@ -48,7 +51,7 @@ class ProfileView extends ConsumerWidget {
         body: LayoutBuilder(
           builder: (context, constraints) {
             // Wide: the character card stays put in its own column while
-            // progress and settings scroll beside it.
+            // progress and friends scroll beside it.
             if (constraints.maxWidth >= _sideBySideMinWidth) {
               return Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -66,7 +69,7 @@ class ProfileView extends ConsumerWidget {
                         _TabBarHeader._tabBar,
                         const Expanded(
                           child: TabBarView(
-                            children: [ProgressDashboard(), SettingsPanel()],
+                            children: [ProgressDashboard(), FriendsPanel()],
                           ),
                         ),
                       ],
@@ -91,7 +94,7 @@ class ProfileView extends ConsumerWidget {
                 ),
               ],
               body: const TabBarView(
-                children: [ProgressDashboard(), SettingsPanel()],
+                children: [ProgressDashboard(), FriendsPanel()],
               ),
             );
           },
@@ -102,33 +105,6 @@ class ProfileView extends ConsumerWidget {
 
   static const _sideBySideMinWidth = 900.0;
   static const _heroColumnWidth = 400.0;
-
-  Future<void> _signOut(BuildContext context, WidgetRef ref) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Sign out?'),
-        content: const Text(
-          'Your vocabulary, decks and progress stay saved to your account.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Sign out'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed == true) {
-      // While still signed in, so the server stops pushing to this phone.
-      await ref.read(notificationViewModelProvider.notifier).unregister();
-      await ref.read(authViewModelProvider.notifier).signOut();
-    }
-  }
 }
 
 class _TabBarHeader extends SliverPersistentHeaderDelegate {
@@ -139,7 +115,7 @@ class _TabBarHeader extends SliverPersistentHeaderDelegate {
   static const _tabBar = TabBar(
     tabs: [
       Tab(icon: Icon(Icons.insights), text: 'Progress'),
-      Tab(icon: Icon(Icons.settings), text: 'Settings'),
+      Tab(icon: Icon(Icons.people_outline), text: 'Friends'),
     ],
   );
 

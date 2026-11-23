@@ -12,6 +12,7 @@ import 'package:ingrain/features/growth/data/growth_repository.dart';
 import 'package:ingrain/features/growth/domain/growth_rules.dart';
 import 'package:ingrain/features/immersion/domain/immersion_repository.dart';
 import 'package:ingrain/features/immersion/presentation/viewmodel/immersion_session_view_model.dart';
+import 'package:ingrain/features/quiz/data/quiz_repository.dart';
 import 'package:ingrain/features/progress/domain/progress_calculator.dart';
 import 'package:ingrain/features/progress/domain/progress_summary.dart';
 import 'package:ingrain/features/sentence_mining/domain/sentence_repository.dart';
@@ -160,6 +161,10 @@ class ProgressViewModel extends Notifier<ProgressUiState> {
       final bestXpFuture = growthRepository.bestXp().catchError(
         (Object _) => 0,
       );
+      final quizzesFuture = QuizRepository(
+        ref.read(documentStoreProvider),
+        ref.read(authRepositoryProvider),
+      ).all().catchError((Object _) => <QuizResult>[]);
       final (
         sessions,
         sentences,
@@ -167,6 +172,7 @@ class ProgressViewModel extends Notifier<ProgressUiState> {
         dueCards,
         reviewEvents,
         bestXp,
+        quizzes,
       ) = await (
         sessionsFuture,
         sentencesFuture,
@@ -174,6 +180,7 @@ class ProgressViewModel extends Notifier<ProgressUiState> {
         dueCardsFuture,
         reviewEventsFuture,
         bestXpFuture,
+        quizzesFuture,
       ).wait;
 
       final summary = _calculator.summarize(
@@ -191,6 +198,7 @@ class ProgressViewModel extends Notifier<ProgressUiState> {
           sentences: sentences,
           vocabulary: vocabulary,
           reviewEvents: reviewEvents,
+          quizzes: [for (final quiz in quizzes) quiz.toQuizDay()],
         ),
         dailyGoalMinutes: goalMinutes,
         today: now,

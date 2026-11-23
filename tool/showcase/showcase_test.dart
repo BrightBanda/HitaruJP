@@ -2,6 +2,7 @@
 // Run with tool/showcase/run.sh (it fetches the photos and sets the paths
 // below). Not part of the normal test suite.
 
+import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' as ui;
 
@@ -24,6 +25,9 @@ import 'package:ingrain/features/dialogue/domain/dialogue.dart';
 import 'package:ingrain/features/dialogue/domain/dialogue_repository.dart';
 import 'package:ingrain/features/dialogue/presentation/viewmodel/dialogue_providers.dart';
 import 'package:ingrain/features/growth/data/growth_repository.dart';
+import 'package:ingrain/features/growth/domain/growth_rules.dart';
+import 'package:ingrain/features/quiz/presentation/viewmodel/quiz_providers.dart';
+import 'package:ingrain/features/social/domain/social.dart';
 import 'package:ingrain/features/immersion/domain/immersion_session.dart';
 import 'package:ingrain/features/immersion/presentation/viewmodel/immersion_session_view_model.dart';
 import 'package:ingrain/features/onboarding/presentation/viewmodel/first_run_view_model.dart';
@@ -348,6 +352,108 @@ const _library = [
   ('sc-coffee', 'How a barista makes pour-over', 'Kitchen Kotoba'),
 ];
 
+/// Friends for the social screens: a mix of companions, levels and streaks.
+const _ken = Person(
+  username: 'ken_studies',
+  displayName: 'Ken',
+  avatarId: 'shiba',
+  stats: PublicStats(level: 9, stage: GrowthStage.teen, streak: 6),
+  relation: Relation.friends,
+  todayQuiz: (correct: 10, total: 12),
+);
+const _mio = Person(
+  username: 'mio',
+  displayName: 'Mio',
+  avatarId: 'usagi',
+  stats: PublicStats(level: 21, stage: GrowthStage.adult, streak: 32),
+  relation: Relation.friends,
+  todayQuiz: (correct: 12, total: 12),
+);
+const _yuto = Person(
+  username: 'yuto.jp',
+  displayName: 'Yuto',
+  avatarId: 'tanuki',
+  stats: PublicStats(level: 4, stage: GrowthStage.child, streak: 2),
+  relation: Relation.friends,
+);
+
+class _ShowcaseSocial extends FakeSocialRepository {
+  _ShowcaseSocial() : super(username: 'aiko') {
+    friendsList.addAll([_ken, _mio, _yuto]);
+    received.add(
+      ReceivedPing(
+        id: 1,
+        kind: PingKind.cheer,
+        sender: _mio,
+        createdAt: DateTime.now().subtract(const Duration(minutes: 40)),
+        seen: false,
+      ),
+    );
+  }
+
+  @override
+  Future<Leaderboard> leaderboard({
+    required DateTime today,
+    LeaderboardScope scope = LeaderboardScope.friends,
+  }) async {
+    const me = Person(
+      username: 'aiko',
+      displayName: 'Aiko',
+      avatarId: 'kitsune',
+      stats: PublicStats(level: 12, stage: GrowthStage.teen, streak: 14),
+      todayQuiz: (correct: 11, total: 12),
+    );
+    Person stranger(String username, String avatar, int level) => Person(
+      username: username,
+      avatarId: avatar,
+      stats: PublicStats(
+        level: level,
+        stage: level >= 20 ? GrowthStage.adult : GrowthStage.teen,
+      ),
+    );
+    final rows = scope == LeaderboardScope.friends
+        ? [
+            (_mio, 245, 3, 47),
+            (me, 190, 3, 38),
+            (_ken, 150, 3, 30),
+            (_yuto, 55, 1, 11),
+          ]
+        : [
+            (stranger('sakura_nihongo', 'neko', 34), 350, 5, 68),
+            (stranger('kanji_hunter', 'oni', 27), 330, 5, 64),
+            (_mio, 245, 3, 47),
+            (stranger('daily_ramen', 'onigiri', 12), 230, 4, 44),
+            (me, 190, 3, 38),
+            (stranger('hana.learns', 'panda', 9), 175, 3, 33),
+            (_ken, 150, 3, 30),
+          ];
+    return Leaderboard(
+      scope: scope,
+      participants: scope == LeaderboardScope.everyone ? 1284 : 0,
+      weekStart: today,
+      entries: [
+        for (final (i, (person, xp, quizzes, correct)) in rows.indexed)
+          LeaderboardEntry(
+            rank: i + 1,
+            person: person,
+            isMe: identical(person, me),
+            weekXp: xp,
+            quizzes: quizzes,
+            correct: correct,
+          ),
+      ],
+    );
+  }
+}
+
+/// The real dictionary, for the quiz: thousands of words at each level.
+DictionaryIndex _fullDictionary() => DictionaryIndex.fromJson(
+  jsonDecode(File('assets/data/dictionary.json').readAsStringSync())
+      as Map<String, dynamic>,
+);
+
+bool _useFullDictionary = false;
+
 ProviderContainer _container(SharedPreferences prefs) {
   final session = FakeAuthSession(uid: _uid, name: 'Aiko')
     ..profileFields.addAll({
@@ -365,10 +471,13 @@ ProviderContainer _container(SharedPreferences prefs) {
         prefs,
         session: session,
         catalog: FakeCatalogRepository(picks: _picks),
+        social: _ShowcaseSocial(),
       ),
       dialogueRepositoryProvider.overrideWithValue(_ShowcaseDialogues()),
       dictionaryProvider.overrideWith(
-        (ref) async => DictionaryIndex(_dictionary),
+        (ref) async => _useFullDictionary
+            ? _fullDictionary()
+            : DictionaryIndex(_dictionary),
       ),
     ],
   );
@@ -609,5 +718,46 @@ void main() {
     final key = GlobalKey();
     await _open(tester, key, '/profile');
     await _shoot(tester, key, '06_profile');
+  });
+
+  testWidgets('daily quiz, one answered', (tester) async {
+    _useFullDictionary = true;
+    addTearDown(() => _useFullDictionary = false);
+    final key = GlobalKey();
+    final (c, _) = await _open(tester, key, '/quiz');
+    final quiz = await tester.runAsync(() => c.read(dailyQuizProvider.future));
+    await tester.tap(find.text(quiz!.questions.first.answer));
+    await _settle(tester);
+    await _shoot(tester, key, '07_quiz');
+  });
+
+  testWidgets('friends', (tester) async {
+    final key = GlobalKey();
+    await _open(tester, key, '/profile?tab=friends');
+    await _shoot(tester, key, '08_friends');
+  });
+
+  testWidgets('the More menu', (tester) async {
+    final key = GlobalKey();
+    await _open(tester, key, '/immerse');
+    await tester.tap(find.text('More'));
+    await _settle(tester);
+    await _shoot(tester, key, 'x_more');
+  });
+
+  testWidgets('settings', (tester) async {
+    final key = GlobalKey();
+    final (_, router) = await _open(tester, key, '/profile');
+    router.push('/settings');
+    await _settle(tester);
+    await tester.scrollUntilVisible(find.text('Sign out'), 400);
+    await _settle(tester);
+    await _shoot(tester, key, 'x_settings');
+  });
+
+  testWidgets('leaderboard', (tester) async {
+    final key = GlobalKey();
+    await _open(tester, key, '/leaderboard');
+    await _shoot(tester, key, '09_leaderboard');
   });
 }

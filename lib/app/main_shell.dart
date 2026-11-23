@@ -9,12 +9,13 @@ import 'package:ingrain/shared/widgets/app_logo.dart';
 import 'package:ingrain/shared/widgets/colorful.dart';
 import 'package:ingrain/shared/widgets/double_back_to_exit.dart';
 
-/// The pages behind the Learn tab's drop-up menu.
-enum LearnDestination {
+/// The pages behind the More tab's drop-up menu.
+enum MoreDestination {
+  kana('Kana', Icons.font_download_outlined, '/learn/kana'),
   vocab('Vocab', Icons.translate, '/learn/vocab'),
-  kana('Kana', Icons.font_download_outlined, '/learn/kana');
+  profile('Profile', Icons.person_outline, '/profile');
 
-  const LearnDestination(this.label, this.icon, this.path);
+  const MoreDestination(this.label, this.icon, this.path);
 
   final String label;
   final IconData icon;
@@ -36,20 +37,20 @@ class MainShellView extends StatelessWidget {
 
   const MainShellView({super.key, required this.child});
 
-  /// Phone tabs. Learn has no page of its own: it opens a menu of
-  /// [LearnDestination]s, which keeps the bottom bar to five items.
+  /// Phone tabs. More has no page of its own: it opens a menu of
+  /// [MoreDestination]s, which keeps the bottom bar to five items.
   static const _tabs = [
     (Icons.play_circle_fill, 'Immerse', '/immerse'),
     (Icons.video_library, 'Library', '/library'),
+    (Icons.leaderboard, 'Leaderboard', '/leaderboard'),
     (Icons.style, 'Flashcards', '/flashcards'),
-    (Icons.school, 'Learn', '/learn'),
-    (Icons.person, 'Profile', '/profile'),
+    (Icons.more_horiz, 'More', '/more'),
   ];
 
-  static const _learnIndex = 3;
+  static const _moreIndex = 4;
 
-  /// Wide-screen destinations. With room to spare, Vocab and Kana get their
-  /// own entries instead of hiding behind Learn.
+  /// Wide-screen destinations. With room to spare, Kana, Vocab and Profile
+  /// get their own entries instead of hiding behind More.
   static const List<_Destination> _destinations = [
     (
       icon: Icons.play_circle_outline,
@@ -64,22 +65,28 @@ class MainShellView extends StatelessWidget {
       path: '/library',
     ),
     (
+      icon: Icons.leaderboard_outlined,
+      selectedIcon: Icons.leaderboard,
+      label: 'Leaderboard',
+      path: '/leaderboard',
+    ),
+    (
       icon: Icons.style_outlined,
       selectedIcon: Icons.style,
       label: 'Flashcards',
       path: '/flashcards',
     ),
     (
-      icon: Icons.translate_outlined,
-      selectedIcon: Icons.translate,
-      label: 'Vocab',
-      path: '/learn/vocab',
-    ),
-    (
       icon: Icons.font_download_outlined,
       selectedIcon: Icons.font_download,
       label: 'Kana',
       path: '/learn/kana',
+    ),
+    (
+      icon: Icons.translate_outlined,
+      selectedIcon: Icons.translate,
+      label: 'Vocab',
+      path: '/learn/vocab',
     ),
     (
       icon: Icons.person_outline,
@@ -137,8 +144,8 @@ class MainShellView extends StatelessWidget {
           builder: (barContext) => NavigationBar(
             selectedIndex: _currentIndex(context),
             onDestinationSelected: (index) {
-              if (index == _learnIndex) {
-                _openLearnMenu(barContext);
+              if (index == _moreIndex) {
+                _openMoreMenu(barContext);
               } else {
                 context.go(_tabs[index].$3);
               }
@@ -154,7 +161,9 @@ class MainShellView extends StatelessWidget {
                   ),
                   selectedIcon: Icon(tab.$1),
                   label: tab.$2,
-                  tooltip: index == _learnIndex ? 'Learn: vocab or kana' : null,
+                  tooltip: index == _moreIndex
+                      ? 'More: kana, vocab, profile'
+                      : null,
                 ),
             ],
           ),
@@ -172,26 +181,29 @@ class MainShellView extends StatelessWidget {
 
   int _currentIndex(BuildContext context) {
     final location = GoRouterState.of(context).uri.path;
+    if (MoreDestination.values.any((d) => location.startsWith(d.path))) {
+      return _moreIndex;
+    }
     final index = _tabs.indexWhere((t) => location.startsWith(t.$3));
     return index < 0 ? 0 : index;
   }
 
-  /// A menu that opens upwards from the Learn tab.
-  Future<void> _openLearnMenu(BuildContext barContext) async {
+  /// A menu that opens upwards from the More tab.
+  Future<void> _openMoreMenu(BuildContext barContext) async {
     final bar = barContext.findRenderObject()! as RenderBox;
     final overlay =
         Overlay.of(barContext).context.findRenderObject()! as RenderBox;
     final barTopLeft = bar.localToGlobal(Offset.zero, ancestor: overlay);
     final tabWidth = bar.size.width / _tabs.length;
-    final tabLeft = barTopLeft.dx + tabWidth * _learnIndex;
+    final tabLeft = barTopLeft.dx + tabWidth * _moreIndex;
 
     // Menus open downwards from `top`; start them one menu-height above the
     // bar so they sit on top of it instead.
     const itemHeight = kMinInteractiveDimension;
-    const menuHeight = itemHeight * 2 + 16;
+    final menuHeight = itemHeight * MoreDestination.values.length + 16;
     final top = barTopLeft.dy - menuHeight - 8;
 
-    final destination = await showMenu<LearnDestination>(
+    final destination = await showMenu<MoreDestination>(
       context: barContext,
       position: RelativeRect.fromLTRB(
         tabLeft - 40,
@@ -201,7 +213,7 @@ class MainShellView extends StatelessWidget {
       ),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       items: [
-        for (final destination in LearnDestination.values)
+        for (final destination in MoreDestination.values)
           PopupMenuItem(
             value: destination,
             height: itemHeight,
@@ -418,11 +430,15 @@ class _SidebarItem extends StatelessWidget {
                       : theme.colorScheme.onSurface.withValues(alpha: 0.7),
                 ),
                 const SizedBox(width: 14),
-                Text(
-                  destination.label,
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    color: selected ? primary : null,
-                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                Flexible(
+                  child: Text(
+                    destination.label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: selected ? primary : null,
+                      fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                    ),
                   ),
                 ),
               ],

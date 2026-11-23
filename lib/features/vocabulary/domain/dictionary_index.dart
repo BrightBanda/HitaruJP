@@ -133,6 +133,10 @@ class DictionaryIndex {
   }
 
   final List<DictionaryEntry> _entries;
+
+  /// Every entry, most common first (the asset is ordered by how often each
+  /// word appears in Japanese subtitles).
+  List<DictionaryEntry> get entries => List.unmodifiable(_entries);
   final Map<String, DictionaryEntry> _bySurface = {};
   final Map<String, DictionaryEntry> _byReading = {};
   final Map<String, List<DictionaryEntry>> _conjugating = {};
