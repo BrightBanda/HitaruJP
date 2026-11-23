@@ -16,6 +16,10 @@ class AuthState {
   /// Such a session is held at the verification screen.
   final bool needsEmailVerification;
 
+  /// Signed in without having accepted the terms in force. Such a session is
+  /// held at the terms screen, and the API refuses it.
+  final bool needsTermsAcceptance;
+
   const AuthState._({
     required this.isLoading,
     required this.uid,
@@ -23,6 +27,7 @@ class AuthState {
     this.profile,
     this.error,
     this.needsEmailVerification = false,
+    this.needsTermsAcceptance = false,
   });
 
   const AuthState.loading() : this._(isLoading: true, uid: '');
@@ -36,6 +41,7 @@ class AuthState {
     UserProfile? profile,
     String? error,
     bool needsEmailVerification = false,
+    bool needsTermsAcceptance = false,
   }) : this._(
          isLoading: false,
          uid: uid,
@@ -43,7 +49,23 @@ class AuthState {
          profile: profile,
          error: error,
          needsEmailVerification: needsEmailVerification,
+         needsTermsAcceptance: needsTermsAcceptance,
        );
+
+  /// This state with the gates changed, everything else kept.
+  AuthState withGates({
+    bool? needsEmailVerification,
+    bool? needsTermsAcceptance,
+  }) => AuthState._(
+    isLoading: isLoading,
+    uid: uid,
+    displayName: displayName,
+    profile: profile,
+    error: error,
+    needsEmailVerification:
+        needsEmailVerification ?? this.needsEmailVerification,
+    needsTermsAcceptance: needsTermsAcceptance ?? this.needsTermsAcceptance,
+  );
 
   bool get isSignedIn => !isLoading && uid.isNotEmpty;
 
@@ -51,7 +73,9 @@ class AuthState {
   /// full flow (see [UserProfile.isOnboarded]); without one, having chosen a name.
   /// The trim guards against a name that is only whitespace.
   bool get isOnboarded {
-    if (!isSignedIn || needsEmailVerification) return false;
+    if (!isSignedIn || needsEmailVerification || needsTermsAcceptance) {
+      return false;
+    }
     final profile = this.profile;
     if (profile != null) return profile.isOnboarded;
     return displayName?.trim().isNotEmpty ?? false;

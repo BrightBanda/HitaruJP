@@ -9,11 +9,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'fake_api_repositories.dart';
 import 'fake_auth_session.dart';
 import 'fake_push_gateway.dart';
+import 'fake_terms_repository.dart';
 
 export 'fake_api_repositories.dart';
 export 'fake_auth_repository.dart';
 export 'fake_auth_session.dart';
 export 'fake_push_gateway.dart';
+export 'fake_terms_repository.dart';
 
 /// The overrides every test needs now that user data lives in Firestore.
 ///
@@ -32,10 +34,12 @@ appTestOverrides(
   FakeProfileSyncRepository? profileSync,
   FakeCatalogRepository? catalog,
   FakePushGateway? pushGateway,
+  FakeTermsRepository? terms,
 }) => [
   sharedPreferencesProvider.overrideWithValue(prefs),
   documentStoreProvider.overrideWithValue(LocalDocumentStore(prefs)),
   authRepositoryProvider.overrideWithValue(session ?? FakeAuthSession()),
+  termsRepositoryProvider.overrideWithValue(terms ?? FakeTermsRepository()),
   profileSyncRepositoryProvider.overrideWithValue(
     profileSync ?? FakeProfileSyncRepository(),
   ),

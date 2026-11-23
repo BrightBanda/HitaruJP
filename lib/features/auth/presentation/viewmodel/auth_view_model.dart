@@ -3,13 +3,16 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:ingrain/core/network/api_client.dart';
 import 'package:ingrain/core/providers.dart';
 import 'package:ingrain/core/storage/snapshot_cache.dart';
 import 'package:ingrain/firebase_options.dart';
 import 'package:ingrain/features/auth/data/firebase_auth_repository.dart';
+import 'package:ingrain/features/auth/data/remote_terms_repository.dart';
 import 'package:ingrain/features/auth/data/user_profile_dto.dart';
 import 'package:ingrain/features/auth/domain/auth_repository.dart';
 import 'package:ingrain/features/auth/domain/auth_state.dart';
+import 'package:ingrain/features/auth/domain/terms_repository.dart';
 import 'package:ingrain/features/auth/domain/user_profile.dart';
 import 'package:ingrain/features/profile/domain/learner_preferences.dart';
 
@@ -24,6 +27,10 @@ final authRepositoryProvider = Provider<AuthSession>((ref) {
   );
 });
 
+final termsRepositoryProvider = Provider<TermsRepository>(
+  (ref) => RemoteTermsRepository(ref.watch(apiClientProvider)),
+);
+
 final authViewModelProvider = NotifierProvider<AuthViewModel, AuthState>(
   AuthViewModel.new,
 );
@@ -34,11 +41,17 @@ final isOnboardedProvider = Provider<bool>((ref) {
 
 class AuthViewModel extends Notifier<AuthState> {
   late AuthSession _auth;
+  late TermsRepository _terms;
   StreamSubscription<String>? _subscription;
+
+  /// Set when the learner ticked "I agree" while signing up: the next session
+  /// records that consent instead of asking again.
+  bool _acceptTermsOnSignIn = false;
 
   @override
   AuthState build() {
     _auth = ref.watch(authRepositoryProvider);
+    _terms = ref.watch(termsRepositoryProvider);
     ref.onDispose(() => _subscription?.cancel());
     _bootstrap();
     // A returning learner starts from the profile saved on this device, so
@@ -51,9 +64,45 @@ class AuthViewModel extends Notifier<AuthState> {
         uid,
         cached,
         needsEmailVerification: _auth.needsEmailVerification,
+        needsTermsAcceptance: !_termsAcceptedHere(uid),
       );
     }
     return const AuthState.loading();
+  }
+
+  /// The terms version this device last saw accepted, so a returning learner
+  /// is not held up while the server is asked again.
+  static String _termsKey(String uid) => 'terms_accepted_$uid';
+
+  bool _termsAcceptedHere(String uid) =>
+      ref.read(sharedPreferencesProvider).getString(_termsKey(uid)) != null;
+
+  void _rememberTerms(String uid, String? version) {
+    final prefs = ref.read(sharedPreferencesProvider);
+    unawaited(
+      version == null
+          ? prefs.remove(_termsKey(uid))
+          : prefs.setString(_termsKey(uid), version),
+    );
+  }
+
+  /// Whether [uid] still has to accept the terms in force, asking the server,
+  /// which keeps the record. Records the consent given at sign-up first.
+  Future<bool> _needsTerms(String uid) async {
+    final acceptNow = _acceptTermsOnSignIn;
+    _acceptTermsOnSignIn = false;
+    try {
+      var status = await _terms.status();
+      if (!status.accepted && acceptNow) {
+        status = await _terms.accept(status.version);
+      }
+      _rememberTerms(uid, status.accepted ? status.version : null);
+      return !status.accepted;
+    } catch (_) {
+      // Offline, or the server still waking: trust what this device last saw.
+      // Anyone never seen accepting is asked; agreeing then retries the server.
+      return !_termsAcceptedHere(uid);
+    }
   }
 
   static String _profileKey(String uid) => 'profile_$uid';
@@ -72,6 +121,7 @@ class AuthViewModel extends Notifier<AuthState> {
     String uid,
     Map<String, dynamic> document, {
     bool needsEmailVerification = false,
+    bool needsTermsAcceptance = false,
   }) {
     final profile = UserProfileDto.fromMapSafe(document);
     final name = profile?.displayName;
@@ -80,6 +130,7 @@ class AuthViewModel extends Notifier<AuthState> {
       displayName: name != null && name.trim().isNotEmpty ? name : null,
       profile: profile,
       needsEmailVerification: needsEmailVerification,
+      needsTermsAcceptance: needsTermsAcceptance,
     );
   }
 
@@ -129,6 +180,7 @@ class AuthViewModel extends Notifier<AuthState> {
         await _retryWhileUnavailable(_auth.ensureProfile);
         document = await _retryWhileUnavailable(_auth.profileDocument);
       }
+      final needsTerms = await _needsTerms(uid);
       // The stream outlives any single listener: a sign-out or a provider rebuild
       // can dispose this notifier while the profile read is still in flight.
       if (!ref.mounted) return;
@@ -136,6 +188,7 @@ class AuthViewModel extends Notifier<AuthState> {
         uid,
         document,
         needsEmailVerification: _auth.needsEmailVerification,
+        needsTermsAcceptance: needsTerms,
       );
       if (document.isNotEmpty) _cacheProfile(uid, document);
       // Best effort: "last active" is a statistic, not worth failing over.
@@ -154,6 +207,7 @@ class AuthViewModel extends Notifier<AuthState> {
         uid: uid,
         error: 'Could not load your profile: $error',
         needsEmailVerification: _auth.needsEmailVerification,
+        needsTermsAcceptance: !_termsAcceptedHere(uid),
       );
     }
   }
@@ -162,7 +216,12 @@ class AuthViewModel extends Notifier<AuthState> {
   /// name and then the email local part, so the field is rarely empty.
   Future<String?> suggestedDisplayName() => _auth.displayName;
 
-  Future<bool> signInWithGoogle() => _runSignIn(_auth.signInWithGoogle);
+  /// [acceptTerms] is the sign-up checkbox: it records consent for a new
+  /// account. Without it, anyone yet to accept is shown the terms.
+  Future<bool> signInWithGoogle({bool acceptTerms = false}) {
+    _acceptTermsOnSignIn = acceptTerms;
+    return _runSignIn(_auth.signInWithGoogle);
+  }
 
   Future<bool> signInWithEmail(String email, String password) =>
       _runSignIn(() async {
@@ -170,11 +229,36 @@ class AuthViewModel extends Notifier<AuthState> {
         return true;
       });
 
-  Future<bool> createAccount(String email, String password) =>
-      _runSignIn(() async {
-        await _auth.createAccount(email, password);
-        return true;
-      });
+  /// Only called once the learner has ticked "I agree": the new account's
+  /// consent is recorded as its session starts.
+  Future<bool> createAccount(String email, String password) {
+    _acceptTermsOnSignIn = true;
+    return _runSignIn(() async {
+      await _auth.createAccount(email, password);
+      return true;
+    });
+  }
+
+  /// Records that the signed-in learner accepts the terms in force and lets
+  /// them in. Returns null on success, or a message to show.
+  Future<String?> acceptTerms() async {
+    final uid = state.uid;
+    if (uid.isEmpty) return 'Sign in first.';
+    try {
+      var status = await _terms.status();
+      if (!status.accepted) status = await _terms.accept(status.version);
+      _rememberTerms(uid, status.version);
+      if (ref.mounted && state.uid == uid) {
+        state = state.withGates(needsTermsAcceptance: false);
+      }
+      return null;
+    } on ApiException catch (error) {
+      return error.error.message;
+    } catch (_) {
+      return 'Could not reach the HitaruJP server. Check your connection '
+          'and try again.';
+    }
+  }
 
   /// Sends a password-reset email. Returns null on success, or a message to show.
   Future<String?> sendPasswordReset(String email) async {
@@ -214,11 +298,7 @@ class AuthViewModel extends Notifier<AuthState> {
     }
     if (!ref.mounted) return !stillNeeds;
     if (!stillNeeds && state.needsEmailVerification) {
-      state = AuthState.ready(
-        uid: state.uid,
-        displayName: state.displayName,
-        profile: state.profile,
-      );
+      state = state.withGates(needsEmailVerification: false);
     }
     return !stillNeeds;
   }
@@ -233,17 +313,22 @@ class AuthViewModel extends Notifier<AuthState> {
       profile: state.profile,
     );
     try {
-      return await action();
+      final signedIn = await action();
+      if (!signedIn) _acceptTermsOnSignIn = false;
+      return signedIn;
     } on FirebaseAuthException catch (error) {
+      _acceptTermsOnSignIn = false;
       state = AuthState.ready(uid: '', error: authErrorMessage(error));
       return false;
     } on GoogleSignInException catch (error) {
+      _acceptTermsOnSignIn = false;
       state = AuthState.ready(
         uid: '',
         error: error.description ?? 'Sign-in failed.',
       );
       return false;
     } catch (error) {
+      _acceptTermsOnSignIn = false;
       state = AuthState.ready(uid: '', error: '$error');
       return false;
     }
@@ -322,6 +407,7 @@ class AuthViewModel extends Notifier<AuthState> {
       profile: profile.copyWith(subscriptionTier: tier),
       error: state.error,
       needsEmailVerification: state.needsEmailVerification,
+      needsTermsAcceptance: state.needsTermsAcceptance,
     );
   }
 
@@ -338,11 +424,13 @@ class AuthViewModel extends Notifier<AuthState> {
       displayName: await _auth.displayName,
       profile: UserProfileDto.fromMapSafe(await _auth.profileDocument()),
       needsEmailVerification: _auth.needsEmailVerification,
+      needsTermsAcceptance: state.needsTermsAcceptance,
     );
   }
 
   /// A plain sign-out. User data in Firestore is deliberately left intact.
   Future<void> signOut() async {
+    _acceptTermsOnSignIn = false;
     await _auth.signOut();
     state = const AuthState.signedOut();
   }

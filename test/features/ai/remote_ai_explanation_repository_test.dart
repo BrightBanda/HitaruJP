@@ -105,6 +105,39 @@ void main() {
     expect(await forStatus(502), AppErrorType.unknown);
   });
 
+  group('the daily allowance', () {
+    String limitBody(int limit, String tier) => jsonEncode({
+      'detail': {
+        'code': 'daily_limit_reached',
+        'limit': limit,
+        'tier': tier,
+        'message': 'daily limit reached',
+      },
+    });
+
+    String? messageFor(http.Response response) =>
+        RemoteAiExplanationRepository.errorFor(response).error.message;
+
+    test('tells a free learner how many they had, and about premium', () {
+      final message = messageFor(http.Response(limitBody(6, 'free'), 429));
+      expect(message, contains('6 free AI explanations'));
+      expect(message, contains('Premium'));
+    });
+
+    test('tells a premium learner to come back tomorrow', () {
+      final message = messageFor(http.Response(limitBody(20, 'premium'), 429));
+      expect(message, contains('all 20 AI explanations'));
+      expect(message, isNot(contains('Premium')));
+    });
+
+    test('a plain 429 still means the AI is busy', () {
+      expect(
+        messageFor(http.Response('{"detail": "busy"}', 429)),
+        'The AI is busy. Try again shortly.',
+      );
+    });
+  });
+
   test('a silent server times out as a network error', () async {
     final type = await failureType(
       repository(

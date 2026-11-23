@@ -11,6 +11,7 @@ import 'package:ingrain/features/auth/presentation/viewmodel/auth_view_model.dar
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../support/fake_auth_session.dart';
+import '../support/fake_terms_repository.dart';
 
 class DelayedSetDisplayNameSession extends FakeAuthSession {
   DelayedSetDisplayNameSession({super.uid, super.name});
@@ -171,16 +172,17 @@ void main() {
 
   group('AuthViewModel', () {
     late FakeAuthSession session;
+    late FakeTermsRepository terms;
     late ProviderContainer container;
 
     AuthViewModel build() => container.read(authViewModelProvider.notifier);
 
     /// A broadcast stream delivers on a microtask, and `_applySession` then awaits
-    /// two more futures before it writes state.
+    /// a few more futures (profile, terms) before it writes state.
     Future<void> pump() async {
-      await Future<void>.delayed(Duration.zero);
-      await Future<void>.delayed(Duration.zero);
-      await Future<void>.delayed(Duration.zero);
+      for (var i = 0; i < 6; i++) {
+        await Future<void>.delayed(Duration.zero);
+      }
     }
 
     late SharedPreferences prefs;
@@ -190,9 +192,11 @@ void main() {
       prefs = await SharedPreferences.getInstance();
       // Fresh install: nobody is signed in until a test emits a session.
       session = FakeAuthSession(uid: '');
+      terms = FakeTermsRepository();
       container = ProviderContainer(
         overrides: [
           authRepositoryProvider.overrideWithValue(session),
+          termsRepositoryProvider.overrideWithValue(terms),
           sharedPreferencesProvider.overrideWithValue(prefs),
         ],
       );
@@ -236,6 +240,81 @@ void main() {
 
       expect(await build().resendVerificationEmail(), isNull);
       expect(session.verificationEmailsSent, 1);
+    });
+
+    group('the terms', () {
+      test('someone who never accepted them is held back', () async {
+        terms.accepted = false;
+        session.emit('google-uid');
+        await pump();
+
+        final state = container.read(authViewModelProvider);
+        expect(state.isSignedIn, isTrue);
+        expect(state.needsTermsAcceptance, isTrue);
+        expect(state.isOnboarded, isFalse);
+      });
+
+      test('accepting records it and lets them in', () async {
+        terms.accepted = false;
+        session.emit('google-uid');
+        await pump();
+
+        expect(await build().acceptTerms(), isNull);
+        expect(terms.acceptCalls, ['test-terms']);
+        final state = container.read(authViewModelProvider);
+        expect(state.needsTermsAcceptance, isFalse);
+        expect(state.isOnboarded, isTrue);
+      });
+
+      test('the sign-up checkbox is recorded with the new account', () async {
+        terms.accepted = false;
+        await build().createAccount('a@b.co', 'secret1');
+        await pump();
+
+        expect(terms.acceptCalls, ['test-terms']);
+        expect(
+          container.read(authViewModelProvider).needsTermsAcceptance,
+          isFalse,
+        );
+      });
+
+      test('signing in does not accept on the learner\'s behalf', () async {
+        terms.accepted = false;
+        await build().signInWithEmail('a@b.co', 'secret1');
+        await pump();
+
+        expect(terms.acceptCalls, isEmpty);
+        expect(
+          container.read(authViewModelProvider).needsTermsAcceptance,
+          isTrue,
+        );
+      });
+
+      test(
+        'offline, a device that saw them accepted lets the learner in',
+        () async {
+          await prefs.setString('terms_accepted_email-uid', 'test-terms');
+          terms.error = Exception('offline');
+          session.emit('email-uid');
+          await pump();
+
+          expect(
+            container.read(authViewModelProvider).needsTermsAcceptance,
+            isFalse,
+          );
+        },
+      );
+
+      test('offline, anyone never seen accepting is asked', () async {
+        terms.error = Exception('offline');
+        session.emit('email-uid');
+        await pump();
+
+        expect(
+          container.read(authViewModelProvider).needsTermsAcceptance,
+          isTrue,
+        );
+      });
     });
 
     test('settles on signed out without waiting for the stream', () async {
@@ -301,6 +380,7 @@ void main() {
             authRepositoryProvider.overrideWithValue(
               FakeAuthSession(uid: 'user-1'),
             ),
+            termsRepositoryProvider.overrideWithValue(FakeTermsRepository()),
             sharedPreferencesProvider.overrideWithValue(prefs),
           ],
         );
@@ -334,6 +414,7 @@ void main() {
         final blockedContainer = ProviderContainer(
           overrides: [
             authRepositoryProvider.overrideWithValue(blocked),
+            termsRepositoryProvider.overrideWithValue(FakeTermsRepository()),
             sharedPreferencesProvider.overrideWithValue(prefs),
           ],
         );
@@ -441,6 +522,7 @@ void main() {
       final container = ProviderContainer(
         overrides: [
           authRepositoryProvider.overrideWithValue(session),
+          termsRepositoryProvider.overrideWithValue(FakeTermsRepository()),
           sharedPreferencesProvider.overrideWithValue(prefs),
         ],
       );

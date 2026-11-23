@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ingrain/app/theme/app_colors.dart';
+import 'package:ingrain/features/auth/presentation/view/terms_gate_view.dart';
 import 'package:ingrain/features/auth/presentation/view/verify_email_view.dart';
 import 'package:ingrain/features/auth/presentation/viewmodel/auth_view_model.dart';
+import 'package:ingrain/features/auth/presentation/widgets/terms_agreement.dart';
 import 'package:ingrain/features/onboarding/presentation/view/onboarding_flow_view.dart';
 import 'package:ingrain/features/onboarding/presentation/view/welcome_view.dart';
 import 'package:ingrain/features/onboarding/presentation/viewmodel/first_run_view_model.dart';
@@ -31,6 +33,10 @@ class _OnboardingViewState extends ConsumerState<OnboardingView> {
   bool _isCreateMode = false;
   bool _showPassword = false;
   bool _showConfirm = false;
+
+  /// The sign-up "I agree" box, and whether to show that it is missing.
+  bool _agreedToTerms = false;
+  bool _termsMissing = false;
 
   /// Which button started the current request, so only it shows a spinner.
   /// Null while idle.
@@ -64,11 +70,30 @@ class _OnboardingViewState extends ConsumerState<OnboardingView> {
     setState(() {
       _isCreateMode = !_isCreateMode;
       _confirmController.clear();
+      _termsMissing = false;
     });
   }
 
+  /// Creating an account needs the terms accepted; signing in does not ask
+  /// here (anyone who never accepted is shown them after signing in).
+  bool _checkTerms() {
+    if (!_isCreateMode || _agreedToTerms) return true;
+    setState(() => _termsMissing = true);
+    return false;
+  }
+
+  Future<void> _continueWithGoogle() async {
+    if (!_checkTerms()) return;
+    final authVm = ref.read(authViewModelProvider.notifier);
+    await _run(
+      _Action.google,
+      () => authVm.signInWithGoogle(acceptTerms: _isCreateMode),
+    );
+  }
+
   Future<void> _submitCredentials() async {
-    if (!_signInFormKey.currentState!.validate()) return;
+    final formValid = _signInFormKey.currentState!.validate();
+    if (!_checkTerms() || !formValid) return;
     final authVm = ref.read(authViewModelProvider.notifier);
     await _run(
       _Action.email,
@@ -120,6 +145,9 @@ class _OnboardingViewState extends ConsumerState<OnboardingView> {
     if (authState.isSignedIn && authState.needsEmailVerification) {
       return const VerifyEmailView();
     }
+    if (authState.isSignedIn && authState.needsTermsAcceptance) {
+      return const TermsGateView();
+    }
     if (authState.isSignedIn) return const OnboardingFlowView();
     // A new install sees what the app is about before being asked to sign in.
     if (!ref.watch(firstRunProvider.select((s) => s.welcomeSeen))) {
@@ -149,7 +177,6 @@ class _OnboardingViewState extends ConsumerState<OnboardingView> {
   }
 
   Widget _buildSignInStep(ThemeData theme, String? error) {
-    final authVm = ref.read(authViewModelProvider.notifier);
     return Form(
       key: _signInFormKey,
       child: Column(
@@ -157,7 +184,10 @@ class _OnboardingViewState extends ConsumerState<OnboardingView> {
         children: [
           const AppLogo.tile(),
           const SizedBox(height: 24),
-          Text('Sign in', style: theme.textTheme.headlineSmall),
+          Text(
+            _isCreateMode ? 'Create your account' : 'Sign in',
+            style: theme.textTheme.headlineSmall,
+          ),
           const SizedBox(height: 8),
           Text(
             'Your vocabulary, review history and immersion sessions follow your '
@@ -188,11 +218,23 @@ class _OnboardingViewState extends ConsumerState<OnboardingView> {
               ),
             ],
           ),
+          if (_isCreateMode) ...[
+            const SizedBox(height: 16),
+            // Above both ways in: it covers a Google sign-up as well.
+            TermsAgreement(
+              value: _agreedToTerms,
+              onChanged: (value) => setState(() {
+                _agreedToTerms = value;
+                if (value) _termsMissing = false;
+              }),
+              errorText: _termsMissing
+                  ? 'Please agree to the terms to create an account'
+                  : null,
+            ),
+          ],
           const SizedBox(height: 24),
           FilledButton.icon(
-            onPressed: _busy
-                ? null
-                : () => _run(_Action.google, authVm.signInWithGoogle),
+            onPressed: _busy ? null : _continueWithGoogle,
             icon: _busyAction == _Action.google
                 ? const _ButtonSpinner()
                 : const Icon(Icons.login),

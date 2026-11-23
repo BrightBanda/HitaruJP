@@ -65,5 +65,14 @@ void main() {
     await tester.tap(submit);
     await tester.pumpAndSettle();
     expect(find.text("Passwords don't match"), findsOneWidget);
+    // The terms must be agreed to as well.
+    expect(
+      find.text('Please agree to the terms to create an account'),
+      findsOneWidget,
+    );
+    expect(
+      find.textContaining('Terms of Service', findRichText: true),
+      findsOneWidget,
+    );
   });
 }

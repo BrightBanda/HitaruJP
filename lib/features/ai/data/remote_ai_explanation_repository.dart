@@ -64,7 +64,7 @@ class RemoteAiExplanationRepository implements AiExplanationRepository {
       );
     }
 
-    if (response.statusCode != 200) throw _errorFor(response.statusCode);
+    if (response.statusCode != 200) throw errorFor(response);
     try {
       return parse(
         jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>,
@@ -76,8 +76,23 @@ class RemoteAiExplanationRepository implements AiExplanationRepository {
     }
   }
 
-  static AiExplanationException _errorFor(int status) {
-    final (type, message) = switch (status) {
+  /// The error to show for a failed [response]. Public for tests.
+  static AiExplanationException errorFor(http.Response response) {
+    final limit = _dailyLimit(response);
+    if (limit != null) {
+      final (count, isPaid) = limit;
+      return AiExplanationException(
+        AppError(
+          type: AppErrorType.rateLimited,
+          message: isPaid
+              ? "You've used all $count AI explanations for today. "
+                    'More tomorrow!'
+              : "You've used today's $count free AI explanations. "
+                    'Premium gives you 20 a day, or come back tomorrow.',
+        ),
+      );
+    }
+    final (type, message) = switch (response.statusCode) {
       401 || 403 => (AppErrorType.auth, 'Sign in again to use AI help.'),
       429 => (AppErrorType.rateLimited, 'The AI is busy. Try again shortly.'),
       503 => (AppErrorType.unknown, 'AI help is not set up on the server yet.'),
@@ -85,6 +100,25 @@ class RemoteAiExplanationRepository implements AiExplanationRepository {
       _ => (AppErrorType.unknown, 'The AI could not answer. Try again.'),
     };
     return AiExplanationException(AppError(type: type, message: message));
+  }
+
+  /// The daily allowance and whether the learner is paid, when [response] is
+  /// the server refusing because today's allowance is used up; null for any
+  /// other failure (a 429 can also mean the AI provider is busy).
+  static (int, bool)? _dailyLimit(http.Response response) {
+    if (response.statusCode != 429) return null;
+    try {
+      final body = jsonDecode(utf8.decode(response.bodyBytes));
+      final detail = body is Map ? body['detail'] : null;
+      if (detail is! Map || detail['code'] != 'daily_limit_reached') {
+        return null;
+      }
+      final limit = (detail['limit'] as num?)?.toInt();
+      if (limit == null) return null;
+      return (limit, detail['tier'] != 'free');
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Maps the camelCase response body. Public for tests.
