@@ -255,6 +255,7 @@ class RemoteSocialRepository implements SocialRepository {
       videoXp: (map['videoXp'] as num?)?.toInt() ?? 0,
       dialogueXp: (map['dialogueXp'] as num?)?.toInt() ?? 0,
       flashcardXp: (map['flashcardXp'] as num?)?.toInt() ?? 0,
+      todayXp: (map['todayXp'] as num?)?.toInt() ?? 0,
     );
   }
 

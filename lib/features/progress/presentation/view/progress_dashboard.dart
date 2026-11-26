@@ -192,9 +192,12 @@ class _StatGrid extends StatelessWidget {
             value: '${summary.currentStreak}d',
             icon: Icons.local_fire_department,
             accentColor: AppColors.primaryMain,
-            caption: summary.longestStreak > 0
-                ? 'best ${summary.longestStreak}d'
-                : null,
+            caption: [
+              if (summary.longestStreak > 0) 'best ${summary.longestStreak}d',
+              if (summary.freezeAllowance > 0)
+                '🧊 ${summary.freezesLeft} '
+                    '${summary.freezesLeft == 1 ? 'freeze' : 'freezes'} left',
+            ].join(' · ').nullIfEmpty,
           ),
         ),
       ],
@@ -494,4 +497,8 @@ class _LearningRow extends StatelessWidget {
       ],
     );
   }
+}
+
+extension on String {
+  String? get nullIfEmpty => isEmpty ? null : this;
 }

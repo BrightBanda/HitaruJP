@@ -413,7 +413,10 @@ class _StatsRow extends ConsumerWidget {
           child: _StatTile(
             icon: Icons.local_fire_department,
             value: value(() => summary?.currentStreak),
-            label: 'Day streak',
+            // Freezes left this week, when the streak has earned some.
+            label: (summary?.freezeAllowance ?? 0) > 0
+                ? 'Day streak · 🧊${summary!.freezesLeft}'
+                : 'Day streak',
           ),
         ),
         const SizedBox(width: 8),

@@ -2,6 +2,8 @@ import 'package:ingrain/core/providers.dart';
 import 'package:ingrain/core/storage/local_document_store.dart';
 import 'package:ingrain/features/auth/presentation/viewmodel/auth_view_model.dart';
 import 'package:ingrain/features/catalog/presentation/viewmodel/catalog_providers.dart';
+import 'package:ingrain/features/progress/data/streak_freeze_config.dart';
+import 'package:ingrain/features/progress/domain/streaks.dart';
 import 'package:ingrain/features/social/presentation/viewmodel/social_providers.dart';
 import 'package:ingrain/features/notifications/presentation/viewmodel/notification_view_model.dart';
 import 'package:ingrain/features/profile/presentation/viewmodel/profile_sync_providers.dart';
@@ -45,6 +47,9 @@ appTestOverrides(
   authRepositoryProvider.overrideWithValue(session ?? FakeAuthSession()),
   termsRepositoryProvider.overrideWithValue(terms ?? FakeTermsRepository()),
   socialRepositoryProvider.overrideWithValue(social ?? FakeSocialRepository()),
+  streakFreezeConfigRepositoryProvider.overrideWithValue(
+    const FakeStreakFreezeConfig(),
+  ),
   profileSyncRepositoryProvider.overrideWithValue(
     profileSync ?? FakeProfileSyncRepository(),
   ),
@@ -55,3 +60,13 @@ appTestOverrides(
     catalog ?? FakeCatalogRepository(),
   ),
 ];
+
+/// The default streak freeze tiers, without a server.
+class FakeStreakFreezeConfig implements StreakFreezeConfigRepository {
+  const FakeStreakFreezeConfig([this.rules = StreakFreezeRules.defaults]);
+
+  final StreakFreezeRules rules;
+
+  @override
+  Future<StreakFreezeRules> fetch() async => rules;
+}

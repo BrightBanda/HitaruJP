@@ -236,6 +236,9 @@ class LeaderboardEntry {
   final int dialogueXp;
   final int flashcardXp;
 
+  /// XP earned today, all sources.
+  final int todayXp;
+
   const LeaderboardEntry({
     required this.rank,
     required this.person,
@@ -247,6 +250,7 @@ class LeaderboardEntry {
     this.videoXp = 0,
     this.dialogueXp = 0,
     this.flashcardXp = 0,
+    this.todayXp = 0,
   });
 }
 

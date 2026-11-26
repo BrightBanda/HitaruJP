@@ -1,5 +1,6 @@
 import 'package:ingrain/features/immersion/domain/immersion_session.dart';
 import 'package:ingrain/features/progress/domain/progress_summary.dart';
+import 'package:ingrain/features/progress/domain/streaks.dart';
 import 'package:ingrain/features/sentence_mining/domain/sentence_item.dart';
 import 'package:ingrain/features/srs/domain/review_card.dart';
 import 'package:ingrain/features/srs/domain/review_event.dart';
@@ -24,6 +25,7 @@ class ProgressCalculator {
     required List<ReviewEvent> reviewEvents,
     required DateTime today,
     required int dailyGoalMinutes,
+    StreakFreezeRules freezeRules = StreakFreezeRules.defaults,
   }) {
     final todayDay = _day(today);
 
@@ -72,15 +74,17 @@ class ProgressCalculator {
         .where((card) => card.dueAt.toLocal().isBefore(endOfToday))
         .length;
 
-    final activeDays = secondsByDay.keys.toList()..sort();
     final reviewedToday = reviewsByDay[todayDay] ?? 0;
+    final streak = streakState(secondsByDay.keys, todayDay, freezeRules);
 
     return ProgressSummary(
       todaySeconds: todaySeconds,
       weekSeconds: weekSeconds,
       lifetimeSeconds: lifetimeSeconds,
-      currentStreak: _currentStreak(activeDays, todayDay),
-      longestStreak: _longestStreak(activeDays),
+      currentStreak: streak.current,
+      longestStreak: streak.longest,
+      freezesUsedThisWeek: streak.usedThisWeek,
+      freezeAllowance: streak.allowance,
       totalSentences: sentences.length,
       sentencesThisWeek: sentencesThisWeek,
       totalWords: vocabulary.length,
@@ -93,47 +97,6 @@ class ProgressCalculator {
       dailyGoalMinutes: dailyGoalMinutes,
       last7Days: last7Days,
     );
-  }
-
-  /// Streak counts back from today. If today has no immersion yet the streak is
-  /// still alive when yesterday was active, so the user does not lose it before
-  /// the end of the day.
-  static int _currentStreak(
-    List<DateTime> sortedActiveDays,
-    DateTime todayDay,
-  ) {
-    if (sortedActiveDays.isEmpty) return 0;
-
-    var cursor = todayDay;
-    if (!sortedActiveDays.contains(cursor)) {
-      cursor = _shiftDays(todayDay, -1);
-      if (!sortedActiveDays.contains(cursor)) return 0;
-    }
-
-    final active = sortedActiveDays.toSet();
-    var streak = 0;
-    while (active.contains(cursor)) {
-      streak++;
-      cursor = _shiftDays(cursor, -1);
-    }
-    return streak;
-  }
-
-  static int _longestStreak(List<DateTime> sortedActiveDays) {
-    if (sortedActiveDays.isEmpty) return 0;
-
-    var longest = 1;
-    var run = 1;
-    for (var i = 1; i < sortedActiveDays.length; i++) {
-      final previous = _shiftDays(sortedActiveDays[i], -1);
-      if (sortedActiveDays[i - 1] == previous) {
-        run++;
-      } else {
-        if (run > longest) longest = run;
-        run = 1;
-      }
-    }
-    return run > longest ? run : longest;
   }
 
   static DateTime _day(DateTime value) =>

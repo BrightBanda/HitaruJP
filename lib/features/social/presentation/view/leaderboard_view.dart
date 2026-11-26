@@ -399,7 +399,9 @@ class LeaderboardRow extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
-                      _breakdown(entry),
+                      entry.todayXp > 0
+                          ? '+${entry.todayXp} XP today'
+                          : 'No XP yet today',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodySmall,
@@ -419,16 +421,4 @@ class LeaderboardRow extends StatelessWidget {
       ),
     );
   }
-}
-
-/// Where a week's XP came from, biggest first: `🧠 45 · ▶ 60 · 🃏 20`.
-String _breakdown(LeaderboardEntry entry) {
-  final parts = [
-    ('🧠', entry.quizXp),
-    ('▶', entry.videoXp),
-    ('💬', entry.dialogueXp),
-    ('🃏', entry.flashcardXp),
-  ].where((part) => part.$2 > 0).toList()..sort((a, b) => b.$2.compareTo(a.$2));
-  if (parts.isEmpty) return 'No XP yet this week';
-  return parts.map((part) => '${part.$1} ${part.$2}').join(' · ');
 }

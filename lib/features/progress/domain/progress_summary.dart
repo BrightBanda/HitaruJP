@@ -40,6 +40,10 @@ class ProgressSummary {
   final int dailyGoalMinutes;
   final List<DailyActivity> last7Days;
 
+  /// Streak freezes spent this week, and how many the streak allows a week.
+  final int freezesUsedThisWeek;
+  final int freezeAllowance;
+
   const ProgressSummary({
     required this.todaySeconds,
     required this.weekSeconds,
@@ -55,7 +59,14 @@ class ProgressSummary {
     required this.totalReviews,
     required this.dailyGoalMinutes,
     required this.last7Days,
+    this.freezesUsedThisWeek = 0,
+    this.freezeAllowance = 0,
   });
+
+  /// Streak freezes still to spend this week.
+  int get freezesLeft => freezeAllowance - freezesUsedThisWeek < 0
+      ? 0
+      : freezeAllowance - freezesUsedThisWeek;
 
   static const ProgressSummary empty = ProgressSummary(
     todaySeconds: 0,
@@ -90,6 +101,8 @@ class ProgressSummary {
     'totalReviews': totalReviews,
     'dailyGoalMinutes': dailyGoalMinutes,
     'last7Days': [for (final day in last7Days) day.toJson()],
+    'freezesUsedThisWeek': freezesUsedThisWeek,
+    'freezeAllowance': freezeAllowance,
   };
 
   factory ProgressSummary.fromJson(Map<String, dynamic> json) {
@@ -108,6 +121,8 @@ class ProgressSummary {
       reviewedToday: field('reviewedToday'),
       totalReviews: field('totalReviews'),
       dailyGoalMinutes: field('dailyGoalMinutes'),
+      freezesUsedThisWeek: field('freezesUsedThisWeek'),
+      freezeAllowance: field('freezeAllowance'),
       last7Days: [
         for (final day in json['last7Days'] as List? ?? const [])
           DailyActivity.fromJson(Map<String, dynamic>.from(day as Map)),

@@ -14,6 +14,7 @@ import 'package:ingrain/features/immersion/domain/immersion_repository.dart';
 import 'package:ingrain/features/immersion/presentation/viewmodel/immersion_session_view_model.dart';
 import 'package:ingrain/features/quiz/data/quiz_repository.dart';
 import 'package:ingrain/features/social/presentation/viewmodel/social_providers.dart';
+import 'package:ingrain/features/progress/data/streak_freeze_config.dart';
 import 'package:ingrain/features/progress/domain/progress_calculator.dart';
 import 'package:ingrain/features/progress/domain/progress_summary.dart';
 import 'package:ingrain/features/sentence_mining/domain/sentence_repository.dart';
@@ -142,6 +143,8 @@ class ProgressViewModel extends Notifier<ProgressUiState> {
     // still loading on first build: the dependency re-runs this ViewModel.
     final goalMinutes =
         ref.watch(settingsViewModelProvider).settings?.dailyGoalMinutes ?? 30;
+    // New tiers from an admin recount the streak.
+    final freezeRules = ref.watch(streakFreezeRulesProvider);
 
     try {
       final now = _clock.now;
@@ -192,6 +195,7 @@ class ProgressViewModel extends Notifier<ProgressUiState> {
         reviewEvents: reviewEvents,
         today: now,
         dailyGoalMinutes: goalMinutes,
+        freezeRules: freezeRules,
       );
       final growth = GrowthCalculator(ref.read(growthRulesProvider)).compute(
         dayActivitiesFrom(
