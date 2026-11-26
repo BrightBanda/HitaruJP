@@ -174,7 +174,7 @@ class _FriendActionsState extends ConsumerState<_FriendActions> {
         : await repository.addFriend(widget.person.username);
     if (mounted) setState(() => _relation = updated.relation);
     container
-      ..invalidate(friendsOverviewProvider)
+      ..invalidate(socialSummaryProvider)
       ..invalidate(leaderboardProvider)
       ..invalidate(publicProfileProvider(widget.person.username));
   });

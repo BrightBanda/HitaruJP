@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ingrain/core/lifecycle.dart';
 import 'package:ingrain/core/providers.dart';
 import 'package:ingrain/features/auth/presentation/viewmodel/auth_view_model.dart';
+import 'package:ingrain/core/storage/stale_while_revalidate.dart';
+import 'package:ingrain/features/catalog/data/catalog_video_dto.dart';
 import 'package:ingrain/features/catalog/data/remote_catalog_repository.dart';
 import 'package:ingrain/features/catalog/domain/catalog_repository.dart';
 import 'package:ingrain/features/catalog/domain/catalog_video.dart';
@@ -53,14 +55,26 @@ final dailyPicksProvider = FutureProvider<DailyPicks>((ref) async {
   return picks;
 }, retry: (_, _) => null);
 
-/// More catalogue videos at the learner's level, for browsing past today's picks.
-final levelVideosProvider = FutureProvider<List<CatalogVideo>>((ref) async {
+/// More catalogue videos at the learner's level, for browsing past today's
+/// picks. Opens with the copy kept on the device while the server answers.
+final levelVideosProvider = StreamProvider<List<CatalogVideo>>((ref) {
   final level =
       ref.watch(
         authViewModelProvider.select((state) => state.profile?.level),
       ) ??
       JlptLevel.fallback;
-  return ref.watch(catalogRepositoryProvider).videosAtLevel(level);
+  final uid = ref.watch(authViewModelProvider.select((state) => state.uid));
+  final repository = ref.watch(catalogRepositoryProvider);
+  return staleWhileRevalidate(
+    ref,
+    key: 'level_videos_${uid}_${level.code}',
+    fetch: () => repository.videosAtLevel(level),
+    toJson: (videos) => [for (final v in videos) CatalogVideoDto.toJson(v)],
+    fromJson: (json) => [
+      for (final item in json! as List)
+        CatalogVideoDto.fromJson(Map<String, dynamic>.from(item as Map)),
+    ],
+  );
 }, retry: (_, _) => null);
 
 /// Opens catalogue videos in the immersion player.

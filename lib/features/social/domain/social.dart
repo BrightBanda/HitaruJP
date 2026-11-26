@@ -149,6 +149,21 @@ class SocialMe {
   const SocialMe({this.username, this.stats = const PublicStats()});
 }
 
+/// Everything the Friends tab and the Friends badge need, fetched in one
+/// call: the learner's username, their friends and requests, and the
+/// cheers, nudges and shares they got.
+class SocialSummary {
+  final SocialMe me;
+  final FriendsOverview friends;
+  final List<ReceivedPing> pings;
+
+  const SocialSummary({
+    required this.me,
+    this.friends = const FriendsOverview(),
+    this.pings = const [],
+  });
+}
+
 class FriendsOverview {
   final List<Person> friends;
   final List<Person> incoming;
@@ -345,6 +360,9 @@ class SocialException implements Exception {
 /// all kept by the HitaruJP server. Failures arrive as [SocialException].
 abstract interface class SocialRepository {
   Future<SocialMe> me();
+
+  /// Username, friends and requests, and received pings, in one call.
+  Future<SocialSummary> summary({required DateTime today});
 
   /// Claims a unique username: 3 to 20 lowercase letters, digits or `_`.
   Future<SocialMe> setUsername(String username);

@@ -29,7 +29,7 @@ class _FriendsPanelState extends ConsumerState<FriendsPanel> {
     // What friends see and any quiz finished offline, sent on every visit.
     unawaited(
       Future.microtask(() {
-        if (mounted) ref.read(socialSyncProvider.notifier).syncAll();
+        if (mounted) ref.read(socialSyncProvider.notifier).syncIfStale();
       }),
     );
   }
@@ -37,13 +37,10 @@ class _FriendsPanelState extends ConsumerState<FriendsPanel> {
   Future<void> _refresh() async {
     final container = ref.container;
     await container.read(socialSyncProvider.notifier).syncAll();
-    container
-      ..invalidate(friendsOverviewProvider)
-      ..invalidate(receivedPingsProvider)
-      ..invalidate(socialBadgeProvider);
+    container..invalidate(socialSummaryProvider);
     await container
-        .read(friendsOverviewProvider.future)
-        .catchError((Object _) => const FriendsOverview());
+        .read(socialSummaryProvider.future)
+        .catchError((Object _) => const SocialSummary(me: SocialMe()));
   }
 
   @override
@@ -55,7 +52,7 @@ class _FriendsPanelState extends ConsumerState<FriendsPanel> {
         message: error is SocialException
             ? error.message
             : 'Could not reach the HitaruJP server.',
-        onRetry: () => ref.invalidate(socialMeProvider),
+        onRetry: () => ref.invalidate(socialSummaryProvider),
       ),
       data: (me) => me.username == null
           ? const UsernameSetup()
@@ -132,7 +129,7 @@ class _UsernameSetupState extends ConsumerState<UsernameSetup> {
     try {
       await container.read(socialRepositoryProvider).setUsername(username);
       container
-        ..invalidate(socialMeProvider)
+        ..invalidate(socialSummaryProvider)
         ..invalidate(leaderboardProvider);
     } on SocialException catch (error) {
       if (mounted) setState(() => _error = error.message);
@@ -228,7 +225,7 @@ class _FriendsListState extends ConsumerState<_FriendsList> {
     final container = ref.container;
     unawaited(
       container.read(socialRepositoryProvider).markPingsSeen().then((_) {
-        container.invalidate(socialBadgeProvider);
+        container.invalidate(socialSummaryProvider);
       }, onError: (Object _) {}),
     );
   }
@@ -246,9 +243,9 @@ class _FriendsListState extends ConsumerState<_FriendsList> {
       );
     }
     container
-      ..invalidate(friendsOverviewProvider)
+      ..invalidate(socialSummaryProvider)
       ..invalidate(leaderboardProvider)
-      ..invalidate(socialBadgeProvider);
+      ..invalidate(socialSummaryProvider);
   }
 
   @override
@@ -268,7 +265,7 @@ class _FriendsListState extends ConsumerState<_FriendsList> {
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, _) => SocialProblem(
         message: '$error',
-        onRetry: () => ref.invalidate(friendsOverviewProvider),
+        onRetry: () => ref.invalidate(socialSummaryProvider),
       ),
       data: (overview) => ListView(
         physics: const AlwaysScrollableScrollPhysics(),
@@ -496,7 +493,7 @@ class _FriendTileState extends ConsumerState<_FriendTile> {
           .removeFriend(widget.friend.username);
     } catch (_) {}
     container
-      ..invalidate(friendsOverviewProvider)
+      ..invalidate(socialSummaryProvider)
       ..invalidate(leaderboardProvider);
   }
 

@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ingrain/core/providers.dart';
+import 'package:ingrain/core/storage/stale_while_revalidate.dart';
 import 'package:ingrain/features/auth/presentation/viewmodel/auth_view_model.dart';
 import 'package:ingrain/features/growth/domain/growth_rules.dart';
 import 'package:ingrain/features/immersion/presentation/viewmodel/immersion_session_view_model.dart';
@@ -7,6 +8,7 @@ import 'package:ingrain/features/progress/presentation/viewmodel/progress_view_m
 import 'package:ingrain/features/quiz/domain/daily_quiz.dart';
 import 'package:ingrain/features/quiz/presentation/viewmodel/quiz_providers.dart';
 import 'package:ingrain/features/social/data/remote_social_repository.dart';
+import 'package:ingrain/features/social/data/social_json.dart';
 import 'package:ingrain/features/social/domain/social.dart';
 
 final socialRepositoryProvider = Provider<SocialRepository>(
@@ -18,58 +20,81 @@ DateTime _today(Ref ref) {
   return DateTime(now.year, now.month, now.day);
 }
 
+String _uid(Ref ref) =>
+    ref.watch(authViewModelProvider.select((auth) => auth.uid));
+
+/// The learner's username, friends, requests and received pings, in one
+/// call. Opens with the copy kept on the device, so Friends and the badge
+/// show at once while the server answers.
+final socialSummaryProvider = StreamProvider<SocialSummary>((ref) {
+  final uid = _uid(ref);
+  return staleWhileRevalidate(
+    ref,
+    key: 'social_summary_$uid',
+    fetch: () => ref.read(socialRepositoryProvider).summary(today: _today(ref)),
+    toJson: SocialJson.summaryToJson,
+    fromJson: SocialJson.summary,
+  );
+});
+
 /// The learner's username (null until chosen) and shared stats.
-final socialMeProvider = FutureProvider<SocialMe>((ref) {
-  ref.watch(authViewModelProvider.select((auth) => auth.uid));
-  return ref.read(socialRepositoryProvider).me();
-});
+final socialMeProvider = Provider<AsyncValue<SocialMe>>(
+  (ref) => ref.watch(socialSummaryProvider).whenData((s) => s.me),
+);
 
-final friendsOverviewProvider = FutureProvider<FriendsOverview>((ref) {
-  ref.watch(authViewModelProvider.select((auth) => auth.uid));
-  return ref.read(socialRepositoryProvider).friends(today: _today(ref));
-});
+final friendsOverviewProvider = Provider<AsyncValue<FriendsOverview>>(
+  (ref) => ref.watch(socialSummaryProvider).whenData((s) => s.friends),
+);
 
-final receivedPingsProvider = FutureProvider<List<ReceivedPing>>((ref) {
-  ref.watch(authViewModelProvider.select((auth) => auth.uid));
-  return ref.read(socialRepositoryProvider).pings();
-});
+final receivedPingsProvider = Provider<AsyncValue<List<ReceivedPing>>>(
+  (ref) => ref.watch(socialSummaryProvider).whenData((s) => s.pings),
+);
 
 /// Someone's profile page, by username.
-final publicProfileProvider = FutureProvider.family<PublicProfile, String>((
+final publicProfileProvider = StreamProvider.family<PublicProfile, String>((
   ref,
   username,
 ) {
-  ref.watch(authViewModelProvider.select((auth) => auth.uid));
-  return ref
-      .read(socialRepositoryProvider)
-      .profile(username, today: _today(ref));
+  final uid = _uid(ref);
+  return staleWhileRevalidate(
+    ref,
+    key: 'profile_${uid}_$username',
+    fetch: () => ref
+        .read(socialRepositoryProvider)
+        .profile(username, today: _today(ref)),
+    toJson: SocialJson.profileToJson,
+    fromJson: SocialJson.profile,
+  );
 });
 
 /// Who may see the learner's profile stats.
 final privacyProvider = FutureProvider<ProfileVisibility>((ref) {
-  ref.watch(authViewModelProvider.select((auth) => auth.uid));
+  _uid(ref);
   return ref.read(socialRepositoryProvider).privacy();
 });
 
 /// This week's board, public or among friends.
 final leaderboardProvider =
-    FutureProvider.family<Leaderboard, LeaderboardScope>((ref, scope) {
-      ref.watch(authViewModelProvider.select((auth) => auth.uid));
-      return ref
-          .read(socialRepositoryProvider)
-          .leaderboard(today: _today(ref), scope: scope);
+    StreamProvider.family<Leaderboard, LeaderboardScope>((ref, scope) {
+      final uid = _uid(ref);
+      return staleWhileRevalidate(
+        ref,
+        key: 'leaderboard_${uid}_${scope.name}',
+        fetch: () => ref
+            .read(socialRepositoryProvider)
+            .leaderboard(today: _today(ref), scope: scope),
+        toJson: SocialJson.leaderboardToJson,
+        fromJson: SocialJson.leaderboard,
+      );
     });
 
 /// Friend requests and unseen cheers waiting, for the badge on the Friends
-/// button. Zero when the server cannot be reached: it is only a hint.
-final socialBadgeProvider = FutureProvider<int>((ref) async {
-  try {
-    final overview = await ref.watch(friendsOverviewProvider.future);
-    final pings = await ref.watch(receivedPingsProvider.future);
-    return overview.incoming.length + pings.where((ping) => !ping.seen).length;
-  } catch (_) {
-    return 0;
-  }
+/// button. Zero until known: it is only a hint.
+final socialBadgeProvider = Provider<int>((ref) {
+  final summary = ref.watch(socialSummaryProvider).value;
+  if (summary == null) return 0;
+  return summary.friends.incoming.length +
+      summary.pings.where((ping) => !ping.seen).length;
 });
 
 /// Keeps the server's view of this learner current: the stats friends see
@@ -127,7 +152,7 @@ class SocialSync extends Notifier<void> {
       }
       if (!ref.mounted) return;
       ref.invalidate(leaderboardProvider);
-      ref.invalidate(friendsOverviewProvider);
+      ref.invalidate(socialSummaryProvider);
     } catch (_) {
       // Offline or no username yet: the next visit tries again.
     }
@@ -169,9 +194,22 @@ class SocialSync extends Notifier<void> {
     }
   }
 
-  /// Everything, for when the learner opens Friends or the leaderboard, or
-  /// finishes a quiz.
+  /// How often opening Friends or the leaderboard syncs: often enough to
+  /// stay current, rarely enough not to refetch on every visit.
+  static const syncInterval = Duration(minutes: 2);
+  DateTime? _lastSync;
+
+  /// [syncAll], unless it ran in the last [syncInterval]. For screens that
+  /// open often; their data shows from the device copy meanwhile.
+  Future<void> syncIfStale() async {
+    final last = _lastSync;
+    if (last != null && DateTime.now().difference(last) < syncInterval) return;
+    await syncAll();
+  }
+
+  /// Everything, for when the learner finishes a quiz or pulls to refresh.
   Future<void> syncAll() async {
+    _lastSync = DateTime.now();
     await publishStats();
     await publishActivity();
     await submitPendingQuizzes();

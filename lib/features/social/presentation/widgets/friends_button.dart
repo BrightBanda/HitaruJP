@@ -9,7 +9,7 @@ class FriendsButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final waiting = ref.watch(socialBadgeProvider).value ?? 0;
+    final waiting = ref.watch(socialBadgeProvider);
     return IconButton(
       tooltip: 'Friends',
       onPressed: () => context.go('/profile?tab=friends'),

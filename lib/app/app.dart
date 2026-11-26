@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ingrain/app/player_overlay.dart';
+import 'package:ingrain/app/prefetch.dart';
 import 'package:ingrain/app/router.dart';
 import 'package:ingrain/app/theme/app_theme.dart';
 import 'package:ingrain/app/theme/theme_controller.dart';
@@ -20,6 +21,8 @@ class IngrApp extends ConsumerWidget {
     ref.watch(activityTrackerProvider);
     // Push notifications, once the first lesson is behind the learner.
     ref.watch(notificationBootstrapProvider);
+    // Friends, the leaderboard and more videos, loading in the background.
+    ref.watch(prefetchProvider);
 
     return MaterialApp.router(
       title: 'HitaruJP',

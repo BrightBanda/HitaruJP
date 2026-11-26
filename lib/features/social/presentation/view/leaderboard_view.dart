@@ -27,7 +27,7 @@ class _LeaderboardViewState extends ConsumerState<LeaderboardView> {
     super.initState();
     // The learner's latest XP, so their own row is current.
     Future.microtask(() {
-      if (mounted) ref.read(socialSyncProvider.notifier).syncAll();
+      if (mounted) ref.read(socialSyncProvider.notifier).syncIfStale();
     });
   }
 
@@ -62,7 +62,7 @@ class _LeaderboardViewState extends ConsumerState<LeaderboardView> {
           message: error is SocialException
               ? error.message
               : 'Could not reach the HitaruJP server.',
-          onRetry: () => ref.invalidate(socialMeProvider),
+          onRetry: () => ref.invalidate(socialSummaryProvider),
         ),
         data: (me) => me.username == null
             ? const UsernameSetup(

@@ -32,6 +32,25 @@ In Render choose **New → Blueprint** and pick this repository.
 - Not available on web: Anki import (mobile only), YouTube search, and
   transcripts. Browsers block requests to youtube.com from other sites.
 
+## Keeping the API awake (free plan)
+
+Render's free plan puts the API to sleep after about 15 minutes without
+requests, and the next request waits 30–60 seconds for it to wake. To keep it
+awake at no cost, have a free pinger call the health check every 10 minutes:
+
+1. Sign up at [cron-job.org](https://cron-job.org) (free).
+2. Create a cron job with URL `https://ingrain-api-y6ia.onrender.com/health`,
+   every 10 minutes, method GET.
+
+Also put the Render service and the Supabase database in the same region
+(Render → Settings → Region; Supabase → Project Settings → General). Every API
+request makes several database queries, and a cross-region hop adds to each.
+
+The app is built for a slow or sleeping server: lists open from the copy kept
+on the device (`staleWhileRevalidate`), the Friends tab loads in one call
+(`/social/summary`), and Friends, the leaderboard and level videos start
+loading in the background shortly after launch.
+
 ## Android release setup
 
 The Android application ID is `com.hautek.hitarujp`, set in `android/app/build.gradle.kts`.

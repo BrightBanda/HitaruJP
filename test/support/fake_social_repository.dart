@@ -36,6 +36,16 @@ class FakeSocialRepository implements SocialRepository {
   }
 
   @override
+  Future<SocialSummary> summary({required DateTime today}) async {
+    _check();
+    return SocialSummary(
+      me: await me(),
+      friends: await friends(today: today),
+      pings: await pings(),
+    );
+  }
+
+  @override
   Future<SocialMe> setUsername(String username) async {
     _check();
     if (people.any((p) => p.username == username)) {

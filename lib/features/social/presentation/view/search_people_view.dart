@@ -95,7 +95,7 @@ class _SearchPeopleViewState extends ConsumerState<SearchPeopleView> {
         ];
       });
       container
-        ..invalidate(friendsOverviewProvider)
+        ..invalidate(socialSummaryProvider)
         ..invalidate(leaderboardProvider);
     } on SocialException catch (error) {
       if (mounted) {

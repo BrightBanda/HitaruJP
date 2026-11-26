@@ -23,6 +23,21 @@ abstract final class CatalogVideoDto {
     reason: PickReason.fromCode(json['reason']),
   );
 
+  /// The same shape [fromJson] reads, for the on-device copy.
+  static Map<String, dynamic> toJson(CatalogVideo video) => {
+    'id': video.id,
+    'title': video.title,
+    'description': video.description,
+    'level': video.level?.code,
+    'categories': [for (final c in video.categories) c.code],
+    'videoUrl': video.videoUrl,
+    'youtubeId': video.youtubeId,
+    'thumbnailUrl': video.thumbnailUrl,
+    'durationSeconds': video.durationSeconds,
+    'channelTitle': video.channelTitle,
+    'reason': video.reason?.code,
+  };
+
   static DailyPicks picksFromJson(
     Map<String, dynamic> json, {
     bool isCached = false,

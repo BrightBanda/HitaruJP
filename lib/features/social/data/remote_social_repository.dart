@@ -1,5 +1,6 @@
 import 'package:ingrain/core/network/api_client.dart';
 import 'package:ingrain/features/quiz/domain/daily_quiz.dart';
+import 'package:ingrain/features/social/data/social_json.dart';
 import 'package:ingrain/features/social/domain/social.dart';
 
 /// [SocialRepository] on the HitaruJP API's `/social` and `/shares` routes.
@@ -68,40 +69,18 @@ class RemoteSocialRepository implements SocialRepository {
 
   @override
   Future<PublicProfile> profile(String username, {required DateTime today}) =>
-      _call(() async {
-        final map = _map(
+      _call(
+        () async => SocialJson.profile(
           await _api.get(
             '/social/people/${Uri.encodeComponent(username)}',
             query: {'today': quizDayKey(today)},
           ),
-        );
-        WeekStanding? week(Object? json) {
-          if (json is! Map) return null;
-          return WeekStanding(
-            rank: (json['rank'] as num).toInt(),
-            xp: (json['xp'] as num).toInt(),
-            participants: (json['participants'] as num).toInt(),
-          );
-        }
-
-        return PublicProfile(
-          person: person(map['person']),
-          isMe: map['isMe'] == true,
-          visible: map['visible'] != false,
-          visibility: _visibility(map['visibility']),
-          joined: DateTime.tryParse(map['joined'] as String? ?? ''),
-          currentStreak: (map['currentStreak'] as num?)?.toInt(),
-          bestStreak: (map['bestStreak'] as num?)?.toInt(),
-          xp: (map['xp'] as num?)?.toInt(),
-          level: (map['level'] as num?)?.toInt(),
-          thisWeek: week(map['thisWeek']),
-          lastWeek: week(map['lastWeek']),
-        );
-      });
+        ),
+      );
 
   @override
   Future<ProfileVisibility> privacy() => _call(
-    () async => _visibility(
+    () async => SocialJson.visibility(
       _map(await _api.get('/social/privacy'))['profileVisibility'],
     ),
   );
@@ -111,24 +90,19 @@ class RemoteSocialRepository implements SocialRepository {
     () => _api.put('/social/privacy', {'profileVisibility': visibility.name}),
   );
 
-  static ProfileVisibility _visibility(Object? name) =>
-      ProfileVisibility.values.where((v) => v.name == name).firstOrNull ??
-      ProfileVisibility.everyone;
+  @override
+  Future<FriendsOverview> friends({required DateTime today}) => _call(
+    () async => SocialJson.friends(
+      await _api.get('/social/friends', query: {'today': quizDayKey(today)}),
+    ),
+  );
 
   @override
-  Future<FriendsOverview> friends({required DateTime today}) => _call(() async {
-    final body = _map(
-      await _api.get('/social/friends', query: {'today': quizDayKey(today)}),
-    );
-    List<Person> people(String key) => [
-      for (final item in body[key] as List? ?? const []) person(item),
-    ];
-    return FriendsOverview(
-      friends: people('friends'),
-      incoming: people('incoming'),
-      outgoing: people('outgoing'),
-    );
-  });
+  Future<SocialSummary> summary({required DateTime today}) => _call(
+    () async => SocialJson.summary(
+      await _api.get('/social/summary', query: {'today': quizDayKey(today)}),
+    ),
+  );
 
   @override
   Future<Person> addFriend(String username) => _call(
@@ -165,28 +139,8 @@ class RemoteSocialRepository implements SocialRepository {
       _call(() async => _allowance(await _api.get('/social/pings/allowance')));
 
   @override
-  Future<List<ReceivedPing>> pings() => _call(() async {
-    final body = await _api.get('/social/pings');
-    return [
-      for (final item in body! as List)
-        () {
-          final map = _map(item);
-          return ReceivedPing(
-            id: (map['id'] as num).toInt(),
-            kind:
-                PingKind.values
-                    .where((kind) => kind.name == map['kind'])
-                    .firstOrNull ??
-                PingKind.cheer,
-            sender: person(map['sender']),
-            createdAt: DateTime.parse(map['createdAt'] as String).toLocal(),
-            seen: map['seen'] == true,
-            shareCode: map['shareCode'] as String?,
-            shareTitle: map['shareTitle'] as String?,
-          );
-        }(),
-    ];
-  });
+  Future<List<ReceivedPing>> pings() =>
+      _call(() async => SocialJson.pings(await _api.get('/social/pings')));
 
   @override
   Future<void> markPingsSeen() => _call(() => _api.post('/social/pings/seen'));
@@ -223,41 +177,17 @@ class RemoteSocialRepository implements SocialRepository {
   Future<Leaderboard> leaderboard({
     required DateTime today,
     LeaderboardScope scope = LeaderboardScope.friends,
-  }) => _call(() async {
-    final body = _map(
+  }) => _call(
+    () async => SocialJson.leaderboard(
       await _api.get(
         '/social/leaderboard',
         query: {'today': quizDayKey(today), 'scope': scope.name},
       ),
-    );
-    return Leaderboard(
-      scope: body['scope'] == 'everyone'
-          ? LeaderboardScope.everyone
-          : LeaderboardScope.friends,
-      weekStart: DateTime.parse(body['weekStart'] as String),
-      entries: [for (final item in body['entries'] as List) entry(item)],
-      me: body['me'] == null ? null : entry(body['me']),
-      participants: (body['participants'] as num?)?.toInt() ?? 0,
-    );
-  });
+    ),
+  );
 
   /// Public for tests.
-  static LeaderboardEntry entry(Object? json) {
-    final map = _map(json);
-    return LeaderboardEntry(
-      rank: (map['rank'] as num).toInt(),
-      person: person(map['person']),
-      isMe: map['isMe'] == true,
-      weekXp: (map['weekXp'] as num).toInt(),
-      quizzes: (map['quizzes'] as num).toInt(),
-      correct: (map['correct'] as num).toInt(),
-      quizXp: (map['quizXp'] as num?)?.toInt() ?? 0,
-      videoXp: (map['videoXp'] as num?)?.toInt() ?? 0,
-      dialogueXp: (map['dialogueXp'] as num?)?.toInt() ?? 0,
-      flashcardXp: (map['flashcardXp'] as num?)?.toInt() ?? 0,
-      todayXp: (map['todayXp'] as num?)?.toInt() ?? 0,
-    );
-  }
+  static LeaderboardEntry entry(Object? json) => SocialJson.entry(json);
 
   @override
   Future<SharedCollection> createShare({
@@ -320,13 +250,7 @@ class RemoteSocialRepository implements SocialRepository {
   static Map<String, dynamic> _map(Object? json) =>
       Map<String, dynamic>.from(json! as Map);
 
-  static SocialMe _me(Object? json) {
-    final map = _map(json);
-    return SocialMe(
-      username: map['username'] as String?,
-      stats: PublicStats.fromJson(map['stats']),
-    );
-  }
+  static SocialMe _me(Object? json) => SocialJson.me(json);
 
   static PingAllowance _allowance(Object? json) {
     final map = _map(json);
@@ -337,27 +261,7 @@ class RemoteSocialRepository implements SocialRepository {
   }
 
   /// Public for tests.
-  static Person person(Object? json) {
-    final map = _map(json);
-    final quiz = map['todayQuiz'];
-    return Person(
-      username: map['username'] as String,
-      displayName: map['displayName'] as String?,
-      avatarId: map['avatarId'] as String?,
-      stats: PublicStats.fromJson(map['stats']),
-      relation:
-          Relation.values
-              .where((relation) => relation.name == map['relation'])
-              .firstOrNull ??
-          Relation.none,
-      todayQuiz: quiz is Map
-          ? (
-              correct: (quiz['correct'] as num).toInt(),
-              total: (quiz['total'] as num).toInt(),
-            )
-          : null,
-    );
-  }
+  static Person person(Object? json) => SocialJson.person(json);
 
   /// Public for tests.
   static SharedCollection shared(Object? json) {
