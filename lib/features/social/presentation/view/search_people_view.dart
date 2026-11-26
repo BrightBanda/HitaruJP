@@ -71,7 +71,8 @@ class _SearchPeopleViewState extends ConsumerState<SearchPeopleView> {
   }
 
   Future<void> _act(Person person) async {
-    final repository = ref.read(socialRepositoryProvider);
+    final container = ref.container;
+    final repository = container.read(socialRepositoryProvider);
     setState(() => _busy.add(person.username));
     try {
       final Person updated;
@@ -93,7 +94,7 @@ class _SearchPeopleViewState extends ConsumerState<SearchPeopleView> {
             result.username == person.username ? updated : result,
         ];
       });
-      ref
+      container
         ..invalidate(friendsOverviewProvider)
         ..invalidate(leaderboardProvider);
     } on SocialException catch (error) {

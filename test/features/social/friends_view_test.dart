@@ -147,23 +147,6 @@ void main() {
     expect(find.text('Ken'), findsOneWidget);
   });
 
-  testWidgets('tapping someone on the board offers to add them', (
-    tester,
-  ) async {
-    const stranger = Person(username: 'mio', avatarId: 'usagi');
-    social
-      ..username = 'aiko'
-      ..people.add(stranger);
-    await pump(tester, const LeaderboardView());
-
-    await tester.tap(find.text('@mio'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Add friend'));
-    await tester.pumpAndSettle();
-    expect(find.text('Request sent'), findsOneWidget);
-    expect(social.outgoing.single.username, 'mio');
-  });
-
   testWidgets('search finds people by username and sends a request', (
     tester,
   ) async {

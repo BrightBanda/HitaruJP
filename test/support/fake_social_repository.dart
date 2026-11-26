@@ -136,6 +136,35 @@ class FakeSocialRepository implements SocialRepository {
   }
 
   int seenCalls = 0;
+  ProfileVisibility visibility = ProfileVisibility.everyone;
+
+  /// Profile pages by username; anyone else gets one built from [people].
+  final Map<String, PublicProfile> profiles = {};
+
+  @override
+  Future<PublicProfile> profile(
+    String username, {
+    required DateTime today,
+  }) async {
+    _check();
+    return profiles[username] ??
+        PublicProfile(
+          person: [
+            ...people,
+            ...friendsList,
+          ].firstWhere((p) => p.username == username),
+        );
+  }
+
+  @override
+  Future<ProfileVisibility> privacy() async => visibility;
+
+  @override
+  Future<void> setPrivacy(ProfileVisibility visibility) async {
+    _check();
+    this.visibility = visibility;
+  }
+
   final List<({String username, String code})> sharedWith = [];
   final List<ActivityDay> reported = [];
 

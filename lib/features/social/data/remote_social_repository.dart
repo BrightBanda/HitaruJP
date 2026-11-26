@@ -67,6 +67,55 @@ class RemoteSocialRepository implements SocialRepository {
   });
 
   @override
+  Future<PublicProfile> profile(String username, {required DateTime today}) =>
+      _call(() async {
+        final map = _map(
+          await _api.get(
+            '/social/people/${Uri.encodeComponent(username)}',
+            query: {'today': quizDayKey(today)},
+          ),
+        );
+        WeekStanding? week(Object? json) {
+          if (json is! Map) return null;
+          return WeekStanding(
+            rank: (json['rank'] as num).toInt(),
+            xp: (json['xp'] as num).toInt(),
+            participants: (json['participants'] as num).toInt(),
+          );
+        }
+
+        return PublicProfile(
+          person: person(map['person']),
+          isMe: map['isMe'] == true,
+          visible: map['visible'] != false,
+          visibility: _visibility(map['visibility']),
+          joined: DateTime.tryParse(map['joined'] as String? ?? ''),
+          currentStreak: (map['currentStreak'] as num?)?.toInt(),
+          bestStreak: (map['bestStreak'] as num?)?.toInt(),
+          xp: (map['xp'] as num?)?.toInt(),
+          level: (map['level'] as num?)?.toInt(),
+          thisWeek: week(map['thisWeek']),
+          lastWeek: week(map['lastWeek']),
+        );
+      });
+
+  @override
+  Future<ProfileVisibility> privacy() => _call(
+    () async => _visibility(
+      _map(await _api.get('/social/privacy'))['profileVisibility'],
+    ),
+  );
+
+  @override
+  Future<void> setPrivacy(ProfileVisibility visibility) => _call(
+    () => _api.put('/social/privacy', {'profileVisibility': visibility.name}),
+  );
+
+  static ProfileVisibility _visibility(Object? name) =>
+      ProfileVisibility.values.where((v) => v.name == name).firstOrNull ??
+      ProfileVisibility.everyone;
+
+  @override
   Future<FriendsOverview> friends({required DateTime today}) => _call(() async {
     final body = _map(
       await _api.get('/social/friends', query: {'today': quizDayKey(today)}),

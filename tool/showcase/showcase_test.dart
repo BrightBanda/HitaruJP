@@ -380,6 +380,16 @@ const _yuto = Person(
 class _ShowcaseSocial extends FakeSocialRepository {
   _ShowcaseSocial() : super(username: 'aiko') {
     friendsList.addAll([_ken, _mio, _yuto]);
+    profiles['mio'] = PublicProfile(
+      person: _mio,
+      joined: DateTime(2026, 3, 2),
+      currentStreak: 32,
+      bestStreak: 41,
+      xp: 5430,
+      level: 21,
+      thisWeek: const WeekStanding(rank: 3, xp: 245, participants: 1284),
+      lastWeek: const WeekStanding(rank: 1, xp: 410, participants: 1102),
+    );
     received.add(
       ReceivedPing(
         id: 1,
@@ -735,6 +745,12 @@ void main() {
     final key = GlobalKey();
     await _open(tester, key, '/profile?tab=friends');
     await _shoot(tester, key, '08_friends');
+  });
+
+  testWidgets('a public profile', (tester) async {
+    final key = GlobalKey();
+    await _open(tester, key, '/people/mio');
+    await _shoot(tester, key, '10_profile_public');
   });
 
   testWidgets('the More menu', (tester) async {

@@ -34,6 +34,23 @@ final receivedPingsProvider = FutureProvider<List<ReceivedPing>>((ref) {
   return ref.read(socialRepositoryProvider).pings();
 });
 
+/// Someone's profile page, by username.
+final publicProfileProvider = FutureProvider.family<PublicProfile, String>((
+  ref,
+  username,
+) {
+  ref.watch(authViewModelProvider.select((auth) => auth.uid));
+  return ref
+      .read(socialRepositoryProvider)
+      .profile(username, today: _today(ref));
+});
+
+/// Who may see the learner's profile stats.
+final privacyProvider = FutureProvider<ProfileVisibility>((ref) {
+  ref.watch(authViewModelProvider.select((auth) => auth.uid));
+  return ref.read(socialRepositoryProvider).privacy();
+});
+
 /// This week's board, public or among friends.
 final leaderboardProvider =
     FutureProvider.family<Leaderboard, LeaderboardScope>((ref, scope) {
@@ -71,6 +88,9 @@ class SocialSync extends Notifier<void> {
       level: growth?.level ?? 1,
       stage: growth?.stage ?? GrowthStage.egg,
       streak: progress.summary?.currentStreak ?? 0,
+      bestStreak: progress.summary?.longestStreak ?? 0,
+      xp: growth?.xp ?? 0,
+      joined: ref.read(authViewModelProvider).profile?.createdAt,
     );
   }
 

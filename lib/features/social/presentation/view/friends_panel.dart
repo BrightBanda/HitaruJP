@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ingrain/app/theme/app_colors.dart';
 import 'package:ingrain/features/social/domain/social.dart';
+import 'package:ingrain/features/social/presentation/view/public_profile_view.dart';
 import 'package:ingrain/features/social/presentation/viewmodel/social_providers.dart';
 import 'package:ingrain/features/social/presentation/widgets/person_avatar.dart';
 import 'package:ingrain/shared/widgets/colorful.dart';
@@ -27,17 +28,20 @@ class _FriendsPanelState extends ConsumerState<FriendsPanel> {
     super.initState();
     // What friends see and any quiz finished offline, sent on every visit.
     unawaited(
-      Future.microtask(() => ref.read(socialSyncProvider.notifier).syncAll()),
+      Future.microtask(() {
+        if (mounted) ref.read(socialSyncProvider.notifier).syncAll();
+      }),
     );
   }
 
   Future<void> _refresh() async {
-    await ref.read(socialSyncProvider.notifier).syncAll();
-    ref
+    final container = ref.container;
+    await container.read(socialSyncProvider.notifier).syncAll();
+    container
       ..invalidate(friendsOverviewProvider)
       ..invalidate(receivedPingsProvider)
       ..invalidate(socialBadgeProvider);
-    await ref
+    await container
         .read(friendsOverviewProvider.future)
         .catchError((Object _) => const FriendsOverview());
   }
@@ -124,9 +128,10 @@ class _UsernameSetupState extends ConsumerState<UsernameSetup> {
       _busy = true;
       _error = null;
     });
+    final container = ref.container;
     try {
-      await ref.read(socialRepositoryProvider).setUsername(username);
-      ref
+      await container.read(socialRepositoryProvider).setUsername(username);
+      container
         ..invalidate(socialMeProvider)
         ..invalidate(leaderboardProvider);
     } on SocialException catch (error) {
@@ -218,17 +223,19 @@ class _FriendsListState extends ConsumerState<_FriendsList> {
 
   /// Cheers shown once are no longer new: clears the badge.
   void _markSeen(List<ReceivedPing> pings) {
-    if (_markedSeen || pings.every((ping) => ping.seen)) return;
+    if (!mounted || _markedSeen || pings.every((ping) => ping.seen)) return;
     _markedSeen = true;
+    final container = ref.container;
     unawaited(
-      ref.read(socialRepositoryProvider).markPingsSeen().then((_) {
-        if (mounted) ref.invalidate(socialBadgeProvider);
+      container.read(socialRepositoryProvider).markPingsSeen().then((_) {
+        container.invalidate(socialBadgeProvider);
       }, onError: (Object _) {}),
     );
   }
 
   Future<void> _act(Future<void> Function() action) async {
     final messenger = ScaffoldMessenger.of(context);
+    final container = ref.container;
     try {
       await action();
     } on SocialException catch (error) {
@@ -238,7 +245,7 @@ class _FriendsListState extends ConsumerState<_FriendsList> {
         const SnackBar(content: Text('Could not reach the HitaruJP server.')),
       );
     }
-    ref
+    container
       ..invalidate(friendsOverviewProvider)
       ..invalidate(leaderboardProvider)
       ..invalidate(socialBadgeProvider);
@@ -400,6 +407,7 @@ class _PingTile extends StatelessWidget {
     final code = ping.shareCode;
     return ListTile(
       contentPadding: EdgeInsets.zero,
+      onTap: () => openProfile(context, ping.sender),
       leading: PersonAvatar(person: ping.sender, size: 40),
       title: Text(switch (ping.kind) {
         PingKind.cheer => '$name cheered you on 🎉',
@@ -480,13 +488,14 @@ class _FriendTileState extends ConsumerState<_FriendTile> {
         ],
       ),
     );
-    if (confirmed != true) return;
+    if (confirmed != true || !mounted) return;
+    final container = ref.container;
     try {
-      await ref
+      await container
           .read(socialRepositoryProvider)
           .removeFriend(widget.friend.username);
     } catch (_) {}
-    ref
+    container
       ..invalidate(friendsOverviewProvider)
       ..invalidate(leaderboardProvider);
   }
@@ -498,63 +507,71 @@ class _FriendTileState extends ConsumerState<_FriendTile> {
     final quiz = friend.todayQuiz;
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 10, 4, 10),
-        child: Row(
-          children: [
-            PersonAvatar(person: friend),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    friend.name,
-                    style: theme.textTheme.titleMedium,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  Text(
-                    '@${friend.username} · ${statsLine(friend)}',
-                    style: theme.textTheme.bodySmall,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    quiz == null
-                        ? 'No quiz yet today'
-                        : 'Quiz today: ${quiz.correct}/${quiz.total}',
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      color: quiz == null
-                          ? theme.colorScheme.onSurfaceVariant
-                          : AppColors.dialogue,
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => openProfile(context, friend),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 10, 4, 10),
+          child: Row(
+            children: [
+              PersonAvatar(person: friend),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      friend.name,
+                      style: theme.textTheme.titleMedium,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
+                    Text(
+                      '@${friend.username} · ${statsLine(friend)}',
+                      style: theme.textTheme.bodySmall,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      quiz == null
+                          ? 'No quiz yet today'
+                          : 'Quiz today: ${quiz.correct}/${quiz.total}',
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: quiz == null
+                            ? theme.colorScheme.onSurfaceVariant
+                            : AppColors.dialogue,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                tooltip: 'Cheer ${friend.name} on',
+                onPressed: _sending == null
+                    ? () => _ping(PingKind.cheer)
+                    : null,
+                icon: _sending == PingKind.cheer
+                    ? const Spinner()
+                    : const Text('🎉', style: TextStyle(fontSize: 22)),
+              ),
+              IconButton(
+                tooltip: 'Nudge ${friend.name} to study',
+                onPressed: _sending == null
+                    ? () => _ping(PingKind.nudge)
+                    : null,
+                icon: _sending == PingKind.nudge
+                    ? const Spinner()
+                    : const Text('👋', style: TextStyle(fontSize: 22)),
+              ),
+              PopupMenuButton<String>(
+                onSelected: (_) => _remove(),
+                itemBuilder: (_) => const [
+                  PopupMenuItem(value: 'remove', child: Text('Remove friend')),
                 ],
               ),
-            ),
-            IconButton(
-              tooltip: 'Cheer ${friend.name} on',
-              onPressed: _sending == null ? () => _ping(PingKind.cheer) : null,
-              icon: _sending == PingKind.cheer
-                  ? const Spinner()
-                  : const Text('🎉', style: TextStyle(fontSize: 22)),
-            ),
-            IconButton(
-              tooltip: 'Nudge ${friend.name} to study',
-              onPressed: _sending == null ? () => _ping(PingKind.nudge) : null,
-              icon: _sending == PingKind.nudge
-                  ? const Spinner()
-                  : const Text('👋', style: TextStyle(fontSize: 22)),
-            ),
-            PopupMenuButton<String>(
-              onSelected: (_) => _remove(),
-              itemBuilder: (_) => const [
-                PopupMenuItem(value: 'remove', child: Text('Remove friend')),
-              ],
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -573,33 +590,37 @@ class PersonRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        children: [
-          PersonAvatar(person: person, size: 40),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  person.name,
-                  style: theme.textTheme.titleMedium,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                Text(
-                  '@${person.username} · ${statsLine(person)}',
-                  style: theme.textTheme.bodySmall,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: () => openProfile(context, person),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Row(
+          children: [
+            PersonAvatar(person: person, size: 40),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    person.name,
+                    style: theme.textTheme.titleMedium,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    '@${person.username} · ${statsLine(person)}',
+                    style: theme.textTheme.bodySmall,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
             ),
-          ),
-          ...actions,
-        ],
+            ...actions,
+          ],
+        ),
       ),
     );
   }

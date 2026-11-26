@@ -6,6 +6,7 @@ import 'package:ingrain/app/theme/app_colors.dart';
 import 'package:ingrain/features/quiz/presentation/viewmodel/quiz_providers.dart';
 import 'package:ingrain/features/social/domain/social.dart';
 import 'package:ingrain/features/social/presentation/view/friends_panel.dart';
+import 'package:ingrain/features/social/presentation/view/public_profile_view.dart';
 import 'package:ingrain/features/social/presentation/viewmodel/social_providers.dart';
 import 'package:ingrain/features/social/presentation/widgets/person_avatar.dart';
 
@@ -25,12 +26,15 @@ class _LeaderboardViewState extends ConsumerState<LeaderboardView> {
   void initState() {
     super.initState();
     // The learner's latest XP, so their own row is current.
-    Future.microtask(() => ref.read(socialSyncProvider.notifier).syncAll());
+    Future.microtask(() {
+      if (mounted) ref.read(socialSyncProvider.notifier).syncAll();
+    });
   }
 
   Future<void> _openQuiz() async {
+    final container = ref.container;
     await context.push('/quiz');
-    ref.invalidate(leaderboardProvider);
+    container.invalidate(leaderboardProvider);
   }
 
   @override
@@ -279,9 +283,10 @@ class _Board extends ConsumerWidget {
     final theme = Theme.of(context);
     return RefreshIndicator(
       onRefresh: () async {
-        await ref.read(socialSyncProvider.notifier).syncAll();
-        ref.invalidate(leaderboardProvider(scope));
-        await ref
+        final container = ref.container;
+        await container.read(socialSyncProvider.notifier).syncAll();
+        container.invalidate(leaderboardProvider(scope));
+        await container
             .read(leaderboardProvider(scope).future)
             .catchError(
               (Object _) => Leaderboard(weekStart: DateTime.now(), entries: []),
@@ -337,8 +342,7 @@ class _Board extends ConsumerWidget {
   }
 }
 
-/// One learner's place on the board. Tapping someone else shows them, with
-/// a way to add them as a friend.
+/// One learner's place on the board. Tapping it opens their profile.
 class LeaderboardRow extends StatelessWidget {
   final LeaderboardEntry entry;
 
@@ -366,13 +370,7 @@ class LeaderboardRow extends StatelessWidget {
           : null,
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: entry.isMe
-            ? null
-            : () => showModalBottomSheet<void>(
-                context: context,
-                showDragHandle: true,
-                builder: (_) => _PersonSheet(person: entry.person),
-              ),
+        onTap: () => openProfile(context, entry.person),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           child: Row(
@@ -417,97 +415,6 @@ class LeaderboardRow extends StatelessWidget {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Someone from the board: their companion and progress, and a friend
-/// request a tap away.
-class _PersonSheet extends ConsumerStatefulWidget {
-  final Person person;
-
-  const _PersonSheet({required this.person});
-
-  @override
-  ConsumerState<_PersonSheet> createState() => _PersonSheetState();
-}
-
-class _PersonSheetState extends ConsumerState<_PersonSheet> {
-  late Relation _relation = widget.person.relation;
-  bool _busy = false;
-  String? _error;
-
-  Future<void> _add() async {
-    setState(() {
-      _busy = true;
-      _error = null;
-    });
-    try {
-      final repository = ref.read(socialRepositoryProvider);
-      final updated = _relation == Relation.incoming
-          ? await repository.acceptFriend(widget.person.username)
-          : await repository.addFriend(widget.person.username);
-      HapticFeedback.selectionClick();
-      if (mounted) setState(() => _relation = updated.relation);
-      ref
-        ..invalidate(friendsOverviewProvider)
-        ..invalidate(leaderboardProvider);
-    } on SocialException catch (error) {
-      if (mounted) setState(() => _error = error.message);
-    } catch (_) {
-      if (mounted) setState(() => _error = 'Could not reach the server.');
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final person = widget.person;
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            PersonAvatar(person: person, size: 88),
-            const SizedBox(height: 12),
-            Text(person.name, style: theme.textTheme.titleLarge),
-            if (person.displayName != null)
-              Text('@${person.username}', style: theme.textTheme.bodyMedium),
-            const SizedBox(height: 4),
-            Text(statsLine(person), style: theme.textTheme.bodySmall),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              child: switch (_relation) {
-                Relation.friends => const OutlinedButton(
-                  onPressed: null,
-                  child: Text('Friends ✓'),
-                ),
-                Relation.outgoing => const OutlinedButton(
-                  onPressed: null,
-                  child: Text('Request sent'),
-                ),
-                Relation.incoming || Relation.none => FilledButton.icon(
-                  onPressed: _busy ? null : _add,
-                  icon: _busy ? const Spinner() : const Icon(Icons.person_add),
-                  label: Text(
-                    _relation == Relation.incoming
-                        ? 'Accept friend request'
-                        : 'Add friend',
-                  ),
-                ),
-              },
-            ),
-            if (_error != null) ...[
-              const SizedBox(height: 8),
-              Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
-            ],
-          ],
         ),
       ),
     );

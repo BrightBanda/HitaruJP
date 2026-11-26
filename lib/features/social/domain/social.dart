@@ -3,22 +3,36 @@ import 'package:ingrain/features/growth/domain/growth_rules.dart';
 /// How another learner stands with this one.
 enum Relation { none, friends, outgoing, incoming }
 
-/// What a learner shows friends: worked out by their app from their history.
+/// What a learner shows others: worked out by their app from their history.
+/// Who sees the streaks, XP and join date is up to their privacy setting.
 class PublicStats {
   final int level;
   final GrowthStage stage;
   final int streak;
+  final int bestStreak;
+  final int xp;
+  final DateTime? joined;
 
   const PublicStats({
     this.level = 1,
     this.stage = GrowthStage.egg,
     this.streak = 0,
+    this.bestStreak = 0,
+    this.xp = 0,
+    this.joined,
   });
 
   Map<String, dynamic> toJson() => {
     'level': level,
     'stage': stage.name,
     'streak': streak,
+    'bestStreak': bestStreak,
+    'xp': xp,
+    if (joined case final joined?)
+      'joined':
+          '${joined.year.toString().padLeft(4, '0')}-'
+          '${joined.month.toString().padLeft(2, '0')}-'
+          '${joined.day.toString().padLeft(2, '0')}',
   };
 
   static PublicStats fromJson(Object? json) {
@@ -31,8 +45,65 @@ class PublicStats {
               .firstOrNull ??
           GrowthStage.egg,
       streak: (map['streak'] as num?)?.toInt() ?? 0,
+      bestStreak: (map['bestStreak'] as num?)?.toInt() ?? 0,
+      xp: (map['xp'] as num?)?.toInt() ?? 0,
+      joined: DateTime.tryParse(map['joined'] as String? ?? ''),
     );
   }
+}
+
+/// Who may see a learner's profile stats.
+enum ProfileVisibility {
+  everyone('Everyone'),
+  friends('Friends only'),
+  private('Only me');
+
+  const ProfileVisibility(this.label);
+
+  final String label;
+}
+
+/// A place on the public board for one week.
+class WeekStanding {
+  final int rank;
+  final int xp;
+  final int participants;
+
+  const WeekStanding({
+    required this.rank,
+    required this.xp,
+    required this.participants,
+  });
+}
+
+/// Someone's profile page. With [visible] false their stats are private to
+/// this viewer, and every stat is null.
+class PublicProfile {
+  final Person person;
+  final bool isMe;
+  final bool visible;
+  final ProfileVisibility visibility;
+  final DateTime? joined;
+  final int? currentStreak;
+  final int? bestStreak;
+  final int? xp;
+  final int? level;
+  final WeekStanding? thisWeek;
+  final WeekStanding? lastWeek;
+
+  const PublicProfile({
+    required this.person,
+    this.isMe = false,
+    this.visible = true,
+    this.visibility = ProfileVisibility.everyone,
+    this.joined,
+    this.currentStreak,
+    this.bestStreak,
+    this.xp,
+    this.level,
+    this.thisWeek,
+    this.lastWeek,
+  });
 }
 
 /// Another learner, by their @username. Never an email or an id.
@@ -277,6 +348,13 @@ abstract interface class SocialRepository {
   Future<void> setStats(PublicStats stats);
 
   Future<List<Person>> search(String query);
+
+  /// [username]'s profile page, as this learner may see it.
+  Future<PublicProfile> profile(String username, {required DateTime today});
+
+  Future<ProfileVisibility> privacy();
+
+  Future<void> setPrivacy(ProfileVisibility visibility);
 
   Future<FriendsOverview> friends({required DateTime today});
 

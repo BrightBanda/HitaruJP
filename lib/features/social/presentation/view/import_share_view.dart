@@ -64,9 +64,10 @@ class _ImportShareViewState extends ConsumerState<ImportShareView> {
   Future<void> _import(SharedCollection shared) async {
     setState(() => _imported = 0);
     final messenger = ScaffoldMessenger.of(context);
+    final container = ref.container;
     try {
       if (shared.kind == ShareKind.playlist) {
-        final content = ref.read(contentViewModelProvider.notifier);
+        final content = container.read(contentViewModelProvider.notifier);
         final ids = <String>[];
         for (final video in shared.videos) {
           final imported = await content.importYoutubeVideo(
@@ -82,7 +83,7 @@ class _ImportShareViewState extends ConsumerState<ImportShareView> {
           ids.add(imported.item.id);
           if (mounted) setState(() => _imported = ids.length);
         }
-        final playlist = await ref
+        final playlist = await container
             .read(playlistsProvider.notifier)
             .create(shared.title, videoIds: ids);
         if (!mounted) return;
@@ -93,7 +94,7 @@ class _ImportShareViewState extends ConsumerState<ImportShareView> {
           context.pushReplacement('/playlists/${playlist.id}');
         }
       } else {
-        final decks = ref.read(deckRepositoryProvider);
+        final decks = container.read(deckRepositoryProvider);
         final deck = await decks.createDeck(shared.title);
         for (final (i, card) in shared.cards.indexed) {
           await decks.addCard(
@@ -103,8 +104,9 @@ class _ImportShareViewState extends ConsumerState<ImportShareView> {
           );
           if (mounted && i % 10 == 0) setState(() => _imported = i + 1);
         }
-        ref.invalidate(deckSummariesProvider);
-        ref.invalidate(dueCountProvider);
+        container
+          ..invalidate(deckSummariesProvider)
+          ..invalidate(dueCountProvider);
         if (!mounted) return;
         messenger.showSnackBar(
           SnackBar(content: Text('Added the deck "${shared.title}"')),

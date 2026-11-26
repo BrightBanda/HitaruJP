@@ -25,6 +25,7 @@ import 'package:ingrain/features/srs/presentation/view/flashcards_view.dart';
 import 'package:ingrain/features/content/presentation/player_host/player_host.dart';
 import 'package:ingrain/features/quiz/presentation/view/quiz_view.dart';
 import 'package:ingrain/features/social/presentation/view/leaderboard_view.dart';
+import 'package:ingrain/features/social/presentation/view/public_profile_view.dart';
 import 'package:ingrain/features/settings/presentation/view/settings_view.dart';
 import 'package:ingrain/features/social/presentation/view/import_share_view.dart';
 import 'package:ingrain/features/social/presentation/view/search_people_view.dart';
@@ -158,6 +159,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             state.uri.queryParameters['tab'] == 'leaderboard'
             ? '/leaderboard'
             : '/profile?tab=friends',
+      ),
+      GoRoute(
+        path: '/people/:username',
+        builder: (context, state) => PageFrame(
+          child: PublicProfileView(username: state.pathParameters['username']!),
+        ),
       ),
       GoRoute(
         path: '/settings',
