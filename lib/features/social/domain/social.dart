@@ -90,8 +90,9 @@ class FriendsOverview {
   });
 }
 
-/// A cheer is a pat on the back; a nudge, a reminder to study.
-enum PingKind { cheer, nudge }
+/// A cheer is a pat on the back; a nudge, a reminder to study; a share,
+/// something sent to watch or study.
+enum PingKind { cheer, nudge, share }
 
 class PingAllowance {
   final int hourRemaining;
@@ -112,22 +113,57 @@ class ReceivedPing {
   final DateTime createdAt;
   final bool seen;
 
+  /// For a share: the code to import it, and what it is.
+  final String? shareCode;
+  final String? shareTitle;
+
   const ReceivedPing({
     required this.id,
     required this.kind,
     required this.sender,
     required this.createdAt,
     required this.seen,
+    this.shareCode,
+    this.shareTitle,
   });
+}
+
+/// One day's XP from videos, dialogues and flashcards, for the leaderboard.
+class ActivityDay {
+  /// `2026-11-25`.
+  final String day;
+  final int videos;
+  final int dialogues;
+  final int flashcards;
+
+  const ActivityDay({
+    required this.day,
+    this.videos = 0,
+    this.dialogues = 0,
+    this.flashcards = 0,
+  });
+
+  Map<String, dynamic> toJson() => {
+    'day': day,
+    'videos': videos,
+    'dialogues': dialogues,
+    'flashcards': flashcards,
+  };
 }
 
 class LeaderboardEntry {
   final int rank;
   final Person person;
   final bool isMe;
+
+  /// The week's XP: the four sources below added up.
   final int weekXp;
   final int quizzes;
   final int correct;
+  final int quizXp;
+  final int videoXp;
+  final int dialogueXp;
+  final int flashcardXp;
 
   const LeaderboardEntry({
     required this.rank,
@@ -136,6 +172,10 @@ class LeaderboardEntry {
     required this.weekXp,
     required this.quizzes,
     required this.correct,
+    this.quizXp = 0,
+    this.videoXp = 0,
+    this.dialogueXp = 0,
+    this.flashcardXp = 0,
   });
 }
 
@@ -255,6 +295,12 @@ abstract interface class SocialRepository {
   Future<List<ReceivedPing>> pings();
 
   Future<void> markPingsSeen();
+
+  /// Sends a friend something shared, by its code.
+  Future<void> shareWithFriend(String username, String code);
+
+  /// The learner's XP from videos, dialogues and flashcards, day by day.
+  Future<void> reportActivity(List<ActivityDay> days);
 
   /// Records today's quiz; returns the XP the server counted for it.
   Future<int> submitQuiz({

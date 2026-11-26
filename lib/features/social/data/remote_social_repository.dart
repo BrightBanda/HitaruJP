@@ -37,6 +37,9 @@ class RemoteSocialRepository implements SocialRepository {
       'quiz_done' => "Today's quiz is already done.",
       'share_not_found' =>
         'No collection has that code. Check it and try again.',
+      'share_limit' =>
+        "You've shared ${detail['daily_limit'] ?? 20} things today. More "
+            'tomorrow!',
       'empty_share' => 'There is nothing to share yet.',
       'terms_not_accepted' => 'Accept the terms to use friends.',
       _ when error.status == 422 =>
@@ -121,10 +124,16 @@ class RemoteSocialRepository implements SocialRepository {
           final map = _map(item);
           return ReceivedPing(
             id: (map['id'] as num).toInt(),
-            kind: map['kind'] == 'nudge' ? PingKind.nudge : PingKind.cheer,
+            kind:
+                PingKind.values
+                    .where((kind) => kind.name == map['kind'])
+                    .firstOrNull ??
+                PingKind.cheer,
             sender: person(map['sender']),
             createdAt: DateTime.parse(map['createdAt'] as String).toLocal(),
             seen: map['seen'] == true,
+            shareCode: map['shareCode'] as String?,
+            shareTitle: map['shareTitle'] as String?,
           );
         }(),
     ];
@@ -132,6 +141,18 @@ class RemoteSocialRepository implements SocialRepository {
 
   @override
   Future<void> markPingsSeen() => _call(() => _api.post('/social/pings/seen'));
+
+  @override
+  Future<void> shareWithFriend(String username, String code) => _call(
+    () => _api.post('/social/share', {'username': username, 'code': code}),
+  );
+
+  @override
+  Future<void> reportActivity(List<ActivityDay> days) => _call(
+    () => _api.put('/social/activity', {
+      'days': [for (final day in days) day.toJson()],
+    }),
+  );
 
   @override
   Future<int> submitQuiz({
@@ -181,6 +202,10 @@ class RemoteSocialRepository implements SocialRepository {
       weekXp: (map['weekXp'] as num).toInt(),
       quizzes: (map['quizzes'] as num).toInt(),
       correct: (map['correct'] as num).toInt(),
+      quizXp: (map['quizXp'] as num?)?.toInt() ?? 0,
+      videoXp: (map['videoXp'] as num?)?.toInt() ?? 0,
+      dialogueXp: (map['dialogueXp'] as num?)?.toInt() ?? 0,
+      flashcardXp: (map['flashcardXp'] as num?)?.toInt() ?? 0,
     );
   }
 

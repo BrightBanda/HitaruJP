@@ -21,6 +21,13 @@ class LeaderboardView extends ConsumerStatefulWidget {
 class _LeaderboardViewState extends ConsumerState<LeaderboardView> {
   LeaderboardScope _scope = LeaderboardScope.everyone;
 
+  @override
+  void initState() {
+    super.initState();
+    // The learner's latest XP, so their own row is current.
+    Future.microtask(() => ref.read(socialSyncProvider.notifier).syncAll());
+  }
+
   Future<void> _openQuiz() async {
     await context.push('/quiz');
     ref.invalidate(leaderboardProvider);
@@ -64,30 +71,198 @@ class _LeaderboardViewState extends ConsumerState<LeaderboardView> {
                 children: [
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: SegmentedButton<LeaderboardScope>(
-                        segments: const [
-                          ButtonSegment(
-                            value: LeaderboardScope.everyone,
-                            icon: Icon(Icons.public),
-                            label: Text('Everyone'),
-                          ),
-                          ButtonSegment(
-                            value: LeaderboardScope.friends,
-                            icon: Icon(Icons.people),
-                            label: Text('Friends'),
-                          ),
-                        ],
-                        selected: {_scope},
-                        onSelectionChanged: (selection) =>
-                            setState(() => _scope = selection.first),
-                      ),
+                    child: _ScopeSwitch(
+                      scope: _scope,
+                      onChanged: (scope) => setState(() => _scope = scope),
                     ),
                   ),
                   Expanded(child: _Board(scope: _scope)),
                 ],
               ),
+      ),
+    );
+  }
+}
+
+/// Everyone or Friends: a tinted track with a gradient thumb that slides to
+/// the chosen side, each side showing how many are on that board.
+class _ScopeSwitch extends ConsumerWidget {
+  final LeaderboardScope scope;
+  final ValueChanged<LeaderboardScope> onChanged;
+
+  const _ScopeSwitch({required this.scope, required this.onChanged});
+
+  static const _duration = Duration(milliseconds: 280);
+  static const _curve = Curves.easeOutCubic;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final participants = ref
+        .watch(leaderboardProvider(LeaderboardScope.everyone))
+        .value
+        ?.participants;
+    final friends = ref.watch(friendsOverviewProvider).value?.friends.length;
+    final everyone = scope == LeaderboardScope.everyone;
+
+    return Container(
+      height: 64,
+      padding: const EdgeInsets.all(5),
+      decoration: BoxDecoration(
+        color: AppColors.primaryMain.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Stack(
+        children: [
+          AnimatedAlign(
+            duration: _duration,
+            curve: _curve,
+            alignment: everyone ? Alignment.centerLeft : Alignment.centerRight,
+            child: FractionallySizedBox(
+              widthFactor: 0.5,
+              heightFactor: 1,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: AppColors.heroGradient,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primaryMain.withValues(alpha: 0.35),
+                      blurRadius: 14,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Row(
+            children: [
+              _ScopeOption(
+                icon: Icons.public,
+                label: 'Everyone',
+                detail: participants == null || participants == 0
+                    ? 'Learners worldwide'
+                    : '${_grouped(participants)} '
+                          '${participants == 1 ? 'learner' : 'learners'}',
+                selected: everyone,
+                onTap: () => onChanged(LeaderboardScope.everyone),
+              ),
+              _ScopeOption(
+                icon: Icons.people_alt_rounded,
+                label: 'Friends',
+                detail: friends == null
+                    ? 'You and your friends'
+                    : friends == 0
+                    ? 'Add some to compete'
+                    : '$friends ${friends == 1 ? 'friend' : 'friends'}',
+                selected: !everyone,
+                onTap: () => onChanged(LeaderboardScope.friends),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 1284 → 1,284.
+  static String _grouped(int n) => n.toString().replaceAllMapped(
+    RegExp(r'\B(?=(\d{3})+(?!\d))'),
+    (_) => ',',
+  );
+}
+
+class _ScopeOption extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String detail;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _ScopeOption({
+    required this.icon,
+    required this.label,
+    required this.detail,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final color = selected ? Colors.white : AppColors.primaryDark;
+    return Expanded(
+      child: Semantics(
+        button: true,
+        selected: selected,
+        label: '$label leaderboard',
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: selected
+              ? null
+              : () {
+                  HapticFeedback.selectionClick();
+                  onTap();
+                },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                AnimatedContainer(
+                  duration: _ScopeSwitch._duration,
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: selected
+                        ? Colors.white.withValues(alpha: 0.22)
+                        : AppColors.primaryMain.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(11),
+                  ),
+                  child: Icon(
+                    icon,
+                    size: 19,
+                    color: selected ? Colors.white : AppColors.primaryMain,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Flexible(
+                  child: AnimatedDefaultTextStyle(
+                    duration: _ScopeSwitch._duration,
+                    style: TextStyle(color: color),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            color: color,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        Text(
+                          detail,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: color.withValues(alpha: 0.8),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -126,16 +301,10 @@ class _Board extends ConsumerWidget {
             // Room under the last row for the quiz button.
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 96),
             children: [
-              Text("This week's quiz XP", style: theme.textTheme.titleLarge),
+              Text("This week's XP", style: theme.textTheme.titleLarge),
               Text(
-                [
-                  'Resets every Monday',
-                  if (scope == LeaderboardScope.everyone &&
-                      board.participants > 0)
-                    '${board.participants} '
-                        '${board.participants == 1 ? 'learner' : 'learners'}',
-                  '5 XP a right answer, 10 more for a perfect quiz',
-                ].join(' · '),
+                'From the daily quiz, videos, dialogues and flashcards. '
+                'Resets every Monday.',
                 style: theme.textTheme.bodySmall,
               ),
               const SizedBox(height: 12),
@@ -232,9 +401,9 @@ class LeaderboardRow extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
-                      '${entry.quizzes} '
-                      '${entry.quizzes == 1 ? 'quiz' : 'quizzes'} · '
-                      '${entry.correct} right',
+                      _breakdown(entry),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodySmall,
                     ),
                   ],
@@ -343,4 +512,16 @@ class _PersonSheetState extends ConsumerState<_PersonSheet> {
       ),
     );
   }
+}
+
+/// Where a week's XP came from, biggest first: `🧠 45 · ▶ 60 · 🃏 20`.
+String _breakdown(LeaderboardEntry entry) {
+  final parts = [
+    ('🧠', entry.quizXp),
+    ('▶', entry.videoXp),
+    ('💬', entry.dialogueXp),
+    ('🃏', entry.flashcardXp),
+  ].where((part) => part.$2 > 0).toList()..sort((a, b) => b.$2.compareTo(a.$2));
+  if (parts.isEmpty) return 'No XP yet this week';
+  return parts.map((part) => '${part.$1} ${part.$2}').join(' · ');
 }

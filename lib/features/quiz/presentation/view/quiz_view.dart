@@ -210,7 +210,7 @@ class _WordCard extends StatelessWidget {
                 fontStyle: FontStyle.italic,
               ),
             ),
-            if (question.fromSaved) ...[
+            if (question.source != QuizSource.level) ...[
               const SizedBox(height: 10),
               Container(
                 padding: const EdgeInsets.symmetric(
@@ -221,9 +221,22 @@ class _WordCard extends StatelessWidget {
                   color: Colors.white.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: const Text(
-                  'One of your words',
-                  style: TextStyle(color: Colors.white, fontSize: 12),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      question.fromSaved ? Icons.bookmark : Icons.smart_display,
+                      size: 14,
+                      color: Colors.white,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      question.fromSaved
+                          ? 'One of your words'
+                          : 'From your videos',
+                      style: const TextStyle(color: Colors.white, fontSize: 12),
+                    ),
+                  ],
                 ),
               ),
             ],

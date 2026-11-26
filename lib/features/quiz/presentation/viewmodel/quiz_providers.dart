@@ -8,6 +8,10 @@ import 'package:ingrain/features/progress/presentation/viewmodel/progress_view_m
 import 'package:ingrain/features/quiz/data/quiz_repository.dart';
 import 'package:ingrain/features/quiz/domain/daily_quiz.dart';
 import 'package:ingrain/features/social/presentation/viewmodel/social_providers.dart';
+import 'package:ingrain/features/content/domain/content_item.dart';
+import 'package:ingrain/features/content/presentation/viewmodel/content_view_model.dart';
+import 'package:ingrain/features/vocabulary/domain/dictionary_index.dart';
+import 'package:ingrain/features/vocabulary/domain/transcript_word_extractor.dart';
 import 'package:ingrain/features/vocabulary/presentation/viewmodel/vocabulary_view_model.dart';
 
 final quizRepositoryProvider = Provider<QuizRepository>(
@@ -29,7 +33,12 @@ final todayQuizResultProvider = FutureProvider<QuizResult?>((ref) async {
   return ref.read(quizRepositoryProvider).result(quizDayKey(quizToday(ref)));
 });
 
-/// Today's twelve words, from the learner's saved words and their level.
+/// How many of the learner's most recent videos the quiz draws words from,
+/// so building it stays quick however big the library grows.
+const _transcriptVideos = 8;
+
+/// Today's twelve words: mostly the learner's saved words, some from their
+/// videos' transcripts, a few at their level.
 final dailyQuizProvider = FutureProvider<DailyQuiz>((ref) async {
   final auth = ref.watch(authViewModelProvider);
   final dictionary = await ref.watch(dictionaryProvider.future);
@@ -39,9 +48,38 @@ final dailyQuizProvider = FutureProvider<DailyQuiz>((ref) async {
     seed: auth.uid,
     saved: saved,
     dictionary: dictionary.entries,
+    transcriptWords: await _transcriptWords(ref, dictionary),
     level: auth.profile?.level,
   );
 });
+
+/// Dictionary words heard in the learner's latest videos. Best effort: a
+/// transcript that cannot be read just adds nothing.
+Future<List<DictionaryEntry>> _transcriptWords(
+  Ref ref,
+  DictionaryIndex dictionary,
+) async {
+  try {
+    final content = ref.read(contentRepositoryProvider);
+    final videos =
+        (await content.watchAll().first)
+            .where((item) => item.sourceType == SourceType.youtube)
+            .toList()
+          ..sort((a, b) => b.addedOrOpenedAt.compareTo(a.addedOrOpenedAt));
+    final extractor = TranscriptWordExtractor(dictionary);
+    final words = <String, DictionaryEntry>{};
+    for (final video in videos.take(_transcriptVideos)) {
+      final sentences = await content.getTranscript(video.id);
+      if (sentences.isEmpty) continue;
+      for (final word in extractor.extract(sentences)) {
+        words.putIfAbsent(word.word, () => word.entry);
+      }
+    }
+    return words.values.toList();
+  } catch (_) {
+    return const [];
+  }
+}
 
 class QuizSessionState {
   final int index;

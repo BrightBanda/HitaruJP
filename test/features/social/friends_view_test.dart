@@ -134,7 +134,7 @@ void main() {
     await pump(tester, const LeaderboardView());
 
     // Everyone first: strangers too.
-    expect(find.text("This week's quiz XP"), findsOneWidget);
+    expect(find.text("This week's XP"), findsOneWidget);
     expect(find.text('You'), findsOneWidget);
     expect(find.text('@mio'), findsOneWidget);
     expect(find.text('50 XP'), findsOneWidget);

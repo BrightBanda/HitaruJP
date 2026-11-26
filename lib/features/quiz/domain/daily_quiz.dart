@@ -5,6 +5,18 @@ import 'package:ingrain/features/profile/domain/learner_preferences.dart';
 import 'package:ingrain/features/vocabulary/domain/dictionary_index.dart';
 import 'package:ingrain/features/vocabulary/domain/vocabulary_item.dart';
 
+/// Where a quiz word came from.
+enum QuizSource {
+  /// One of the learner's own saved words.
+  saved,
+
+  /// Heard in a video the learner added.
+  transcript,
+
+  /// A common word at the learner's level.
+  level,
+}
+
 /// A Japanese word and four meanings, one of them right.
 class QuizQuestion {
   final String word;
@@ -15,8 +27,7 @@ class QuizQuestion {
   final List<String> choices;
   final int answerIndex;
 
-  /// One of the learner's own saved words, rather than one at their level.
-  final bool fromSaved;
+  final QuizSource source;
 
   const QuizQuestion({
     required this.word,
@@ -24,33 +35,40 @@ class QuizQuestion {
     required this.romaji,
     required this.choices,
     required this.answerIndex,
-    this.fromSaved = false,
+    this.source = QuizSource.level,
   });
 
   String get answer => choices[answerIndex];
+
+  bool get fromSaved => source == QuizSource.saved;
 }
 
 /// Today's quiz: the same twelve words however often it is opened that day.
 class DailyQuiz {
   static const length = 12;
 
-  /// At most this many of the learner's own saved words; the rest come from
-  /// common words at their level.
-  static const savedShare = 6;
+  /// How each question's word is chosen: mostly the learner's own saved
+  /// words, some heard in their videos, a few at random from their level.
+  /// Drawn per question, so over the days the mix averages out to these
+  /// shares; a source that runs dry hands over to the next.
+  static const savedShare = 0.80;
+  static const transcriptShare = 0.15;
 
   final DateTime day;
   final List<QuizQuestion> questions;
 
   const DailyQuiz({required this.day, required this.questions});
 
-  /// Builds the quiz for [day] from [saved] words and the [dictionary], for a
-  /// learner at [level]. [seed] (their uid) makes it theirs: the same day
-  /// gives the same quiz, and different learners get different ones.
+  /// Builds the quiz for [day] from [saved] words, words from the learner's
+  /// video [transcriptWords] and the [dictionary], for a learner at [level].
+  /// [seed] (their uid) makes it theirs: the same day gives the same quiz,
+  /// and different learners get different ones.
   factory DailyQuiz.build({
     required DateTime day,
     required String seed,
     required List<VocabularyItem> saved,
     required List<DictionaryEntry> dictionary,
+    List<DictionaryEntry> transcriptWords = const [],
     JlptLevel? level,
   }) {
     final random = Random(_hash('$seed:${quizDayKey(day)}'));
@@ -68,29 +86,51 @@ class DailyQuiz {
     final readings = {
       for (final entry in dictionary.take(20000)) entry.surface: entry.reading,
     };
-    final mine = [
-      for (final item in saved) ?_Word.ofSaved(item, readings[item.word]),
-    ]..shuffle(random);
+    final sources = <QuizSource, List<_Word>>{
+      QuizSource.saved: [
+        for (final item in saved) ?_Word.ofSaved(item, readings[item.word]),
+      ]..shuffle(random),
+      QuizSource.transcript: [
+        for (final entry in transcriptWords)
+          ?_Word.fromEntry(entry, source: QuizSource.transcript),
+      ]..shuffle(random),
+      QuizSource.level: [...band]..shuffle(random),
+    };
 
     final chosen = <_Word>[];
     final seen = <String>{};
-    void take(_Word word) {
-      if (chosen.length >= length) return;
-      if (seen.add(word.surface) &&
-          seen.add('m:${word.meaning.toLowerCase()}')) {
-        chosen.add(word);
+
+    /// The next unused word from [source], or null when it has none left.
+    _Word? next(QuizSource source) {
+      final words = sources[source]!;
+      while (words.isNotEmpty) {
+        final word = words.removeLast();
+        final meaning = 'm:${word.meaning.toLowerCase()}';
+        if (seen.contains(word.surface) || seen.contains(meaning)) continue;
+        seen
+          ..add(word.surface)
+          ..add(meaning);
+        return word;
       }
+      return null;
     }
 
-    for (final word in mine.take(savedShare)) {
-      take(word);
+    while (chosen.length < length) {
+      final roll = random.nextDouble();
+      final wanted = roll < savedShare
+          ? QuizSource.saved
+          : roll < savedShare + transcriptShare
+          ? QuizSource.transcript
+          : QuizSource.level;
+      // The source the roll chose, then the others in order of preference.
+      final word =
+          next(wanted) ??
+          next(QuizSource.saved) ??
+          next(QuizSource.transcript) ??
+          next(QuizSource.level);
+      if (word == null) break;
+      chosen.add(word);
     }
-    final shuffledBand = [...band]..shuffle(random);
-    for (final word in shuffledBand) {
-      if (chosen.length >= length) break;
-      take(word);
-    }
-    chosen.shuffle(random);
 
     return DailyQuiz(
       day: DateTime(day.year, day.month, day.day),
@@ -127,7 +167,7 @@ class DailyQuiz {
       romaji: toRomaji(word.reading),
       choices: choices,
       answerIndex: choices.indexOf(word.meaning),
-      fromSaved: word.fromSaved,
+      source: word.source,
     );
   }
 
@@ -153,14 +193,14 @@ class _Word {
   final String reading;
   final String meaning;
   final String kind;
-  final bool fromSaved;
+  final QuizSource source;
 
   const _Word(
     this.surface,
     this.reading,
     this.meaning,
     this.kind, {
-    this.fromSaved = false,
+    this.source = QuizSource.level,
   });
 
   bool get hasKanji => _kanji.hasMatch(surface);
@@ -176,14 +216,23 @@ class _Word {
     'numeral',
   };
 
-  static _Word? fromEntry(DictionaryEntry entry) {
+  static _Word? fromEntry(
+    DictionaryEntry entry, {
+    QuizSource source = QuizSource.level,
+  }) {
     if (!_kinds.contains(entry.pos)) return null;
     final meaning = _meaning(entry.primaryMeaning);
     if (meaning == null) return null;
     if (!_japanese.hasMatch(entry.surface) || entry.surface.length > 6) {
       return null;
     }
-    return _Word(entry.surface, entry.reading, meaning, entry.pos!);
+    return _Word(
+      entry.surface,
+      entry.reading,
+      meaning,
+      entry.pos!,
+      source: source,
+    );
   }
 
   static _Word? ofSaved(VocabularyItem item, String? dictionaryReading) {
@@ -200,7 +249,7 @@ class _Word {
       reading ?? surface,
       meaning,
       item.pos ?? 'noun',
-      fromSaved: true,
+      source: QuizSource.saved,
     );
   }
 

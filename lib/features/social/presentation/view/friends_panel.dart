@@ -396,17 +396,23 @@ class _PingTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cheer = ping.kind == PingKind.cheer;
+    final name = ping.sender.name;
+    final code = ping.shareCode;
     return ListTile(
       contentPadding: EdgeInsets.zero,
       leading: PersonAvatar(person: ping.sender, size: 40),
-      title: Text(
-        cheer
-            ? '${ping.sender.name} cheered you on 🎉'
-            : '${ping.sender.name} nudged you 👋',
-      ),
+      title: Text(switch (ping.kind) {
+        PingKind.cheer => '$name cheered you on 🎉',
+        PingKind.nudge => '$name nudged you 👋',
+        PingKind.share => '$name shared "${ping.shareTitle ?? 'something'}"',
+      }),
       subtitle: Text(_ago(ping.createdAt)),
-      trailing: ping.seen
+      trailing: ping.kind == PingKind.share && code != null
+          ? FilledButton.tonal(
+              onPressed: () => context.push('/import?code=$code'),
+              child: const Text('Add'),
+            )
+          : ping.seen
           ? null
           : const Badge(smallSize: 10, backgroundColor: AppColors.streak),
     );

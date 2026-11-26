@@ -15,6 +15,7 @@ import 'package:ingrain/features/content/presentation/viewmodel/content_view_mod
 import 'package:ingrain/features/content/presentation/view/player/recommended_videos.dart';
 import 'package:ingrain/features/content/presentation/view/player/transcript_view.dart';
 import 'package:ingrain/features/immersion/presentation/viewmodel/immersion_session_view_model.dart';
+import 'package:ingrain/features/social/presentation/share_video_sheet.dart';
 
 final playbackPositionProvider =
     NotifierProvider<PlaybackPositionNotifier, Duration>(
@@ -441,6 +442,13 @@ class _ImmersionPlayerViewState extends ConsumerState<ImmersionPlayerView>
               );
             },
           ),
+          if (contentAsync.value case final video?
+              when video.sourceType == SourceType.youtube)
+            IconButton(
+              icon: const Icon(Icons.share_outlined),
+              tooltip: 'Share with a friend',
+              onPressed: () => showShareVideoSheet(context, video),
+            ),
           IconButton(
             icon: const Icon(Icons.edit_note),
             tooltip: 'Edit transcript',

@@ -136,6 +136,22 @@ class FakeSocialRepository implements SocialRepository {
   }
 
   int seenCalls = 0;
+  final List<({String username, String code})> sharedWith = [];
+  final List<ActivityDay> reported = [];
+
+  @override
+  Future<void> shareWithFriend(String username, String code) async {
+    _check();
+    sharedWith.add((username: username, code: code));
+  }
+
+  @override
+  Future<void> reportActivity(List<ActivityDay> days) async {
+    _check();
+    reported
+      ..clear()
+      ..addAll(days);
+  }
 
   @override
   Future<void> markPingsSeen() async => seenCalls++;

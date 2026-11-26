@@ -113,9 +113,47 @@ class SocialSync extends Notifier<void> {
     }
   }
 
-  /// Both, for when the learner opens Friends or finishes a quiz.
+  /// The last activity sent, so an unchanged week is not sent again.
+  String? _lastActivity;
+
+  /// The learner's XP from videos, dialogues and flashcards over the last
+  /// eight days, for the leaderboard. Best effort.
+  Future<void> publishActivity() async {
+    final growth = ref.read(progressViewModelProvider).growth;
+    if (growth == null) return;
+    final now = ref.read(clockProvider).now;
+    final since = DateTime(now.year, now.month, now.day - 8);
+    final days = [
+      for (final day in growth.days)
+        if (!day.day.isBefore(since))
+          ActivityDay(
+            day: quizDayKey(day.day),
+            videos: day.bySource[XpSource.watching] ?? 0,
+            dialogues:
+                (day.bySource[XpSource.reading] ?? 0) +
+                (day.bySource[XpSource.dialogues] ?? 0),
+            flashcards: day.bySource[XpSource.reviews] ?? 0,
+          ),
+    ];
+    final key = [
+      for (final day in days)
+        '${day.day}:${day.videos}:${day.dialogues}:${day.flashcards}',
+    ].join(',');
+    if (days.isEmpty || key == _lastActivity) return;
+    try {
+      await ref.read(socialRepositoryProvider).reportActivity(days);
+      _lastActivity = key;
+      if (ref.mounted) ref.invalidate(leaderboardProvider);
+    } catch (_) {
+      // Offline: the next progress update sends it.
+    }
+  }
+
+  /// Everything, for when the learner opens Friends or the leaderboard, or
+  /// finishes a quiz.
   Future<void> syncAll() async {
     await publishStats();
+    await publishActivity();
     await submitPendingQuizzes();
   }
 }
